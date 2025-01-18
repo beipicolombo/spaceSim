@@ -67,7 +67,7 @@ def computeControl(fswControlParam, fswBus):
         torqueCtrl_B = offControl()
         
     # Update output bus signals
-    fswControlBusOut.signals["torqueCtrl_B"].value = torqueCtrl_B
+    fswControlBusOut.signals["torqueCtrl_B"].update(torqueCtrl_B)
     
     return fswControlBusOut
 

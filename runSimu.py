@@ -197,7 +197,6 @@ modelsBus.subBuses["environment"] = envModel.computeExtTorque(simParam, scParam.
 # Spacecraft actuators torque
 modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["control"], modelsBus.subBuses["actuators"])
 
-
 # Total external torque
 modelsBus = attitudeDynamics.computeTotTorque(modelsBus)
 

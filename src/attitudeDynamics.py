@@ -26,7 +26,7 @@ class AttDynParam:
         self.inertiaSc_B  = np.identity(3)
         self.inertiaScInv_B = np.linalg.inv(self.inertiaSc_B)
         # S/C mass [kg]
-        self.massSc  = 10
+        self.massSc  = 1
         # S/C CB mass [kg] (equal to S/C total mass by default) => appendages to be added
         self.massCB = self.massSc
         # S/C center of mass position in geometric frame [m]
@@ -115,6 +115,25 @@ def computeTotTorque(modelsBus):
     modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].update(torqueTot_B)
 
     return modelsBusOut
+
+# Angular momentum
+def computeAngMom(attDynParam, modelsBus):
+    # Retrieve useful inputs
+    # angMomRw_B = np.array([0, 0, 0]) # RW models to be implemented
+    angRate_BI_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].value
+    inertiaSc_B = attDynParam.inertiaSc_B
+    
+    # Initialize output bus
+    modelsBusOut = modelsBus
+    
+    # Compute S/C angular momentum
+    angMomSc_B = np.matmul(inertiaSc_B, angRate_BI_B)
+    
+    # Update output bus signals
+    modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].update(angMomSc_B)
+    
+    return modelsBusOut
+    
 
 # --------------------------------------------------
 # SIMULATION / TEST

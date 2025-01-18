@@ -15,7 +15,7 @@ import numpy as np
 class FswControlParam:
     # To be moved as higher level class
     def __init__(self):
-        self.rateDampingKd = 0.1
+        self.rateDampingKd = 10.0
         self.attControlKp = 0.01
         self.attControlKd = 0.1
         self.MODE = FswControlMode()

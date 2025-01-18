@@ -29,7 +29,7 @@ import src.orbitDynamics as orbitDynamics
 import src.models.env.envModel as envModel
 import src.models.act.actModels as actModels
 import src.models.sen.senModels as senModels
-
+import src.models.dyn.massModels as massModels
 
 # Retrieve useful constants
 pi  = np.pi
@@ -50,15 +50,21 @@ Ts = 1 # [s]
 Tend = 90*60 # [s]
 
 # Simulation options
-isGGTorqueEnabled = True
+isGGTorqueEnabled = False
 isCtrlTorqueEnabled = True
 isPlot = True
 
 # S/C attitude and angular rates
-angRate_BI_B = np.array([1, 0.1, 0.1])*deg2rad
+angRate_BI_B = np.array([1, 0.2, -0.3])*deg2rad
 
-# S/C mass properties
-inertiaSc_B = np.diag([100, 120, 20])
+# S/C properties
+# Dimensions for rectangle prism
+massSc = 1000 # [kg]
+lx = 2 # [m]
+ly = 2 # [m]
+lz = 4 # [m]
+inertiaSc_B = massModels.getUniformRectanglePrismInertia(massSc, lx, ly, lz)
+# inertiaSc_B = np.diag([100, 120, 20])
 
 # Orbit
 perAltitudeInit = 500 * 1e3 # [m]
@@ -72,14 +78,14 @@ ta = 0 * deg2rad
 # GUIDMODE_OFF
 # GUIDMODE_RATE_DAMPING
 # GUIDMODE_ATT_NADIR
-attitudeGuidanceMode = "GUIDMODE_ATT_INERT"
+attitudeGuidanceMode = "GUIDMODE_RATE_DAMPING"
 GUIDMODE_ATT_INERT_eulerAngGuid_BI = np.array([5, 2, 1]) * deg2rad
 
 # Attitude control
 # CTRLMODE_ATT_CTRL
 # CTRLMODE_OFF
 # CTRLMODE_RATE_DAMP_CTRL
-fswControlMode = "CTRLMODE_ATT_CTRL"
+fswControlMode = "CTRLMODE_RATE_DAMP_CTRL"
 
 # --------------------------------------------------
 # INITIALIZATION
@@ -90,7 +96,10 @@ elapsedTime = 0
 
 # [Simulation] Parameters
 print("   Simulation parameters")
-simParam = simParam.SimParam(Ts, Tend, isGGTorqueEnabled, isCtrlTorqueEnabled, isPlot)
+simParam = simParam.SimParam(Ts, Tend)
+simParam.runOptions.isPlot = isPlot
+simParam.simOptions.isCtrlTorqueEnabled = isCtrlTorqueEnabled
+simParam.simOptions.isGGTorqueEnabled = isGGTorqueEnabled
 
 # Data buses and signals
 (modelsBus, fswBus) = initData.initializeBusesAndSignals(simParam)
@@ -122,13 +131,17 @@ modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(vel_I)
 # [Models] Dynamics properties
 attDynParam = attitudeDynamics.AttDynParam()
 attDynParam.inertiaSc_B = inertiaSc_B
+attDynParam.inertiaScInv_B = np.linalg.inv(attDynParam.inertiaSc_B)
 attDynParam.inertiaSc_G = attDynParam.inertiaSc_B
+attDynParam.massSc = massSc
+attDynParam.massCB = attDynParam.massSc
 
 # [Models] Attitude
 myDynState = attitudeDynamics.DynamicsState()
 myDynState.angRate_BI_B = angRate_BI_B
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(angRate_BI_B)
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(myDynState.qBI.toEuler())
+modelsBus = attitudeDynamics.computeAngMom(attDynParam, modelsBus) 
 
 # [Models] LVLH frame
 lvlhFrame = envModel.LVLHframe()
@@ -208,6 +221,7 @@ for ii in range(1, simParam.nbPts):
     myDynState.propagateState(attDynParam, simParam, modelsBus) 
     modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(myDynState.angRate_BI_B)
     modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(myDynState.qBI.toEuler())
+    modelsBus = attitudeDynamics.computeAngMom(attDynParam, modelsBus) 
 
     # Propagate orbit dynamics
     orbit.propagate(simParam, earthMu)
@@ -261,9 +275,12 @@ plots.plotOrbit3d(modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].timeseries.rad2deg().plot()
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].timeseries.rad2deg().plot()
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].timeseries.plot()
+modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].timeseries.plot()
+
+modelsBus.subBuses["sensors"].signals["angRateMeas_BI_B"].timeseries.plot()
+modelsBus.subBuses["actuators"].signals["torqueThr_B"].timeseries.plot()
 
 modelsBus.subBuses["environment"].signals["torqueExt_B"].timeseries.plot()
 
 fswBus.subBuses["guidance"].signals["angRateGuid_BI_B"].timeseries.rad2deg().plot()
 fswBus.subBuses["control"].signals["torqueCtrl_B"].timeseries.plot()
-

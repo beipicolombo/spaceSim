@@ -23,7 +23,7 @@ class ThrModelParam:
         for ii in range(1, self.nbThrSet+1):
             self.thrSets.append(ThrSetParam(attDynParam))
 
-    def updateThrSets(self, nbThrSet, attDynParam):
+    def initThr(self, nbThrSet, attDynParam):
         self.nbThrSet = nbThrSet
         for ii in range(1, self.nbThrSet+1):
             self.thrSets.append(ThrSetParam(attDynParam))
@@ -47,7 +47,7 @@ class ThrSetParam:
         self.inflMat_B = self.getInfluenceMatrix(attDynParam)
         self.isOn = False
 
-    def updateThrSet(self, nbThr, attDynParam):
+    def initThrSet(self, nbThr, attDynParam):
         self.nbThr = nbThr
         for ii in range(1, self.nbThr+1):
             self.thrUnits.append(ThrUnitParam(ii))

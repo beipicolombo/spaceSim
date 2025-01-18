@@ -169,7 +169,7 @@ modelsBus.subBuses["environment"] = envModel.computeExtTorque(simParam, attDynPa
 # [Models] Actuators
 # Parameters
 actModelParam = actModels.ActModelParam(attDynParam)
-actModelParam.thrModelParam.updateThrSets(1, attDynParam);
+actModelParam.thrModelParam.initThr(1, attDynParam);
 actModelParam.thrModelParam.thrSets[0].isOn = True
 
 # Initial value

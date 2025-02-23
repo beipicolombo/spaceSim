@@ -78,18 +78,11 @@ def computeControl(fswControlParam, fswBus):
         torqueCtrlRw_B = offControl()
         
     # Update output bus signals
-<<<<<<< HEAD
-    fswControlBusOut.signals["torqueCtrl_B"].update(torqueCtrl_B)
-    
-    return fswControlBusOut
-=======
     fswControlBusOut.signals["torqueCtrl_B"].value = torqueCtrl_B
     fswControlBusOut.signals["torqueCtrlThr_B"].value = torqueCtrlThr_B
     fswControlBusOut.signals["torqueCtrlRw_B"].value = torqueCtrlRw_B
         
     return (fswControlBusOut)
->>>>>>> 65bec56 (200 - NEW add switch to select between RW and THR - based control (only THR are used for now), with control parameter (to be embedded in the future mode management))
-
 
 # --------------------------------------------------
 # SIMULATION / TEST

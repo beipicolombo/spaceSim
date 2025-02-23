@@ -21,25 +21,45 @@ class FswModeMgtState:
 		self.aocsCtrActMode = aocsCtrActMode
 		self.aocsModeElapsedTime = 0
 
+		self.aocsOffModeMinDur = 10 # [s] => TBW manage mode management parameters separately
+		self.aocsSafeModeMinDur = 20*60 # [s] => TBW manage mode management parameters separately
+
 	def update(self, simParam):
 		# Retrieve useful data
 		Ts = simParam.Ts
 
-		# Compute new AOCS mode => TBW currently constant
-		aocsMode = self.aocsMode
-		# Compute new guidance mode => TBW currently constant
-		aocsGuidMode = self.aocsGuidMode
-		# Compute new control mode => TBW currently constant
-		aocsCtrMode = self.aocsCtrMode
-		aocsCtrActMode = self.aocsCtrActMode
-		
-		# Compute elapsed time
+		# 1. Compute new AOCS mode
+		if ((self.aocsMode == "OFF") and (self.aocsModeElapsedTime > self.aocsOffModeMinDur)):
+			# Transition OFF -> SAFE
+			aocsMode = "SAFE"
+		elif ((self.aocsMode == "SAFE") and (self.aocsModeElapsedTime > self.aocsSafeModeMinDur)):
+			aocsMode = "NOM"
+		else: 
+			# Otherwise in current mode
+			aocsMode = self.aocsMode
+
+
+		# 2. Switch control, guidance and actuators depending on current AOCS mode
+		if (aocsMode == "SAFE"):
+			aocsGuidMode = "GUIDMODE_RATE_DAMPING"
+			aocsCtrMode = "CTRLMODE_RATE_DAMP_CTRL"
+			aocsCtrActMode = "THR"
+		elif (aocsMode == "NOM"):
+			aocsGuidMode = "GUIDMODE_ATT_INERT" 
+			aocsCtrMode = "CTRLMODE_ATT_CTRL"
+			aocsCtrActMode = "THR"
+		else:
+			aocsGuidMode = "GUIDMODE_OFF"
+			aocsCtrMode = "CTRLMODE_OFF"
+			aocsCtrActMode = "NONE"
+
+		# 3. Compute elapsed time
 		if (aocsCtrMode != self.aocsCtrModePre):
 			aocsModeElapsedTime = 0
 		else:
 			aocsModeElapsedTime = self.aocsModeElapsedTimePre + Ts
 
-		# Update states
+		# 4. Update states
 		self.aocsModePre = self.aocsMode
 		self.aocsCtrModePre = self.aocsCtrMode
 		self.aocsGuidModePre = self.aocsGuidMode

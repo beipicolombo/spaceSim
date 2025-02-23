@@ -50,7 +50,7 @@ dateTimeStart = ephem.Date("2024/3/9 5:10:10")
 
 # Simulation timestep and duration
 Ts = 1 # [s]
-Tend = 5*60 # [s]
+Tend = 90*60 # [s]
 
 # Simulation options
 isGGTorqueEnabled = False
@@ -73,7 +73,8 @@ ta = 0 * deg2rad
 
 # Initial AOCS mode
 # OFF
-# IDLE => TBW
+# SAFE
+# NOM
 aocsMode = "OFF"
 
 # Initial attitude guidance mode
@@ -81,19 +82,19 @@ aocsMode = "OFF"
 # GUIDMODE_RATE_DAMPING
 # GUIDMODE_ATT_NADIR
 # GUIDMODE_ATT_INERT
-aocsGuidMode = "GUIDMODE_RATE_DAMPING"
+aocsGuidMode = "OFF"
 GUIDMODE_ATT_INERT_eulerAngGuid_BI = np.array([5, 2, 1]) * deg2rad
 
 # Initial attitude control mode
-# CTRLMODE_ATT_CTRL
 # CTRLMODE_OFF
+# CTRLMODE_ATT_CTRL
 # CTRLMODE_RATE_DAMP_CTRL
-aocsCtrMode = "CTRLMODE_RATE_DAMP_CTRL"
+aocsCtrMode = "CTRLMODE_OFF"
 
 # Initial attitude control mode
 # NONE
 # THR
-# RW = TBW
+# RW => TBW
 # RW_OFFLOADING => TBW
 aocsCtrActMode = "THR"
 

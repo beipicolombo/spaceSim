@@ -57,23 +57,24 @@ def computeGuidance(fswGuidanceParam, lvlhFrame, modelsBus, fswBus):
     # Retrieve useful inputs
     zL_B = modelsBus.subBuses["dynamics"].subBuses["frames"].signals["zL_B"].value
     zL_I = modelsBus.subBuses["dynamics"].subBuses["frames"].signals["zL_I"].value
+    aocsGuidMode = fswBus.subBuses["modeMgt"].signals["aocsGuidMode"].value
     
     # Initialize output bus
     fswGuidBusOut = fswBus.subBuses["guidance"]
 
     # Compute guidance angular rates and euler angles depending on the current guidance mode
-    if (fswGuidanceParam.MODE == "GUIDMODE_ATT_INERT"):
+    if (aocsGuidMode == "GUIDMODE_ATT_INERT"):
         # Inertial attitude guidance mode
         (angRateGuid_B, eulerAngGuid_BI) = attitudeInertialGuidance(fswGuidanceParam)
-    elif (fswGuidanceParam.MODE == "GUIDMODE_RATE_DAMPING"):
+    elif (aocsGuidMode == "GUIDMODE_RATE_DAMPING"):
         # Rate damping guidance mode
         (angRateGuid_B, eulerAngGuid_BI) = rateDampingGuidance()
-    elif (fswGuidanceParam.MODE == "GUIDMODE_ATT_NADIR"):
+    elif (aocsGuidMode == "GUIDMODE_ATT_NADIR"):
         # Nadir guidance mode
         (angRateGuid_B, eulerAngGuid_BI) = nadirGuidance(lvlhFrame.dcmIL)
     else:
         # OFF guidance mode or current mode is not defined
-        fswGuidanceParam.MODE = "GUIDMODE_OFF"
+        aocsGuidMode = "GUIDMODE_OFF"
         (angRateGuid_B, eulerAngGuid_BI) = offGuidance()   
     
     # Update output bus signals

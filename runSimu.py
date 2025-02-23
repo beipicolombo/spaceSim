@@ -21,8 +21,9 @@ import src.data.spacecraftMassModelsDatabase as spacecraftMassModelsDatabase
 
 import src.fsw.fswModel as fswModel
 import src.fsw.fswGuidance as fswGuidance
-import src.fsw.fswControl as fswControl
 import src.fsw.fswEstimation as fswEstimation 
+import src.fsw.fswControl as fswControl
+import src.fsw.fswCommand as fswCommand
 
 import src.attitudeDynamics as attitudeDynamics
 import src.orbitDynamics as orbitDynamics
@@ -48,7 +49,7 @@ dateTimeStart = ephem.Date("2024/3/9 5:10:10")
 
 # Simulation timestep and duration
 Ts = 1 # [s]
-Tend = 10*60 # [s]
+Tend = 90*60 # [s]
 
 # Simulation options
 isGGTorqueEnabled = False
@@ -136,7 +137,7 @@ scParam.senParam = senModels.SenModelParam()
 # [FSW] Functions parameters
 # ==================================
 print("      [FSW] Functions parameters")
-fswParam = fswModel.Fsw()
+fswParam = fswModel.Fsw(scParam)
 
 # [Guidance]
 fswParam.guidParam.MODE = attitudeGuidanceMode
@@ -144,6 +145,12 @@ fswParam.guidParam.GUIDMODE_ATT_INERT_eulerAngGuid_BI = GUIDMODE_ATT_INERT_euler
 
 # [Control]
 fswParam.ctrParam.MODE = fswControlMode
+fswParam.ctrParam.ACTMODE = fswControlActMode
+
+# [Command]
+# FSW has full knowledge of actuator model => TBW to be descoped
+fswParam.cmdParam.thrCmdParam = scParam.actParam.thrModelParam
+fswParam.cmdParam.rwCmdParam = scParam.actParam.rwModelParam
 
 # [Models] Attitude and orbit states
 # ==================================
@@ -194,6 +201,10 @@ fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, lv
 # [Control]
 fswBus.subBuses["control"] = fswControl.computeControl(fswParam.ctrParam, fswBus)
 
+# [Command]
+fswBus.subBuses["command"] = fswCommand.computeCommand(fswParam.cmdParam, fswBus)
+
+
 # [Models] Environment / actuators states
 # ==================================
 print("      [Models] Environment / actuators states")
@@ -202,7 +213,7 @@ print("      [Models] Environment / actuators states")
 modelsBus.subBuses["environment"] = envModel.computeExtTorque(simParam, scParam.massParam, orbit, lvlhFrame, modelsBus.subBuses["environment"])
  
 # Spacecraft actuators torque
-modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["control"], modelsBus.subBuses["actuators"])
+modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
 
 # Total external torque
 modelsBus = attitudeDynamics.computeTotTorque(modelsBus)
@@ -228,7 +239,7 @@ for ii in range(1, simParam.nbPts):
     modelsBus.subBuses["environment"] = envModel.computeExtTorque(simParam, scParam.massParam, orbit, lvlhFrame, modelsBus.subBuses["environment"])
 
     # Actuators
-    modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["control"], modelsBus.subBuses["actuators"])
+    modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
 
     # Total total external torque
     modelsBus = attitudeDynamics.computeTotTorque(modelsBus)
@@ -266,6 +277,10 @@ for ii in range(1, simParam.nbPts):
     # [Control] Compute control torque
     # Depends on the current control mode
     fswBus.subBuses["control"] = fswControl.computeControl(fswParam.ctrParam, fswBus)
+
+    # [Command]
+    fswBus.subBuses["command"] = fswCommand.computeCommand(fswParam.cmdParam, fswBus)
+
     
 simuEndTime = time.time()
 simuDuration = simuEndTime - simuStrTime
@@ -304,4 +319,10 @@ modelsBus.subBuses["environment"].signals["torqueExt_B"].timeseries.plot()
 
 fswBus.subBuses["guidance"].signals["angRateGuid_BI_B"].timeseries.rad2deg().plot()
 fswBus.subBuses["control"].signals["torqueCtrl_B"].timeseries.plot()
+fswBus.subBuses["control"].signals["torqueCtrlThr_B"].timeseries.plot()
+fswBus.subBuses["control"].signals["torqueCtrlRw_B"].timeseries.plot()
+
+
+fswBus.subBuses["command"].signals["torqueCmdRw_B"].timeseries.plot()
+fswBus.subBuses["command"].signals["torqueCmdThr_B"].timeseries.plot()
 

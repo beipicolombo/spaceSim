@@ -47,6 +47,8 @@ def initializeBusesAndSignals(simParam):
     fswBus.subBuses["guidance"].addSignal("eulerAngGuid_BI", 3, unit = "rad")    
     fswBus.addSubBus("control")
     fswBus.subBuses["control"].addSignal("torqueCtrl_B", 3, unit = "N*m", isLogged = True, timeVec = simParam.timeVec)
+    fswBus.subBuses["control"].addSignal("torqueCtrlRw_B", 3, unit = "N*m", isLogged = True, timeVec = simParam.timeVec)
+    fswBus.subBuses["control"].addSignal("torqueCtrlThr_B", 3, unit = "N*m", isLogged = True, timeVec = simParam.timeVec)
     fswBus.addSubBus("estimation")
     fswBus.subBuses["estimation"].addSignal("angRateEst_BI_B", 3, unit = "rad/s")
     fswBus.subBuses["estimation"].addSignal("eulerAngEst_BI", 3, unit = "rad")

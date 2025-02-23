@@ -83,6 +83,13 @@ GUIDMODE_ATT_INERT_eulerAngGuid_BI = np.array([5, 2, 1]) * deg2rad
 # CTRLMODE_RATE_DAMP_CTRL
 fswControlMode = "CTRLMODE_RATE_DAMP_CTRL"
 
+# Actuator selection
+# NONE
+# THR
+# RW = TBW
+# RW_OFFLOADING => TBW
+fswControlActMode = "THR"
+
 # --------------------------------------------------
 # INITIALIZATION
 # --------------------------------------------------

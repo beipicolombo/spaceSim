@@ -6,34 +6,34 @@ import numpy as np
 # --------------------------------------------------
 class FswModeMgtState:
 	# TBW
-	def __init__(self, fswParam):
+	def __init__(self, aocsMode, aocsGuidMode, aocsCtrMode, aocsCtrActMode):
 		# Previous states
-		self.aocsModePre = "OFF"
-		self.aocsCtrModePre = "CTRLMODE_OFF"
-		self.aocsGuidModePre = "GUIDMODE_OFF"
-		self.aocsCtrActModePre = "NONE"
+		self.aocsModePre = aocsMode
+		self.aocsCtrModePre = aocsCtrMode
+		self.aocsGuidModePre = aocsGuidMode
+		self.aocsCtrActModePre = aocsCtrActMode
 
 		# Current state
-		self.aocsMode = "OFF"
-		self.aocsCtrMode = "CTRLMODE_OFF"
-		self.aocsGuidMode = "GUIDMODE_OFF"
-		self.aocsCtrActMode = "NONE"
+		self.aocsMode = aocsMode
+		self.aocsCtrMode = aocsCtrMode
+		self.aocsGuidMode = aocsGuidMode
+		self.aocsCtrActMode = aocsCtrActMode
 
-	def update(self, fswParam):
+	def update(self):
 		self.aocsModePre = self.aocsMode
 		self.aocsCtrModePre = self.aocsCtrMode
 		self.aocsGuidModePre = self.aocsGuidMode
 		self.aocsCtrActModePre = self.aocsCtrActMode
 
-		# Compute new AOCS mode
-		aocsMode = "OFF"
+		# Compute new AOCS mode => TBW currently constant
+		aocsMode = self.aocsMode
 
-		# Compute new guidance mode
-		aocsGuidMode = fswParam.guidParam.MODE
+		# Compute new guidance mode => TBW currently constant
+		aocsGuidMode = self.aocsGuidMode
 
-		# Compute new control mode
-		aocsCtrMode = fswParam.ctrParam.MODE
-		aocsCtrActMode = fswParam.ctrParam.ACTMODE
+		# Compute new control mode => TBW currently constant
+		aocsCtrMode = self.aocsCtrMode
+		aocsCtrActMode = self.aocsCtrActMode
 
 		# Update states
 		self.aocsMode = aocsMode
@@ -44,9 +44,9 @@ class FswModeMgtState:
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
-def computeModeMgt(fswParam, fswModeMgtState, fswBus):
+def computeModeMgt(fswModeMgtState, fswBus):
 	# Update mode management states
-	fswModeMgtState.update(fswParam)
+	fswModeMgtState.update()
 
 	fswModeMgtBusOut = fswBus.subBuses["modeMgt"]
 

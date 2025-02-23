@@ -18,8 +18,6 @@ class FswControlParam:
         self.rateDampingKd = 10.0
         self.attControlKp = 0.01
         self.attControlKd = 0.1
-        self.MODE = "CTRLMODE_OFF"
-        self.ACTMODE = "NONE"
 
 # --------------------------------------------------
 # FUNCTIONS

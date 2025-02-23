@@ -71,26 +71,31 @@ raan = 90 * deg2rad
 argPer = 90 * deg2rad
 ta = 0 * deg2rad
 
-# Attitude guidance
+# Initial AOCS mode
+# OFF
+# IDLE => TBW
+aocsMode = "OFF"
+
+# Initial attitude guidance mode
 # GUIDMODE_OFF
 # GUIDMODE_RATE_DAMPING
 # GUIDMODE_ATT_NADIR
 # GUIDMODE_ATT_INERT
-attitudeGuidanceMode = "GUIDMODE_RATE_DAMPING"
+aocsGuidMode = "GUIDMODE_RATE_DAMPING"
 GUIDMODE_ATT_INERT_eulerAngGuid_BI = np.array([5, 2, 1]) * deg2rad
 
-# Attitude control
+# Initial attitude control mode
 # CTRLMODE_ATT_CTRL
 # CTRLMODE_OFF
 # CTRLMODE_RATE_DAMP_CTRL
-fswControlMode = "CTRLMODE_RATE_DAMP_CTRL"
+aocsCtrMode = "CTRLMODE_RATE_DAMP_CTRL"
 
-# Actuator selection
+# Initial attitude control mode
 # NONE
 # THR
 # RW = TBW
 # RW_OFFLOADING => TBW
-fswControlActMode = "THR"
+aocsCtrActMode = "THR"
 
 # --------------------------------------------------
 # INITIALIZATION
@@ -141,12 +146,9 @@ print("      [FSW] Functions parameters")
 fswParam = fswModel.Fsw(scParam)
 
 # [Guidance]
-fswParam.guidParam.MODE = attitudeGuidanceMode
 fswParam.guidParam.GUIDMODE_ATT_INERT_eulerAngGuid_BI = GUIDMODE_ATT_INERT_eulerAngGuid_BI
 
 # [Control]
-fswParam.ctrParam.MODE = fswControlMode
-fswParam.ctrParam.ACTMODE = fswControlActMode
 
 # [Command]
 # FSW has full knowledge of actuator model => TBW to be descoped
@@ -154,7 +156,7 @@ fswParam.cmdParam.thrCmdParam = scParam.actParam.thrModelParam
 fswParam.cmdParam.rwCmdParam = scParam.actParam.rwModelParam
 
 # [Mode management]
-fswModeMgtState = fswModeMgt.FswModeMgtState(fswParam)
+fswModeMgtState = fswModeMgt.FswModeMgtState(aocsMode, aocsGuidMode, aocsCtrMode, aocsCtrActMode)
 
 
 # [Models] Attitude and orbit states
@@ -199,7 +201,7 @@ modelsBus.subBuses["sensors"] = scParam.senParam.computeMeasurements(modelsBus.s
 print("      [FSW] Functions states")
 
 # [Mode management]
-fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(fswParam, fswModeMgtState, fswBus)
+fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(fswModeMgtState, fswBus)
 
 # [Estimation]
 fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
@@ -277,7 +279,7 @@ for ii in range(1, simParam.nbPts):
     # [FSW]
     # ==================================
     # [Mode management]
-    fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(fswParam, fswModeMgtState, fswBus)
+    fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(fswModeMgtState, fswBus)
 
     # [Estimation] Compute estimated angular rates and / or attitude
     fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)

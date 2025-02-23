@@ -19,24 +19,24 @@ deg2rad = pi/180
 # Simulation parameters
 class SimParam:
     # To be moved as higher level class
-    def __init__(self, Ts, Tend, isGGTorqueEnabled = True, isCtrlTorqueEnabled = True, isPlot = True):
+    def __init__(self, Ts, Tend):
         self.Ts = Ts
         self.Tend = Tend
         self.timeVec = np.arange(0, Tend+Ts, Ts)
         self.nbPts = len(self.timeVec)
-        self.simOptions = SimOptions(isGGTorqueEnabled = True, isCtrlTorqueEnabled = True)        
-        self.runOptions = RunOptions(isPlot)
+        self.simOptions = SimOptions()        
+        self.runOptions = RunOptions()
         self.ephemEpoch = ephem.J2000
 
 # Simulation options
 class SimOptions:
-    def __init__(self, isGGTorqueEnabled = True, isCtrlTorqueEnabled = True):
-        self.isGGTorqueEnabled = isGGTorqueEnabled
-        self.isCtrlTorqueEnabled = isCtrlTorqueEnabled
+    def __init__(self):
+        self.isGGTorqueEnabled = True
+        self.isCtrlTorqueEnabled = True
         self.isRwAct = False
         self.isThrAct = True
 
 # Run options       
 class RunOptions:
-    def __init__(self, isPlot = False):
-        self.isPlot = isPlot
+    def __init__(self):
+        self.isPlot = True

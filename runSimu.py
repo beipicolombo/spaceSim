@@ -48,7 +48,7 @@ dateTimeStart = ephem.Date("2024/3/9 5:10:10")
 
 # Simulation timestep and duration
 Ts = 1 # [s]
-Tend = 90*60 # [s]
+Tend = 10*60 # [s]
 
 # Simulation options
 isGGTorqueEnabled = False
@@ -121,7 +121,7 @@ scParam.massParam = spacecraftMassModelsDatabase.getSpaceceraftMassModel(spacecr
 
 # Actuators
 scParam.actParam = actModels.ActModelParam(scParam.massParam)
-scParam.actParam.thrModelParam.updateThrSets(1, scParam.massParam);
+scParam.actParam.thrModelParam.initThr(1, scParam.massParam);
 scParam.actParam.thrModelParam.thrSets[0].isOn = True
 # Sensors
 scParam.senParam = senModels.SenModelParam()
@@ -230,6 +230,7 @@ for ii in range(1, simParam.nbPts):
     myDynState.propagateState(scParam.massParam, simParam, modelsBus) 
     modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(myDynState.angRate_BI_B)
     modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(myDynState.qBI.toEuler())
+    # Compute spacecraft angular momentum
     modelsBus = attitudeDynamics.computeAngMom(scParam.massParam, modelsBus) 
 
     # Propagate orbit dynamics

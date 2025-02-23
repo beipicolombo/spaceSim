@@ -55,5 +55,11 @@ def initializeBusesAndSignals(simParam):
     fswBus.addSubBus("command")
     fswBus.subBuses["command"].addSignal("torqueCmdThr_B", 3, unit = "N*m", isLogged = True, timeVec = simParam.timeVec)
     fswBus.subBuses["command"].addSignal("torqueCmdRw_B", 3, unit = "N*m", isLogged = True, timeVec = simParam.timeVec)
+    fswBus.addSubBus("modeMgt")
+    fswBus.subBuses["modeMgt"].addSignal("aocsMode", 1, unit = "-")
+    fswBus.subBuses["modeMgt"].addSignal("aocsGuidMode", 1, unit = "-")
+    fswBus.subBuses["modeMgt"].addSignal("aocsCtrMode", 1, unit = "-")
+    fswBus.subBuses["modeMgt"].addSignal("aocsCtrActMode", 1, unit = "-")
+    fswBus.subBuses["modeMgt"].addSignal("aocsModeElapsedTime", 1, unit = "s", isLogged = True, timeVec = simParam.timeVec)
     
     return (modelsBus, fswBus)

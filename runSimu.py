@@ -20,6 +20,7 @@ import src.data.initData as initData
 import src.data.spacecraftMassModelsDatabase as spacecraftMassModelsDatabase
 
 import src.fsw.fswModel as fswModel
+import src.fsw.fswModeMgt as fswModeMgt
 import src.fsw.fswGuidance as fswGuidance
 import src.fsw.fswEstimation as fswEstimation 
 import src.fsw.fswControl as fswControl
@@ -70,26 +71,32 @@ raan = 90 * deg2rad
 argPer = 90 * deg2rad
 ta = 0 * deg2rad
 
-# Attitude guidance
+# Initial AOCS mode
+# OFF
+# SAFE
+# NOM
+aocsMode = "OFF"
+
+# Initial attitude guidance mode
 # GUIDMODE_OFF
 # GUIDMODE_RATE_DAMPING
 # GUIDMODE_ATT_NADIR
 # GUIDMODE_ATT_INERT
-attitudeGuidanceMode = "GUIDMODE_RATE_DAMPING"
+aocsGuidMode = "OFF"
 GUIDMODE_ATT_INERT_eulerAngGuid_BI = np.array([5, 2, 1]) * deg2rad
 
-# Attitude control
-# CTRLMODE_ATT_CTRL
+# Initial attitude control mode
 # CTRLMODE_OFF
+# CTRLMODE_ATT_CTRL
 # CTRLMODE_RATE_DAMP_CTRL
-fswControlMode = "CTRLMODE_RATE_DAMP_CTRL"
+aocsCtrMode = "CTRLMODE_OFF"
 
-# Actuator selection
+# Initial attitude control mode
 # NONE
 # THR
-# RW = TBW
+# RW => TBW
 # RW_OFFLOADING => TBW
-fswControlActMode = "THR"
+aocsCtrActMode = "THR"
 
 # --------------------------------------------------
 # INITIALIZATION
@@ -134,23 +141,24 @@ scParam.actParam.thrModelParam.thrSets[0].isOn = True
 # Sensors
 scParam.senParam = senModels.SenModelParam()
 
-# [FSW] Functions parameters
+# [FSW] Functions parameters and states
 # ==================================
 print("      [FSW] Functions parameters")
 fswParam = fswModel.Fsw(scParam)
 
 # [Guidance]
-fswParam.guidParam.MODE = attitudeGuidanceMode
 fswParam.guidParam.GUIDMODE_ATT_INERT_eulerAngGuid_BI = GUIDMODE_ATT_INERT_eulerAngGuid_BI
 
 # [Control]
-fswParam.ctrParam.MODE = fswControlMode
-fswParam.ctrParam.ACTMODE = fswControlActMode
 
 # [Command]
 # FSW has full knowledge of actuator model => TBW to be descoped
 fswParam.cmdParam.thrCmdParam = scParam.actParam.thrModelParam
 fswParam.cmdParam.rwCmdParam = scParam.actParam.rwModelParam
+
+# [Mode management]
+fswModeMgtState = fswModeMgt.FswModeMgtState(aocsMode, aocsGuidMode, aocsCtrMode, aocsCtrActMode)
+
 
 # [Models] Attitude and orbit states
 # ==================================
@@ -192,6 +200,10 @@ modelsBus.subBuses["sensors"] = scParam.senParam.computeMeasurements(modelsBus.s
 # [FSW] Functions states
 # ==================================
 print("      [FSW] Functions states")
+
+# [Mode management]
+fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswModeMgtState, fswBus)
+
 # [Estimation]
 fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
 
@@ -267,6 +279,9 @@ for ii in range(1, simParam.nbPts):
 
     # [FSW]
     # ==================================
+    # [Mode management]
+    fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswModeMgtState, fswBus)
+
     # [Estimation] Compute estimated angular rates and / or attitude
     fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
 
@@ -278,7 +293,7 @@ for ii in range(1, simParam.nbPts):
     # Depends on the current control mode
     fswBus.subBuses["control"] = fswControl.computeControl(fswParam.ctrParam, fswBus)
 
-    # [Command]
+    # [Command] Compute actuator commands
     fswBus.subBuses["command"] = fswCommand.computeCommand(fswParam.cmdParam, fswBus)
 
     
@@ -325,4 +340,6 @@ fswBus.subBuses["control"].signals["torqueCtrlRw_B"].timeseries.plot()
 
 fswBus.subBuses["command"].signals["torqueCmdRw_B"].timeseries.plot()
 fswBus.subBuses["command"].signals["torqueCmdThr_B"].timeseries.plot()
+
+fswBus.subBuses["modeMgt"].signals["aocsModeElapsedTime"].timeseries.plot()
 

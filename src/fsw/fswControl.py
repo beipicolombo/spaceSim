@@ -18,8 +18,6 @@ class FswControlParam:
         self.rateDampingKd = 10.0
         self.attControlKp = 0.01
         self.attControlKd = 0.1
-        self.MODE = "CTRLMODE_OFF"
-        self.ACTMODE = "NONE"
 
 # --------------------------------------------------
 # FUNCTIONS
@@ -44,18 +42,20 @@ def computeControl(fswControlParam, fswBus):
     eulerAngEst_BI =  fswBus.subBuses["estimation"].signals["eulerAngEst_BI"].value
     angRateGuid_B = fswBus.subBuses["guidance"].signals["angRateGuid_BI_B"].value
     eulerAngGuid_BI = fswBus.subBuses["guidance"].signals["eulerAngGuid_BI"].value
+    aocsCtrMode = fswBus.subBuses["modeMgt"].signals["aocsCtrMode"].value
+    aocsCtrActMode = fswBus.subBuses["modeMgt"].signals["aocsCtrActMode"].value
 
     # Initialize output bus
     fswControlBusOut = fswBus.subBuses["control"]
 
     # Compute control toraque depending on the current control mode
-    if (fswControlParam.MODE == "CTRLMODE_OFF"):
+    if (aocsCtrMode == "CTRLMODE_OFF"):
         # OFF control mode
         torqueCtrl_B = offControl()
-    elif (fswControlParam.MODE == "CTRLMODE_RATE_DAMP_CTRL"):
+    elif (aocsCtrMode == "CTRLMODE_RATE_DAMP_CTRL"):
         # Rate damping control mode
         torqueCtrl_B = rateControl(fswControlParam, angRateEst_B, angRateGuid_B)
-    elif (fswControlParam.MODE == "CTRLMODE_ATT_CTRL"):
+    elif (aocsCtrMode == "CTRLMODE_ATT_CTRL"):
         # Inertial attitude control mode
         torqueCtrl_B = attitudeControl(fswControlParam, angRateEst_B, eulerAngEst_BI, angRateGuid_B, eulerAngGuid_BI)
     else:
@@ -64,11 +64,11 @@ def computeControl(fswControlParam, fswBus):
 
     
     # Switch between THR and RW control torques
-    if (fswControlParam.ACTMODE == "THR"):
+    if (aocsCtrActMode == "THR"):
         # THR only
         torqueCtrlThr_B = torqueCtrl_B
         torqueCtrlRw_B = offControl()
-    elif (fswControlParam.ACTMODE == "RW"):
+    elif (aocsCtrActMode == "RW"):
         # RW only
         torqueCtrlThr_B = offControl()
         torqueCtrlRw_B = torqueCtrl_B

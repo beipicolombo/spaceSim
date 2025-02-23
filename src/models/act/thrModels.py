@@ -28,12 +28,12 @@ class ThrModelParam:
         for ii in range(1, self.nbThrSet+1):
             self.thrSets.append(ThrSetParam(attDynParam))
 
-    def computeThrTorque(self, fswCtrlBus):
-        torqueCtrl_B = np.array(fswCtrlBus.signals["torqueCtrl_B"].value)
+    def computeThrTorque(self, fswCmdBus):
+        torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdThr_B"].value)
         torqueThr_B = np.array([0, 0, 0])
         if (self.nbThrSet > 0):
             for thrSetParam in self.thrSets:
-                torqueThr_B = torqueThr_B + thrSetParam.computeThrSetTorque(torqueCtrl_B)/self.nbThrSet
+                torqueThr_B = torqueThr_B + thrSetParam.computeThrSetTorque(torqueCmd_B)/self.nbThrSet
         
         return torqueThr_B
 
@@ -53,9 +53,10 @@ class ThrSetParam:
             self.thrUnits.append(ThrUnitParam(ii))
         self.inflMat_B = self.getInfluenceMatrix(attDynParam)
 
-    def computeThrSetTorque(self, torqueCtrl_B):
+    def computeThrSetTorque(self, torqueCmd_B):
+        # TBW once THR commanding is implemented
         if self.isOn:
-            torqueThrSet_B = torqueCtrl_B
+            torqueThrSet_B = torqueCmd_B
         else:
             torqueThrSet_B = np.array([0, 0, 0])
 

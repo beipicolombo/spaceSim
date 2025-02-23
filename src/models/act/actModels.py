@@ -23,7 +23,7 @@ class ActModelParam:
 		self.thrModelParam = thrModels.ThrModelParam(attDynParam)
 		self.rwModelParam = rwModels.RwModelParam()
 
-	def computeActTorque(self, simOptions, fswCtrlBus, modelsActBus):
+	def computeActTorque(self, simOptions, fswCmdBus, modelsActBus):
 		torqueAct_B = np.array([0, 0, 0])
 		torqueThr_B = np.array([0, 0, 0])
 		torqueRw_B = np.array([0, 0, 0])
@@ -31,7 +31,7 @@ class ActModelParam:
 		if simOptions.isRwAct:
 			torqueRw_B = self.rwModelParam.computeRwTorque()
 		elif simOptions.isThrAct:
-			torqueThr_B = self.thrModelParam.computeThrTorque(fswCtrlBus)
+			torqueThr_B = self.thrModelParam.computeThrTorque(fswCmdBus)
 		
 		torqueAct_B = torqueThr_B + torqueRw_B
 

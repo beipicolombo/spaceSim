@@ -28,9 +28,9 @@ class MassParam:
 # --------------------------------------------------
 
 def getUniformCylinderInertia(mass, rad, length):
-    Ixx = 1/2 * mass * rad^2
-    Iyy = 1/4 * mass * rad^2 + 1/12 * mass * length^2
-    Izz = 1/4 * mass * rad^2 + 1/12 * mass * length^2
+    Ixx = 1/2 * mass * rad**2
+    Iyy = 1/4 * mass * rad**2 + 1/12 * mass * length**2
+    Izz = 1/4 * mass * rad**2 + 1/12 * mass * length**2
     inertia = np.diag([Ixx, Iyy, Izz])
     
     return inertia

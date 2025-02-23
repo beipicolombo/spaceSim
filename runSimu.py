@@ -17,6 +17,7 @@ import src.utils.conversions as conversions
 import src.utils.plots as plots
 
 import src.data.initData as initData
+import src.data.spacecraftMassModelsDatabase as spacecraftMassModelsDatabase
 
 import src.fsw.fswModel as fswModel
 import src.fsw.fswGuidance as fswGuidance
@@ -30,7 +31,6 @@ import src.models.scModel as scModel
 import src.models.env.envModel as envModel
 import src.models.act.actModels as actModels
 import src.models.sen.senModels as senModels
-import src.models.dyn.massModels as massModels
 
 # Retrieve useful constants
 pi  = np.pi
@@ -48,7 +48,7 @@ dateTimeStart = ephem.Date("2024/3/9 5:10:10")
 
 # Simulation timestep and duration
 Ts = 1 # [s]
-Tend = 5*60 # [s]
+Tend = 90*60 # [s]
 
 # Simulation options
 isGGTorqueEnabled = False
@@ -58,13 +58,8 @@ isPlot = True
 # S/C attitude and angular rates
 angRate_BI_B = np.array([1, 0.2, -0.3])*deg2rad
 
-# S/C properties
-# Dimensions for rectangle prism
-massSc = 1000 # [kg]
-lx = 2 # [m]
-ly = 2 # [m]
-lz = 4 # [m]
-inertiaSc_B = massModels.getUniformRectanglePrismInertia(massSc, lx, ly, lz)
+# S/C name
+spacecraftName = "spacecraft1"
 
 # Orbit
 perAltitudeInit = 500 * 1e3 # [m]
@@ -110,6 +105,7 @@ print("   FSW / models")
 
 # [Models] Ephemerides and time parameters
 # ==================================
+print("      [Models] Ephemerides and time parameters")
 # Datetime
 currDateTime = dateTimeStart
 # Bodies
@@ -118,13 +114,11 @@ marsEphem.compute(currDateTime, epoch = simParam.ephemEpoch)
 
 # [Models] Spacecraft parameters
 # ==================================
+print("      [Models] Spacecraft parameters")
 # Mass
 scParam = scModel.Spacecraft()
-scParam.massParam.inertiaSc_B = inertiaSc_B
-scParam.massParam.inertiaScInv_B = np.linalg.inv(scParam.massParam.inertiaSc_B)
-scParam.massParam.inertiaSc_G = scParam.massParam.inertiaSc_B
-scParam.massParam.massSc = massSc
-scParam.massParam.massCB = scParam.massParam.massSc
+scParam.massParam = spacecraftMassModelsDatabase.getSpaceceraftMassModel(spacecraftName)    
+
 # Actuators
 scParam.actParam = actModels.ActModelParam(scParam.massParam)
 scParam.actParam.thrModelParam.updateThrSets(1, scParam.massParam);
@@ -134,6 +128,7 @@ scParam.senParam = senModels.SenModelParam()
 
 # [FSW] Functions parameters
 # ==================================
+print("      [FSW] Functions parameters")
 fswParam = fswModel.Fsw()
 
 # [Guidance]
@@ -145,6 +140,7 @@ fswParam.ctrParam.MODE = fswControlMode
 
 # [Models] Attitude and orbit states
 # ==================================
+print("      [Models] Attitude and orbit states")
 # Orbit state
 # Temporary definitions for orbit configuration => to be handled later with dedicated classes / functions
 perRadiusInit = perAltitudeInit + earthRadius
@@ -174,12 +170,14 @@ lvlhFrame.update(orbit, myDynState)
 modelsBus.subBuses["dynamics"].subBuses["frames"].signals["zL_B"].update(lvlhFrame.zL_B)
 modelsBus.subBuses["dynamics"].subBuses["frames"].signals["zL_I"].update(lvlhFrame.zL_I)
 
-# [Models] Spacecraft sensor state
+# [Models] Spacecraft sensors states
 # ==================================
+print("      [Models] Spacecraft sensors states")
 modelsBus.subBuses["sensors"] = scParam.senParam.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
 
 # [FSW] Functions states
 # ==================================
+print("      [FSW] Functions states")
 # [Estimation]
 fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
 
@@ -189,8 +187,10 @@ fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, lv
 # [Control]
 fswBus.subBuses["control"] = fswControl.computeControl(fswParam.ctrParam, fswBus)
 
-# [Models] Environment / actuators state
+# [Models] Environment / actuators states
 # ==================================
+print("      [Models] Environment / actuators states")
+
 # Disturbance torque
 modelsBus.subBuses["environment"] = envModel.computeExtTorque(simParam, scParam.massParam, orbit, lvlhFrame, modelsBus.subBuses["environment"])
  
@@ -217,7 +217,7 @@ for ii in range(1, simParam.nbPts):
     marsEphem.compute(currDateTime, epoch = simParam.ephemEpoch)
     sunToMarsDir_I = conversions.latLonToCartesian(marsEphem.hlat/deg2rad, marsEphem.hlon/deg2rad, 1)
     
-    # Environment torques
+    # Environment
     modelsBus.subBuses["environment"] = envModel.computeExtTorque(simParam, scParam.massParam, orbit, lvlhFrame, modelsBus.subBuses["environment"])
 
     # Actuators
@@ -237,7 +237,8 @@ for ii in range(1, simParam.nbPts):
     modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(orbit.pos_I)
     modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(orbit.vel_I)
     
-    # Update LVLH frame
+    # Frames
+    # LVLH frames
     lvlhFrame.update(orbit, myDynState)
     modelsBus.subBuses["dynamics"].subBuses["frames"].signals["zL_B"].update(lvlhFrame.zL_B)
     modelsBus.subBuses["dynamics"].subBuses["frames"].signals["zL_I"].update(lvlhFrame.zL_I)
@@ -277,6 +278,8 @@ print("Post-processing...")
 # --------------------------------------------------
 print("Plots...")
 
+plt.show(block = False)
+plt.pause(3)
 plt.close("all")
 
 plots.plotOrbit3d(modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].timeseries, const.earthRadius)
@@ -293,3 +296,4 @@ modelsBus.subBuses["environment"].signals["torqueExt_B"].timeseries.plot()
 
 fswBus.subBuses["guidance"].signals["angRateGuid_BI_B"].timeseries.rad2deg().plot()
 fswBus.subBuses["control"].signals["torqueCtrl_B"].timeseries.plot()
+

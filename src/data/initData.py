@@ -60,5 +60,6 @@ def initializeBusesAndSignals(simParam):
     fswBus.subBuses["modeMgt"].addSignal("aocsGuidMode", 1, unit = "-")
     fswBus.subBuses["modeMgt"].addSignal("aocsCtrMode", 1, unit = "-")
     fswBus.subBuses["modeMgt"].addSignal("aocsCtrActMode", 1, unit = "-")
+    fswBus.subBuses["modeMgt"].addSignal("aocsModeElapsedTime", 1, unit = "s", isLogged = True, timeVec = simParam.timeVec)
     
     return (modelsBus, fswBus)

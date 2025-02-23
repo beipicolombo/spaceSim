@@ -201,7 +201,7 @@ modelsBus.subBuses["sensors"] = scParam.senParam.computeMeasurements(modelsBus.s
 print("      [FSW] Functions states")
 
 # [Mode management]
-fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(fswModeMgtState, fswBus)
+fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswModeMgtState, fswBus)
 
 # [Estimation]
 fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
@@ -279,7 +279,7 @@ for ii in range(1, simParam.nbPts):
     # [FSW]
     # ==================================
     # [Mode management]
-    fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(fswModeMgtState, fswBus)
+    fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswModeMgtState, fswBus)
 
     # [Estimation] Compute estimated angular rates and / or attitude
     fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
@@ -339,4 +339,6 @@ fswBus.subBuses["control"].signals["torqueCtrlRw_B"].timeseries.plot()
 
 fswBus.subBuses["command"].signals["torqueCmdRw_B"].timeseries.plot()
 fswBus.subBuses["command"].signals["torqueCmdThr_B"].timeseries.plot()
+
+fswBus.subBuses["modeMgt"].signals["aocsModeElapsedTime"].timeseries.plot()
 

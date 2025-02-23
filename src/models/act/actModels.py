@@ -29,9 +29,9 @@ class ActModelParam:
 		torqueRw_B = np.array([0, 0, 0])
 
 		if simOptions.isRwAct:
-			torqueThr_B = self.rwModelParam.computeRwTorque()
+			torqueRw_B = self.rwModelParam.computeRwTorque()
 		elif simOptions.isThrAct:
-			torqueRw_B = self.thrModelParam.computeThrTorque(fswCtrlBus)
+			torqueThr_B = self.thrModelParam.computeThrTorque(fswCtrlBus)
 		
 		torqueAct_B = torqueThr_B + torqueRw_B
 

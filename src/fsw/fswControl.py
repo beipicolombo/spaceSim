@@ -15,15 +15,11 @@ import numpy as np
 class FswControlParam:
     # To be moved as higher level class
     def __init__(self):
-        self.rateDampingKd = 0.1
+        self.rateDampingKd = 10.0
         self.attControlKp = 0.01
         self.attControlKd = 0.1
-        self.MODE = FswControlMode()
-   
-class FswControlMode:
-    def __init__(self):
         self.MODE = "CTRLMODE_OFF"
-
+        self.ACTMODE = "NONE"
 
 # --------------------------------------------------
 # FUNCTIONS
@@ -65,11 +61,34 @@ def computeControl(fswControlParam, fswBus):
     else:
         # OFF control mode or current mode is not defined
         torqueCtrl_B = offControl()
+
+    
+    # Switch between THR and RW control torques
+    if (fswControlParam.ACTMODE == "THR"):
+        # THR only
+        torqueCtrlThr_B = torqueCtrl_B
+        torqueCtrlRw_B = offControl()
+    elif (fswControlParam.ACTMODE == "RW"):
+        # RW only
+        torqueCtrlThr_B = offControl()
+        torqueCtrlRw_B = torqueCtrl_B
+    else :
+        # RW_OFFLOADING => TBW
+        torqueCtrlThr_B = offControl()
+        torqueCtrlRw_B = offControl()
         
     # Update output bus signals
-    fswControlBusOut.signals["torqueCtrl_B"].value = torqueCtrl_B
+<<<<<<< HEAD
+    fswControlBusOut.signals["torqueCtrl_B"].update(torqueCtrl_B)
     
     return fswControlBusOut
+=======
+    fswControlBusOut.signals["torqueCtrl_B"].value = torqueCtrl_B
+    fswControlBusOut.signals["torqueCtrlThr_B"].value = torqueCtrlThr_B
+    fswControlBusOut.signals["torqueCtrlRw_B"].value = torqueCtrlRw_B
+        
+    return (fswControlBusOut)
+>>>>>>> 65bec56 (200 - NEW add switch to select between RW and THR - based control (only THR are used for now), with control parameter (to be embedded in the future mode management))
 
 
 # --------------------------------------------------

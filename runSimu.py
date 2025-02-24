@@ -82,21 +82,18 @@ aocsMode = "OFF"
 # GUIDMODE_RATE_DAMPING
 # GUIDMODE_ATT_NADIR
 # GUIDMODE_ATT_INERT
-aocsGuidMode = "OFF"
 GUIDMODE_ATT_INERT_eulerAngGuid_BI = np.array([5, 2, 1]) * deg2rad
 
 # Initial attitude control mode
 # CTRLMODE_OFF
 # CTRLMODE_ATT_CTRL
 # CTRLMODE_RATE_DAMP_CTRL
-aocsCtrMode = "CTRLMODE_OFF"
 
 # Initial attitude control mode
 # NONE
 # THR
 # RW => TBW
 # RW_OFFLOADING => TBW
-aocsCtrActMode = "THR"
 
 # --------------------------------------------------
 # INITIALIZATION
@@ -157,7 +154,7 @@ fswParam.cmdParam.thrCmdParam = scParam.actParam.thrModelParam
 fswParam.cmdParam.rwCmdParam = scParam.actParam.rwModelParam
 
 # [Mode management]
-fswModeMgtState = fswModeMgt.FswModeMgtState(aocsMode, aocsGuidMode, aocsCtrMode, aocsCtrActMode)
+fswModeMgtState = fswModeMgt.FswModeMgtState(aocsMode)
 
 
 # [Models] Attitude and orbit states
@@ -202,7 +199,7 @@ modelsBus.subBuses["sensors"] = scParam.senParam.computeMeasurements(modelsBus.s
 print("      [FSW] Functions states")
 
 # [Mode management]
-fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswModeMgtState, fswBus)
+fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus)
 
 # [Estimation]
 fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
@@ -280,7 +277,7 @@ for ii in range(1, simParam.nbPts):
     # [FSW]
     # ==================================
     # [Mode management]
-    fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswModeMgtState, fswBus)
+    fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus)
 
     # [Estimation] Compute estimated angular rates and / or attitude
     fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
@@ -320,6 +317,7 @@ plt.show(block = False)
 plt.pause(3)
 plt.close("all")
 
+
 plots.plotOrbit3d(modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].timeseries, const.earthRadius)
 
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].timeseries.rad2deg().plot()
@@ -327,7 +325,7 @@ modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].times
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].timeseries.plot()
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].timeseries.plot()
 
-modelsBus.subBuses["sensors"].signals["angRateMeas_BI_B"].timeseries.plot()
+modelsBus.subBuses["sensors"].signals["angRateMeas_BI_B"].timeseries.rad2deg().plot()
 modelsBus.subBuses["actuators"].signals["torqueThr_B"].timeseries.plot()
 
 modelsBus.subBuses["environment"].signals["torqueExt_B"].timeseries.plot()

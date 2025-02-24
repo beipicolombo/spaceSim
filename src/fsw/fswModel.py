@@ -3,6 +3,7 @@ import src.fsw.fswControl as fswControl
 import src.fsw.fswEstimation as fswEstimation
 import src.fsw.fswGuidance as fswGuidance
 import src.fsw.fswCommand as fswCommand
+import src.fsw.fswModeMgt as fswModeMgt
 
 # To be moved as common constants
 pi  = np.pi
@@ -23,6 +24,9 @@ class Fsw:
 		# Command
 		self.cmdParam = fswCommand.FswCommandParam(scParam.actParam)
 		# Common
+
+		# Mode management
+		self.modeMgtParam = fswModeMgt.FswModeMgtParam()
 
 # --------------------------------------------------
 # FUNCTIONS

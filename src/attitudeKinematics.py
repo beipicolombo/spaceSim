@@ -42,11 +42,16 @@ class Quaternion:
         return np.append([self.sca], self.vec)  
     
     def toEuler(self):
+        # Source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+        qw = self.sca
+        qx = self.vec[0]
+        qy = self.vec[1]
+        qz = self.vec[2]
         sca = self.sca
         vec = self.vec        
-        phi   = m.atan2(2 * (sca*vec[0] + vec[1]*vec[2]), (1 - 2*(vec[0]**2+vec[1]**2)))
-        theta = m.asin(2 * (sca*vec[1] - vec[2]*vec[0])) 
-        psi   = m.atan2(2 * (sca*vec[2] + vec[0]*vec[1]), (1 - 2*(vec[1]**2+vec[2]**2)))
+        phi   = m.atan2(2 * (qw*qx + qy*qz), (1 - 2*(qx**2+qy**2)))
+        theta = m.asin(2 * (qw*qy - qz*qx)) 
+        psi   = m.atan2(2 * (qw*qz + qx*qy), (1 - 2*(qy**2+qz**2)))
         eulerAngles = np.array([phi, theta, psi])
         return eulerAngles
 

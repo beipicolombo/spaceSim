@@ -72,28 +72,31 @@ argPer = 90 * deg2rad
 ta = 0 * deg2rad
 
 # Initial AOCS mode
-# OFF
-# SAFE
-# NOM
-aocsMode = "OFF"
+# OFF (Off)
+# SAFE (Safe)
+# NOM (Nominal)
+# OCM (Orbit Control Mode)
+aocsMode = "NOM"
 
-# Initial attitude guidance mode
-# GUIDMODE_OFF
-# GUIDMODE_RATE_DAMPING
-# GUIDMODE_ATT_NADIR
-# GUIDMODE_ATT_INERT
-GUIDMODE_ATT_INERT_eulerAngGuid_BI = np.array([5, 2, 1]) * deg2rad
+# Initial guidance mode
+# GUIDMODE_OFF (Off)
+# GUIDMODE_RATE_DAMPING (Rate damping)
+# GUIDMODE_ATT_NADIR (Nadir pointing)
+# GUIDMODE_SLEW (Slew) => TBW
+# GUIDMODE_ATT_INERT (Attitude inertial pointing)
+GUIDMODE_ATT_INERT_eulerAngGuid_BI = np.array([25, 0, 0]) * deg2rad
 
-# Initial attitude control mode
-# CTRLMODE_OFF
-# CTRLMODE_ATT_CTRL
-# CTRLMODE_RATE_DAMP_CTRL
+# Initial control mode
+# CTRLMODE_OFF (Off)
+# CTRLMODE_ATT_CTRL (Attitude control)
+# CTRLMODE_RATE_DAMP_CTRL (Rate control)
+# CTRLMOD_THRUST_CTRL  (Thrust control)
 
-# Initial attitude control mode
-# NONE
-# THR
-# RW => TBW
-# RW_OFFLOADING => TBW
+# Initial actuator mode
+# NONE (None)
+# THR (Thrusters)
+# RW (Reaction wheels) => TBW
+# RW_OFFLOADING (Reaction wheels offloading) => TBW
 
 # --------------------------------------------------
 # INITIALIZATION
@@ -320,24 +323,25 @@ plt.close("all")
 
 plots.plotOrbit3d(modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].timeseries, const.earthRadius)
 
-modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].timeseries.rad2deg().plot()
+modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].timeseries.addNorm().rad2deg().plot()
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].timeseries.rad2deg().plot()
-modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].timeseries.plot()
-modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].timeseries.plot()
+modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].timeseries.addNorm().plot()
+modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].timeseries.addNorm().plot()
 
-modelsBus.subBuses["sensors"].signals["angRateMeas_BI_B"].timeseries.rad2deg().plot()
-modelsBus.subBuses["actuators"].signals["torqueThr_B"].timeseries.plot()
+modelsBus.subBuses["sensors"].signals["angRateMeas_BI_B"].timeseries.addNorm().rad2deg().plot()
+modelsBus.subBuses["actuators"].signals["torqueThr_B"].timeseries.addNorm().plot()
 
-modelsBus.subBuses["environment"].signals["torqueExt_B"].timeseries.plot()
+modelsBus.subBuses["environment"].signals["torqueExt_B"].timeseries.addNorm().plot()
 
 fswBus.subBuses["guidance"].signals["angRateGuid_BI_B"].timeseries.rad2deg().plot()
-fswBus.subBuses["control"].signals["torqueCtrl_B"].timeseries.plot()
-fswBus.subBuses["control"].signals["torqueCtrlThr_B"].timeseries.plot()
-fswBus.subBuses["control"].signals["torqueCtrlRw_B"].timeseries.plot()
+fswBus.subBuses["control"].signals["forceCtrl_B"].timeseries.addNorm().plot()
+fswBus.subBuses["control"].signals["torqueCtrl_B"].timeseries.addNorm().plot()
+fswBus.subBuses["control"].signals["torqueCtrlThr_B"].timeseries.addNorm().plot()
+fswBus.subBuses["control"].signals["torqueCtrlRw_B"].timeseries.addNorm().plot()
 
 
-fswBus.subBuses["command"].signals["torqueCmdRw_B"].timeseries.plot()
-fswBus.subBuses["command"].signals["torqueCmdThr_B"].timeseries.plot()
+fswBus.subBuses["command"].signals["torqueCmdRw_B"].timeseries.addNorm().plot()
+fswBus.subBuses["command"].signals["torqueCmdThr_B"].timeseries.addNorm().plot()
 
 fswBus.subBuses["modeMgt"].signals["aocsModeElapsedTime"].timeseries.plot()
 

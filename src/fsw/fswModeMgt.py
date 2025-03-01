@@ -10,10 +10,11 @@ deg2rad = pi/180
 # --------------------------------------------------
 class FswModeMgtParam:
 	def __init__(self):
-		self.aocsOffModeMinDur = 10*60 # [s]
+		self.aocsOffModeMinDur = 10 # [s]
 		self.aocsSafeModeMinDur = 0*60 # [s]
 		self.aocsSafeModeAngRateThd = 0.1*deg2rad # [s]
 		self.aocsSafeModeAngRateThdDur = 30*60 # [s]
+		self.aocsNomModeMinDur = 15*60 # [s]
 		self.aocsNomModeAngRateThd = 0.01*deg2rad # [s]
 		self.aocsNomModeAngRateThdDur = 10*60 # [s]
 
@@ -61,7 +62,11 @@ class FswModeMgtState:
 			# Transition OFF -> SAFE
 			aocsMode = "SAFE"
 		elif ((self.aocsMode == "SAFE") and (self.aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur) and isRateCvg):
+			# Transition SAFE -> NOM
 			aocsMode = "NOM"
+		elif ((self.aocsMode == "NOM") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomModeMinDur) and isRateCvg):
+			# Transition NOM -> OCM, TBW dummy for now
+			aocsMode = "OCM"
 		else: 
 			# Otherwise in current mode
 			aocsMode = self.aocsMode
@@ -130,6 +135,8 @@ def aocsGuidanceModeLogic(aocsMode):
 		aocsGuidMode = "GUIDMODE_RATE_DAMPING"
 	elif (aocsMode == "NOM"):
 		aocsGuidMode = "GUIDMODE_ATT_INERT" 
+	elif (aocsMode == "OCM"):
+		aocsGuidMode = "GUIDMODE_ATT_INERT"
 	else:
 		aocsGuidMode = "GUIDMODE_OFF"
 
@@ -141,6 +148,9 @@ def aocsCtrModeLogic(aocsMode):
 		aocsCtrActMode = "THR"
 	elif (aocsMode == "NOM"):
 		aocsCtrMode = "CTRLMODE_ATT_CTRL"
+		aocsCtrActMode = "THR"
+	elif (aocsMode == "OCM"):
+		aocsCtrMode = "CTRLMODE_THRUST_CTRL"
 		aocsCtrActMode = "THR"
 	else:
 		aocsCtrMode = "CTRLMODE_OFF"

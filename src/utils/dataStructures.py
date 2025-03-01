@@ -70,7 +70,15 @@ class Timeseries:
         else:
             self.unit = "deg/s^2"
         return self
-        
+
+    def addNorm(self):
+        dataVecNorm = np.reshape(np.linalg.norm(self.dataVec, axis = 1), (len(self.timeVec), 1))
+        self.dataVec = np.concatenate((self.dataVec, dataVecNorm), axis = 1)
+        self.nComponents += 1
+
+        return self
+
+
     def deg2rad(self):      
         self.dataVec = self.dataVec * deg2rad
         if self.unit == "deg":

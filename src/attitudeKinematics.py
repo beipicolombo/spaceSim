@@ -50,6 +50,24 @@ class Quaternion:
         eulerAngles = np.array([phi, theta, psi])
         return eulerAngles
 
+    def toDcm(self):
+        # Source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+        qw = self.sca
+        qx = self.vec[0]
+        qy = self.vec[1]
+        qz = self.vec[2]
+        M11 = qw**2 + qx**2 - qy**2 - qz**2
+        M12 = 2*(qx*qy - qw*qz)
+        M13 = 2*(qw*qy + qw*qz)
+        M21 = 2*(qx*qy + qw*qz)
+        M22 = qw**2 - qx**2 + qy**2 - qz**2
+        M23 = 2*(qy*qz - qw*qx)
+        M31 = 2*(qx*qz - qw*qy)
+        M32 = 2*(qw*qx + qy*qz)
+        M33 = qw**2 - qx**2 - qy**2 + qz**2
+        dcm = np.array([[M11, M12, M13], [M21, M22, M23], [M31, M32, M33]])
+        return dcm
+
     def propagateState(self, angleRates_B, simParam):
         xPrev = self.toVec()
         Ts = simParam.Ts
@@ -134,7 +152,7 @@ def trans_VecToCrossMat(vec):
     return crossMat        
 
 
-# Quaternion to rotation (vector + angle)
+# Rotation (vector + angle) to quaternion
 def trans_AngVecToQuat(angle, vec):
     quatSca = m.cos(angle/2)
     quatVec = m.sin(angle/2)*np.array(vec)

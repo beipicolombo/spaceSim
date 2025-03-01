@@ -186,6 +186,8 @@ modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].upda
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(myDynState.qBI.toEuler())
 modelsBus = attitudeDynamics.computeAngMom(scParam.massParam, modelsBus) 
 
+myDynState.qBI.toDcm()
+
 # LVLH frame
 lvlhFrame = envModel.LVLHframe()
 lvlhFrame.update(orbit, myDynState)

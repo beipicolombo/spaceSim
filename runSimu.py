@@ -28,9 +28,10 @@ import src.fsw.fswCommand as fswCommand
 
 import src.attitudeDynamics as attitudeDynamics
 import src.orbitDynamics as orbitDynamics
+import src.attitudeKinematics as attitudeKinematics
 
 import src.models.scModel as scModel
-import src.models.env.envModel as envModel
+import src.models.spaceEnv.envModel as envModel
 import src.models.act.actModels as actModels
 import src.models.sen.senModels as senModels
 
@@ -185,8 +186,6 @@ myDynState.angRate_BI_B = angRate_BI_B
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(angRate_BI_B)
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(myDynState.qBI.toEuler())
 modelsBus = attitudeDynamics.computeAngMom(scParam.massParam, modelsBus) 
-
-myDynState.qBI.toDcm()
 
 # LVLH frame
 lvlhFrame = envModel.LVLHframe()

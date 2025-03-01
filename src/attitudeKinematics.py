@@ -42,11 +42,16 @@ class Quaternion:
         return np.append([self.sca], self.vec)  
     
     def toEuler(self):
+        # Source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+        qw = self.sca
+        qx = self.vec[0]
+        qy = self.vec[1]
+        qz = self.vec[2]
         sca = self.sca
         vec = self.vec        
-        phi   = m.atan2(2 * (sca*vec[0] + vec[1]*vec[2]), (1 - 2*(vec[0]**2+vec[1]**2)))
-        theta = m.asin(2 * (sca*vec[1] - vec[2]*vec[0])) 
-        psi   = m.atan2(2 * (sca*vec[2] + vec[0]*vec[1]), (1 - 2*(vec[1]**2+vec[2]**2)))
+        phi   = m.atan2(2 * (qw*qx + qy*qz), (1 - 2*(qx**2+qy**2)))
+        theta = m.asin(2 * (qw*qy - qz*qx)) 
+        psi   = m.atan2(2 * (qw*qz + qx*qy), (1 - 2*(qy**2+qz**2)))
         eulerAngles = np.array([phi, theta, psi])
         return eulerAngles
 
@@ -158,6 +163,23 @@ def trans_AngVecToQuat(angle, vec):
     quatVec = m.sin(angle/2)*np.array(vec)
     quatOut = Quaternion(quatSca,quatVec)
     return quatOut
+
+# 321 euler angles to quaternion
+def trans_EulerAngToQuat(eulerAngles):
+    # Source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    # Euler angles vectors: [0] roll , [1] pitch, [2] yaw
+    cr = np.cos(eulerAngles[0]/2)
+    cp = np.cos(eulerAngles[1]/2)
+    cy = np.cos(eulerAngles[2]/2)
+    sr = np.sin(eulerAngles[0]/2)
+    sp = np.sin(eulerAngles[1]/2)
+    sy = np.sin(eulerAngles[2]/2)
+    quat = Quaternion()
+    quat.sca    = cr*cp*cy + sr*sp*sy
+    quat.vec[0] = sr*cp*cy - cr*sp*sy
+    quat.vec[1] = cr*sp*cy + sr*cp*sy
+    quat.vec[2] = cr*cp*sy - sr*sp*cy
+    return quat
 
 
 # X axis rotation DCM

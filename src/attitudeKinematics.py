@@ -159,6 +159,23 @@ def trans_AngVecToQuat(angle, vec):
     quatOut = Quaternion(quatSca,quatVec)
     return quatOut
 
+# 321 euler angles to quaternion
+def trans_EulerAngToQuat(eulerAngles):
+    # Source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+    # Euler angles vectors: [0] roll , [1] pitch, [2] yaw
+    cr = np.cos(eulerAngles[0]/2)
+    cp = np.cos(eulerAngles[1]/2)
+    cy = np.cos(eulerAngles[2]/2)
+    sr = np.sin(eulerAngles[0]/2)
+    sp = np.sin(eulerAngles[1]/2)
+    sy = np.sin(eulerAngles[2]/2)
+    quat = Quaternion()
+    quat.sca    = cr*cp*cy + sr*sp*sy
+    quat.vec[0] = sr*cp*cy - cr*sp*sy
+    quat.vec[1] = cr*sp*cy + sr*cp*sy
+    quat.vec[2] = cr*cp*sy - sr*sp*cy
+    return quat
+
 
 # X axis rotation DCM
 def Rx(ang):

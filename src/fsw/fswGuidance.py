@@ -42,6 +42,7 @@ def offGuidance():
     return (angRateGuid_B, eulerAngGuid_BI)
 
 def nadirGuidance(dcmIL):
+    # TBW
     angRateGuid_B = np.array([0, 0, 0])
     eulerAngGuid_BI = np.array([0, 0, 0])
     

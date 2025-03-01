@@ -59,7 +59,7 @@ isCtrlTorqueEnabled = True
 isPlot = True
 
 # S/C attitude and angular rates
-angRate_BI_B = np.array([1, 0.2, -0.3])*deg2rad
+angRate_BI_B = np.array([1, 0.2, -0.3])*deg2rad/1e3
 
 # S/C name
 spacecraftName = "spacecraft1"
@@ -75,9 +75,11 @@ ta = 0 * deg2rad
 # Initial AOCS mode
 # OFF (Off)
 # SAFE (Safe)
-# NOM (Nominal)
+# NOM_PTNG (Nominal - pointing) => To be added
+# NOM_EQ (Nominal - equilibrium) => To be added
+# NOM_SLEW (Nominal - slew) => To be added
 # OCM (Orbit Control Mode)
-aocsMode = "NOM"
+aocsMode = "NOM_EQ"
 
 # Initial guidance mode
 # GUIDMODE_OFF (Off)
@@ -209,6 +211,7 @@ fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswMo
 fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
 
 # [Guidance]
+fswParam.guidParam.orbitRate = orbit.orbitContext.orbitPulse
 fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, lvlhFrame, modelsBus, fswBus)
 
 # [Control]
@@ -335,11 +338,12 @@ modelsBus.subBuses["actuators"].signals["torqueThr_B"].timeseries.addNorm().plot
 modelsBus.subBuses["environment"].signals["torqueExt_B"].timeseries.addNorm().plot()
 
 fswBus.subBuses["guidance"].signals["angRateGuid_BI_B"].timeseries.rad2deg().plot()
+fswBus.subBuses["guidance"].signals["eulerAngGuid_BI"].timeseries.rad2deg().plot()
+
 fswBus.subBuses["control"].signals["forceCtrl_B"].timeseries.addNorm().plot()
 fswBus.subBuses["control"].signals["torqueCtrl_B"].timeseries.addNorm().plot()
 fswBus.subBuses["control"].signals["torqueCtrlThr_B"].timeseries.addNorm().plot()
 fswBus.subBuses["control"].signals["torqueCtrlRw_B"].timeseries.addNorm().plot()
-
 
 fswBus.subBuses["command"].signals["torqueCmdRw_B"].timeseries.addNorm().plot()
 fswBus.subBuses["command"].signals["torqueCmdThr_B"].timeseries.addNorm().plot()

@@ -23,6 +23,7 @@ class LVLHframe:
         self.zL_B = np.array([1, 0, 0])
         self.zL_I = np.array([1, 0, 0])
         self.eulerAng_LI = np.array([0, 0, 0])
+        self.qLI = attitudeKinematics.Quaternion()
 
     def update(self, orbit, dynState):
         zL_L = np.array([0, 0, 1])
@@ -39,7 +40,7 @@ class LVLHframe:
         self.dcmLI = dcmLI
         self.zL_B = zL_B
         self.zL_I = zL_I
-        self.eulerAng_LI
+        self.eulerAng_LI = eulerAng_LI
         self.qLI = qLI
 
 # --------------------------------------------------

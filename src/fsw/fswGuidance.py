@@ -18,6 +18,7 @@ class FswGuidanceParam:
     # To be moved as higher level class
     def __init__(self):
         self.GUIDMODE_ATT_INERT_eulerAngGuid_BI = np.array([0, 0, 0])*deg2rad
+        self.orbitRate = 0 # [rad/s]
 
 
 # --------------------------------------------------
@@ -41,10 +42,9 @@ def offGuidance():
     
     return (angRateGuid_B, eulerAngGuid_BI)
 
-def nadirGuidance(dcmIL):
-    # TBW
-    angRateGuid_B = np.array([0, 0, 0])
-    eulerAngGuid_BI = np.array([0, 0, 0])
+def nadirGuidance(fswGuidanceParam, eulerAng_LI):
+    angRateGuid_B = np.array([0, -fswGuidanceParam.orbitRate, 0])
+    eulerAngGuid_BI = eulerAng_LI
     
     return (angRateGuid_B, eulerAngGuid_BI)
 
@@ -66,7 +66,7 @@ def computeGuidance(fswGuidanceParam, lvlhFrame, modelsBus, fswBus):
         (angRateGuid_B, eulerAngGuid_BI) = rateDampingGuidance()
     elif (aocsGuidMode == "GUIDMODE_ATT_NADIR"):
         # Nadir guidance mode
-        (angRateGuid_B, eulerAngGuid_BI) = nadirGuidance(lvlhFrame.dcmIL)
+        (angRateGuid_B, eulerAngGuid_BI) = nadirGuidance(fswGuidanceParam, lvlhFrame.eulerAng_LI)
     else:
         # OFF guidance mode or current mode is not defined
         aocsGuidMode = "GUIDMODE_OFF"

@@ -44,7 +44,7 @@ def initializeBusesAndSignals(simParam):
     fswBus = dataStructures.DataBus("fswBus")
     fswBus.addSubBus("guidance")
     fswBus.subBuses["guidance"].addSignal("angRateGuid_BI_B", 3, unit = "rad/s", isLogged = True, timeVec = simParam.timeVec)
-    fswBus.subBuses["guidance"].addSignal("eulerAngGuid_BI", 3, unit = "rad")    
+    fswBus.subBuses["guidance"].addSignal("eulerAngGuid_BI", 3, unit = "rad", isLogged = True, timeVec = simParam.timeVec)
     fswBus.addSubBus("control")
     fswBus.subBuses["control"].addSignal("forceCtrl_B", 3, unit = "N", isLogged = True, timeVec = simParam.timeVec)
     fswBus.subBuses["control"].addSignal("torqueCtrl_B", 3, unit = "N*m", isLogged = True, timeVec = simParam.timeVec)

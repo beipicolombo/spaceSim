@@ -31,7 +31,7 @@ import src.orbitDynamics as orbitDynamics
 import src.attitudeKinematics as attitudeKinematics
 
 import src.models.scModel as scModel
-import src.models.env.envModel as envModel
+import src.models.spaceEnv.envModel as envModel
 import src.models.act.actModels as actModels
 import src.models.sen.senModels as senModels
 

@@ -29,6 +29,8 @@ class SenModelParam:
 
 		modelsSenBus.signals["angRateMeas_BI_B"].update(angRateMeas_BI_B)
 		modelsSenBus.signals["eulerAngMeas_BI"].update(eulerAngMeas_BI)
+		modelsSenBus.signals["qBImeas_sca"].update(qBImeas.sca)
+		modelsSenBus.signals["qBImeas_vec"].update(qBImeas.vec)
 
 		return modelsSenBus
 

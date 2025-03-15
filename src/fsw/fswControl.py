@@ -15,9 +15,22 @@ import numpy as np
 class FswControlParam:
     # To be moved as higher level class
     def __init__(self):
-        self.rateDampingKd = 10.0
-        self.attControlKp = 0.1
-        self.attControlKd = 10
+        self.rateDampingKd = 10.0*np.eye(3)
+        self.attControlKp = 0.1*np.eye(3)
+        self.attControlKd = 10*np.eye(3)
+
+    def attControlSimplifiedTuning(self, overshoot, timeResp, inertia):
+        # Get damping
+        damp = np.sqrt(np.log(overshoot)**2/(np.pi**2 + np.log(overshoot)**2))
+        # Get natural pulse
+        omega_n = 2/(timeResp * damp)
+
+        # Get controller gains
+        Kp = omega_n**2 * inertia
+        Kd = 2*damp*omega_n * inertia
+
+        self.attControlKd = Kd
+        self.attControlKp = Kp
 
 # --------------------------------------------------
 # FUNCTIONS
@@ -28,12 +41,12 @@ def thrustControl(fswControlParam):
     return forceCtrl_B
 
 def rateControl(fswControlParam, angRateEst_B, angRateGuid_B):
-    torqueCtrl_B = fswControlParam.rateDampingKd * (angRateGuid_B - angRateEst_B)
+    torqueCtrl_B = np.matmul(fswControlParam.rateDampingKd, (angRateGuid_B - angRateEst_B))
     
     return torqueCtrl_B
 
 def attitudeControl(fswControlParam, angRateMeas_B, eulerAngMeas_BI, angRateGuid_B, eulerAngGuid_BI):
-    torqueCtrl_B = fswControlParam.attControlKd * (angRateGuid_B - angRateMeas_B) + fswControlParam.attControlKp * (eulerAngGuid_BI - eulerAngMeas_BI)
+    torqueCtrl_B = np.matmul(fswControlParam.attControlKd, (angRateGuid_B - angRateMeas_B)) + np.matmul(fswControlParam.attControlKp, (eulerAngGuid_BI - eulerAngMeas_BI))
     
     return torqueCtrl_B
 

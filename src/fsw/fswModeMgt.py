@@ -11,11 +11,18 @@ deg2rad = pi/180
 class FswModeMgtParam:
 	def __init__(self):
 		self.aocsOffModeMinDur = 10 # [s]
+		# SAFE mode parameters
 		self.aocsSafeModeMinDur = 0*60 # [s]
 		self.aocsSafeModeAngRateThd = 0.1*deg2rad # [s]
 		self.aocsSafeModeAngRateThdDur = 30*60 # [s]
+		self.isAutoSafeToNomPtngModeAllwd = False
+		# NOM_PTNG parameters
 		self.aocsNomPtngModeMinDur = 15*60 # [s]
-		self.aocsNomEqModeMinDur = 90*60 # [s]
+		self.isAutoNomPtngToNomEqAllwd = True
+		# NOM_EQ parameters
+		self.aocsNomEqModeMinDur = 90*60 # [s
+		self.isAutoNomToOcmAllwd = False
+		# NOM common parameters
 		self.aocsNomModeAngRateThd = 0.01*deg2rad # [s]
 		self.aocsNomModeAngRateThdDur = 10*60 # [s]
 
@@ -62,13 +69,13 @@ class FswModeMgtState:
 		if ((self.aocsMode == "OFF") and (self.aocsModeElapsedTime >= modeMgtParam.aocsOffModeMinDur)):
 			# Transition OFF -> SAFE
 			aocsMode = "SAFE"
-		elif ((self.aocsMode == "SAFE") and (self.aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur) and isRateCvg):
+		elif ((self.aocsMode == "SAFE") and (self.aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur) and isRateCvg and modeMgtParam.isAutoSafeToNomPtngModeAllwd):
 			# Transition SAFE -> NOM_PTNG
 			aocsMode = "NOM_PTNG"
-		elif ((self.aocsMode == "NOM_PTNG") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur) and isRateCvg):
+		elif ((self.aocsMode == "NOM_PTNG") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur) and isRateCvg and modeMgtParam.isAutoNomPtngToNomEqAllwd):
 			# Transition NOM -> OCM, TBW dummy for now
 			aocsMode = "NOM_EQ"
-		elif ((self.aocsMode == "NOM_EQ") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomEqModeMinDur) and isRateCvg):
+		elif ((self.aocsMode == "NOM_EQ") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomEqModeMinDur) and isRateCvg and modeMgtParam.isAutoNomToOcmAllwd):
 			aocsMode = "OCM"
 		else: 
 			# Otherwise in current mode

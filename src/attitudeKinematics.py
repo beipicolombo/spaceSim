@@ -175,12 +175,12 @@ def trans_VecToQuat(vec, isScalarFirst):
 # Vector to skew matrix
 def trans_VecToCrossMat(vec):
     crossMat = np.zeros((3,3))
-    crossMat[0,1] = vec[2]
-    crossMat[0,2] = -vec[1]
-    crossMat[1,2] = vec[0]
-    crossMat[1,0] = -vec[2]
-    crossMat[2,0] = vec[1]
-    crossMat[2,1] = -vec[0]
+    crossMat[0,1] = -vec[2]
+    crossMat[0,2] = vec[1]
+    crossMat[1,2] = -vec[0]
+    crossMat[1,0] = vec[2]
+    crossMat[2,0] = -vec[1]
+    crossMat[2,1] = vec[0]
     return crossMat        
 
 

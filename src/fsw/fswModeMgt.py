@@ -17,7 +17,7 @@ class FswModeMgtParam:
 		self.aocsSafeModeAngRateThdDur = 30*60 # [s]
 		self.isAutoSafeToNomPtngModeAllwd = False
 		# NOM_PTNG parameters
-		self.aocsNomPtngModeMinDur = 15*60 # [s]
+		self.aocsNomPtngModeMinDur = 30*60 # [s]
 		self.isAutoNomPtngToNomEqAllwd = True
 		# NOM_EQ parameters
 		self.aocsNomEqModeMinDur = 90*60 # [s
@@ -146,7 +146,7 @@ def aocsGuidanceModeLogic(aocsMode):
 	elif (aocsMode == "NOM_PTNG"):
 		aocsGuidMode = "GUIDMODE_ATT_INERT" 
 	elif (aocsMode == "NOM_EQ"):
-		aocsGuidMode = "GUIDMODE_ATT_NADIR" 
+		aocsGuidMode = "GUIDMODE_ATT_NADIR"
 	elif (aocsMode == "OCM"):
 		aocsGuidMode = "GUIDMODE_ATT_INERT"
 	else:
@@ -158,7 +158,10 @@ def aocsCtrModeLogic(aocsMode):
 	if (aocsMode == "SAFE"):
 		aocsCtrMode = "CTRLMODE_RATE_DAMP_CTRL"
 		aocsCtrActMode = "THR"
-	elif ((aocsMode == "NOM_PTNG") or (aocsMode == "NOM_EQ")):
+	elif (aocsMode == "NOM_PTNG"):
+		aocsCtrMode = "CTRLMODE_ATT_CTRL"
+		aocsCtrActMode = "THR"
+	elif (aocsMode == "NOM_EQ"):
 		aocsCtrMode = "CTRLMODE_ATT_CTRL"
 		aocsCtrActMode = "THR"
 	elif (aocsMode == "OCM"):

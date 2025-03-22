@@ -29,6 +29,6 @@ class StrModelParam():
 		eulerAngMeas_BI = eulerAng_BI
 		qBImeas_sca = qBI_sca
 		qBImeas_vec = qBI_vec
-		qBImeas = attitudeKinematics.Quaternion(qBImeas_sca, qBImeas_vec)
+		qBImeas = attitudeKinematics.Quaternion(qBImeas_sca, qBImeas_vec).normalize()
 		return (qBImeas, eulerAngMeas_BI)
 

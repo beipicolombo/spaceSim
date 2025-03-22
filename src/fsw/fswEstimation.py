@@ -38,7 +38,7 @@ def attitudeEstimation(fswEstimationParam, fswBus, modelsBus):
     angRateEst_BI_B = angRateMeas_BI_B
     # Attitude estimation
     eulerAngEst_BI = eulerAngMeas_BI
-    qBIest = attitudeKinematics.Quaternion(qBImeas_sca, qBImeas_vec)
+    qBIest = attitudeKinematics.Quaternion(qBImeas_sca, qBImeas_vec).normalize()
 
     # Update output bus signals
     fswEstBusOut.signals["angRateEst_BI_B"].update(angRateEst_BI_B)

@@ -25,16 +25,27 @@ class Quaternion:
     
     def norm(self):
         return np.linalg.norm(self.toVec())
+
+    def isIdentity(self):
+        vecnorm = np.linalg.norm(self.vec)
+        eps = 1e-10
+        isIdentity = ((vecnorm < eps) and ((self.sca-1)<eps))
+        return isIdentity
     
     def normalize(self):
         quatNormalized = Quaternion()
-        quatNorm = self.norm()
-        quatNormalized.sca = self.sca / quatNorm
-        quatNormalized.vec = self.vec / quatNorm
+        if not self.isIdentity():
+            quatNorm = self.norm()
+            quatNormalized.sca = self.sca / quatNorm
+            quatNormalized.vec = self.vec / quatNorm
+        else:
+            # Identity quaternion
+            quatNormalized = self
         return quatNormalized
 
     def conjugate(self):
         conjQuat = Quaternion()
+        conjQuat.sca = self.sca
         conjQuat.vec = -self.vec
         return conjQuat
     
@@ -46,32 +57,48 @@ class Quaternion:
         qw = self.sca
         qx = self.vec[0]
         qy = self.vec[1]
-        qz = self.vec[2]
-        sca = self.sca
-        vec = self.vec        
+        qz = self.vec[2]     
         phi   = m.atan2(2 * (qw*qx + qy*qz), (1 - 2*(qx**2+qy**2)))
         theta = m.asin(2 * (qw*qy - qz*qx)) 
         psi   = m.atan2(2 * (qw*qz + qx*qy), (1 - 2*(qy**2+qz**2)))
+        # Handle gimbal lock
+        if (abs(theta-pi/2) < 1e-10):
+            phi = 0
+            psi = -2*m.atan2(qx, qw)
+        elif (abs(theta+pi/2) < 1e-10):
+            phi = 0
+            psi = 2*m.atan2(qx, qw)
+        
         eulerAngles = np.array([phi, theta, psi])
         return eulerAngles
 
     def toDcm(self):
         # Source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
+        # Source: https://www.vectornav.com/resources/inertial-navigation-primer/math-fundamentals/math-attitudetran
         qw = self.sca
         qx = self.vec[0]
         qy = self.vec[1]
         qz = self.vec[2]
         M11 = qw**2 + qx**2 - qy**2 - qz**2
-        M12 = 2*(qx*qy - qw*qz)
-        M13 = 2*(qw*qy + qw*qz)
-        M21 = 2*(qx*qy + qw*qz)
+        M12 = 2*(qx*qy + qz*qw)
+        M13 = 2*(qx*qz - qy*qw)
+        M21 = 2*(qx*qy - qz*qw)
         M22 = qw**2 - qx**2 + qy**2 - qz**2
-        M23 = 2*(qy*qz - qw*qx)
-        M31 = 2*(qx*qz - qw*qy)
-        M32 = 2*(qw*qx + qy*qz)
+        M23 = 2*(qy*qz + qx*qw)
+        M31 = 2*(qx*qz + qy*qw)
+        M32 = 2*(qy*qz - qx*qw)
         M33 = qw**2 - qx**2 - qy**2 + qz**2
         dcm = np.array([[M11, M12, M13], [M21, M22, M23], [M31, M32, M33]])
         return dcm
+
+    def toVecRot(self):
+        if not self.isIdentity():
+            vec = self.vec/np.linalg.norm(self.vec)
+            ang = 2*np.arccos(self.sca)
+        else:
+            vec = np.array([1, 0, 0])
+            ang = 0
+        return (vec, ang)
 
     def propagateState(self, angleRates_B, simParam):
         xPrev = self.toVec()
@@ -86,7 +113,7 @@ class Quaternion:
         k4 = quatDot(trans_VecToQuat(x4, True), angleRates_B).toVec()
         xNext = xPrev + Ts/6 * (k1 + 2*k2 + 2*k3 + k4)
         
-        quatNext = trans_VecToQuat(xNext, True)
+        quatNext = trans_VecToQuat(xNext, True).normalize()
         self.sca = quatNext.sca
         self.vec = quatNext.vec
      
@@ -108,9 +135,9 @@ def multiplyQuat(quat1, quat2):
 
 
 # Quaternion rotation
-def applyRotation(qAB, v_B):
+def applyRotation(qBA, v_B):
     quat_v_B = Quaternion(0, v_B)
-    quat_v_A = multiplyQuat(multiplyQuat(qAB, quat_v_B), qAB.conjugate())
+    quat_v_A = multiplyQuat(multiplyQuat(qBA, quat_v_B), qBA.conjugate())
     return quat_v_A.vec
 
 
@@ -179,7 +206,72 @@ def trans_EulerAngToQuat(eulerAngles):
     quat.vec[0] = sr*cp*cy - cr*sp*sy
     quat.vec[1] = cr*sp*cy + sr*cp*sy
     quat.vec[2] = cr*cp*sy - sr*sp*cy
+
     return quat
+
+# DCM to 321 euler angles
+def trans_DcmToEulerAng(dcm):
+    M11 = dcm[0, 0]
+    M12 = dcm[0, 1]
+    M13 = dcm[0, 2]
+    M21 = dcm[1, 0]
+    M22 = dcm[1, 1]
+    M23 = dcm[1, 2]
+    M31 = dcm[2, 0]
+    M32 = dcm[2, 1]
+    M33 = dcm[2, 2]
+
+    phi = m.atan2(M12, M11)
+    theta = -m.asin(M13)
+    psi = m.atan2(M23, M33)
+    eulerAngles = np.array([phi, theta, psi])
+
+    return eulerAngles
+
+# DCM to quaternion
+def trans_DcmToQuat(dcm):
+    # Source: https://www.vectornav.com/resources/inertial-navigation-primer/math-fundamentals/math-attitudetran
+    quat = Quaternion()
+    M11 = dcm[0, 0]
+    M12 = dcm[0, 1]
+    M13 = dcm[0, 2]
+    M21 = dcm[1, 0]
+    M22 = dcm[1, 1]
+    M23 = dcm[1, 2]
+    M31 = dcm[2, 0]
+    M32 = dcm[2, 1]
+    M33 = dcm[2, 2]
+
+    qw2 = 1/4 * (1 + M11 + M22 + M33)
+    qx2 = 1/4 * (1 + M11 - M22 - M33)
+    qy2 = 1/4 * (1 - M11 + M22 - M33)
+    qz2 = 1/4 * (1 - M11 - M22 + M33)
+
+    idxMax = np.argmax([qx2, qy2, qz2, qw2])
+
+    if (idxMax == 0):
+        quat.vec = 1/(4*np.sqrt(qx2)) * np.array([4*qx2, M12+M21, M31+M13])
+        quat.sca = 1/(4*np.sqrt(qx2)) * (M23 - M32)
+
+    elif (idxMax == 1):
+        quat.vec = 1/(4*np.sqrt(qy2)) *  np.array([M12+M21, 4*qy2, M23+M32])
+        quat.sca = 1/(4*np.sqrt(qy2)) * (M31 - M13)  
+
+    elif (idxMax == 2):
+        quat.vec = 1/(4*np.sqrt(qz2)) * np.array([M31+M13, M23+M32, 4*qz2])
+        quat.sca = 1/(4*np.sqrt(qz2)) * (M12 - M21)
+
+    else:
+        quat.vec = 1/(4*np.sqrt(qw2)) * np.array([M23-M32, M31-M13, M12-M21])
+        quat.sca = np.sqrt(qw2)
+
+    
+    return quat
+
+# 321 euler angles to DCM
+def trans_EulerAngToDcm(eulerAngles):
+    dcm = Rx(eulerAngles[0]) * Ry(eulerAngles[1]) * Rz(eulerAngles[2])
+    return dcm
 
 
 # X axis rotation DCM

@@ -107,10 +107,10 @@ class Orbit:
 # FUNCTIONS
 # --------------------------------------------------
 
-# intertial position/velocity to orbit elements
+# Intertial position/velocity to orbit elements
 def posVelInertialToElements(posVec, velVec, mu):
     # Pre-processing
-    eps = 10**-8
+    eps = 1e-10
     posVec = np.array(posVec);
     velVec = np.array(velVec)
 
@@ -129,10 +129,13 @@ def posVelInertialToElements(posVec, velVec, mu):
     # Position radius and velocity amplitude
     r = np.linalg.norm(posVec)
     v = np.linalg.norm(velVec)
+
+    dot_posVel = np.dot(posVec, velVec)
+
     # Angular momentum
     angMomVec = np.cross(posVec,velVec)
     h = np.linalg.norm(angMomVec)
-    # Node vectorr
+    # Node vector
     nodeVec = np.cross(np.array([0,0,1]),angMomVec)
     n = np.linalg.norm(nodeVec)
     if np.abs(n)>eps:
@@ -166,7 +169,10 @@ def posVelInertialToElements(posVec, velVec, mu):
     # True anomaly at epoch
     if not(isCircular):
         cosTaEp = np.dot(eccVec,posVec)/(ecc*r)
-        taEp = np.arccos(cosTaEp)
+        if (dot_posVel>0):
+            taEp = np.arccos(cosTaEp)
+        else:
+            taEp = 2*np.pi - np.arccos(cosTaEp)
     # Longitude of periapsis
     if not(isCircular):
         cosLonPer = eccVec[0]/(ecc)

@@ -32,6 +32,7 @@ import src.attitudeKinematics as attitudeKinematics
 
 import src.models.scModel as scModel
 import src.models.spaceEnv.envModel as envModel
+import src.models.spaceEnv.perfModel as perfModel
 import src.models.act.actModels as actModels
 import src.models.sen.senModels as senModels
 
@@ -50,8 +51,8 @@ print("Setup...")
 dateTimeStart = ephem.Date("2024/3/9 5:10:10")
 
 # Simulation timestep and duration
-Ts = 1 # [s]
-Tend = 90*60 # [s]
+Ts = 1 # [s] 
+Tend = 1*90*60 # [s]
 
 # Simulation options
 isGGTorqueEnabled = False
@@ -59,41 +60,53 @@ isCtrlTorqueEnabled = True
 isPlot = True
 
 # S/C attitude and angular rates
-angRate_BI_B = np.array([1, 0.2, -0.3])*deg2rad
+swInitAttitude = "nadir"
+angRate_BI_B = np.array([0, 0, 0])
+qBI = attitudeKinematics.Quaternion()
 
 # S/C name
-spacecraftName = "spacecraft1"
+spacecraftName = "spacecraft_100kg_rectangle"
 
 # Orbit
 perAltitudeInit = 500 * 1e3 # [m]
-ecc = 0.1
-inc = 45 * deg2rad
-raan = 90 * deg2rad
+ecc = 0.01
+inc = 0.1 * deg2rad
+raan = 10 * deg2rad
 argPer = 90 * deg2rad
 ta = 0 * deg2rad
+
+# Mode management
+isAutoNomPtngToNomEqAllwd = True
+
+# Control
+attCtrNatFreq =  0.0010919*10 # [rad/s]
+attCtrDamping = 0.6 # [-]
+swInertiaTrqCompensation = False
 
 # Initial AOCS mode
 # OFF (Off)
 # SAFE (Safe)
-# NOM (Nominal)
+# NOM_PTNG (Nominal - pointing)
+# NOM_EQ (Nominal - equilibrium)
+# NOM_SLEW (Nominal - slew) => To be added
 # OCM (Orbit Control Mode)
-aocsMode = "NOM"
+aocsMode = "NOM_PTNG"
 
-# Initial guidance mode
+# Guidance modes
 # GUIDMODE_OFF (Off)
 # GUIDMODE_RATE_DAMPING (Rate damping)
 # GUIDMODE_ATT_NADIR (Nadir pointing)
 # GUIDMODE_SLEW (Slew) => TBW
 # GUIDMODE_ATT_INERT (Attitude inertial pointing)
-GUIDMODE_ATT_INERT_eulerAngGuid_BI = np.array([25, 0, 0]) * deg2rad
+GUIDMODE_ATT_INERT_eulerAngGuid_RI = np.array([0, 10, 0]) * deg2rad * 0
 
-# Initial control mode
+# Control modes
 # CTRLMODE_OFF (Off)
 # CTRLMODE_ATT_CTRL (Attitude control)
 # CTRLMODE_RATE_DAMP_CTRL (Rate control)
 # CTRLMOD_THRUST_CTRL  (Thrust control)
 
-# Initial actuator mode
+# Actuator modes
 # NONE (None)
 # THR (Thrusters)
 # RW (Reaction wheels) => TBW
@@ -148,9 +161,17 @@ print("      [FSW] Functions parameters")
 fswParam = fswModel.Fsw(scParam)
 
 # [Guidance]
-fswParam.guidParam.GUIDMODE_ATT_INERT_eulerAngGuid_BI = GUIDMODE_ATT_INERT_eulerAngGuid_BI
+fswParam.guidParam.GUIDMODE_ATT_INERT_eulerAngGuid_RI = GUIDMODE_ATT_INERT_eulerAngGuid_RI
 
 # [Control]
+fswParam.ctrParam.inertiaSc_B = scParam.massParam.inertiaSc_B
+fswParam.ctrParam.swInertiaTrqCompensation = swInertiaTrqCompensation
+# 1. Tune attitude controller with overshoot % and time response duration
+#overshoot = 10 # [%]
+#timeResp = 10*60 # [s] 2% time response
+#fswParam.ctrParam.getAttCtrlTuningFrom_overshootAndTimeResp(overshoot, timeResp, fswParam.ctrlParam.inertiaSc_B)
+# 2. Tune attitude controller with damping and natural frequency
+fswParam.ctrParam.getAttCtrlTuningFrom_dampingAndNaturalFrequency(attCtrDamping, attCtrNatFreq, fswParam.ctrParam.inertiaSc_B)
 
 # [Command]
 # FSW has full knowledge of actuator model => TBW to be descoped
@@ -159,7 +180,7 @@ fswParam.cmdParam.rwCmdParam = scParam.actParam.rwModelParam
 
 # [Mode management]
 fswModeMgtState = fswModeMgt.FswModeMgtState(aocsMode)
-
+fswParam.modeMgtParam.isAutoNomPtngToNomEqAllwd = isAutoNomPtngToNomEqAllwd
 
 # [Models] Attitude and orbit states
 # ==================================
@@ -174,24 +195,34 @@ modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].update(inc)
 modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].update(raan)
 modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(argPer)
 modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(ta)
-
 (pos_I, vel_I) = orbitDynamics.elementsToPosVelInertial(sma, ecc, inc, raan, argPer, ta, earthMu, modelsBus.subBuses["dynamics"].subBuses["orbitElem"])
 orbit = orbitDynamics.Orbit(earthMu, pos_I, vel_I)
 modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(pos_I)
 modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(vel_I)
 
-# Attitude state
+# LVLH frame
+modelsBus = envModel.computeLvlhFrame(orbit, modelsBus)
+
+# Attitude state => to be implemented as a separate function
 myDynState = attitudeDynamics.DynamicsState()
-myDynState.angRate_BI_B = angRate_BI_B
-modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(angRate_BI_B)
+if (swInitAttitude == "nadir"):
+    # Use the user-specified angular rates and attitude, defined between body and nadir frame
+    myDynState.angRate_BI_B = modelsBus.subBuses["environment"].signals["angRate_LI_L"].value # TBW: add specified bias 
+    qLI_sca = modelsBus.subBuses["environment"].signals["qLI_sca"].value 
+    qLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
+    myDynState.qBI = attitudeKinematics.Quaternion(qLI_sca, qLI_vec) # TBW: add specified bias 
+else:
+    # Use the user-specified angular rates and attitude, defined between body and inertial
+    myDynState.angRate_BI_B = angRate_BI_B
+    myDynState.qBI = myDynState.qBI
+modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].update(myDynState.qBI.sca)
+modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].update(myDynState.qBI.vec)
+modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(myDynState.angRate_BI_B)
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(myDynState.qBI.toEuler())
 modelsBus = attitudeDynamics.computeAngMom(scParam.massParam, modelsBus) 
 
-# LVLH frame
-lvlhFrame = envModel.LVLHframe()
-lvlhFrame.update(orbit, myDynState)
-modelsBus.subBuses["dynamics"].subBuses["frames"].signals["zL_B"].update(lvlhFrame.zL_B)
-modelsBus.subBuses["dynamics"].subBuses["frames"].signals["zL_I"].update(lvlhFrame.zL_I)
+# Performance (additional models signals)
+modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
 
 # [Models] Spacecraft sensors states
 # ==================================
@@ -209,7 +240,8 @@ fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswMo
 fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
 
 # [Guidance]
-fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, lvlhFrame, modelsBus, fswBus)
+fswParam.guidParam.orbitRate = orbit.orbitContext.orbitPulse
+fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, modelsBus.subBuses["environment"], fswBus)
 
 # [Control]
 fswBus.subBuses["control"] = fswControl.computeControl(fswParam.ctrParam, fswBus)
@@ -223,7 +255,7 @@ fswBus.subBuses["command"] = fswCommand.computeCommand(fswParam.cmdParam, fswBus
 print("      [Models] Environment / actuators states")
 
 # Disturbance torque
-modelsBus.subBuses["environment"] = envModel.computeExtTorque(simParam, scParam.massParam, orbit, lvlhFrame, modelsBus.subBuses["environment"])
+modelsBus.subBuses["environment"] = envModel.computeExtTorque(simParam, scParam.massParam, myDynState, orbit, modelsBus.subBuses["environment"])
  
 # Spacecraft actuators torque
 modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
@@ -249,7 +281,7 @@ for ii in range(1, simParam.nbPts):
     sunToMarsDir_I = conversions.latLonToCartesian(marsEphem.hlat/deg2rad, marsEphem.hlon/deg2rad, 1)
     
     # Environment
-    modelsBus.subBuses["environment"] = envModel.computeExtTorque(simParam, scParam.massParam, orbit, lvlhFrame, modelsBus.subBuses["environment"])
+    modelsBus.subBuses["environment"] = envModel.computeExtTorque(simParam, scParam.massParam, myDynState, orbit, modelsBus.subBuses["environment"])
 
     # Actuators
     modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
@@ -258,7 +290,9 @@ for ii in range(1, simParam.nbPts):
     modelsBus = attitudeDynamics.computeTotTorque(modelsBus)
     
     # Propagate attitude dynamics
-    myDynState.propagateState(scParam.massParam, simParam, modelsBus) 
+    myDynState.propagateState(scParam.massParam, simParam, modelsBus)
+    modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].update(myDynState.qBI.sca)
+    modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].update(myDynState.qBI.vec)
     modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(myDynState.angRate_BI_B)
     modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(myDynState.qBI.toEuler())
     # Compute spacecraft angular momentum
@@ -268,15 +302,21 @@ for ii in range(1, simParam.nbPts):
     orbit.propagate(simParam, earthMu)
     modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(orbit.pos_I)
     modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(orbit.vel_I)
-    
-    # Frames
-    # LVLH frames
-    lvlhFrame.update(orbit, myDynState)
-    modelsBus.subBuses["dynamics"].subBuses["frames"].signals["zL_B"].update(lvlhFrame.zL_B)
-    modelsBus.subBuses["dynamics"].subBuses["frames"].signals["zL_I"].update(lvlhFrame.zL_I)
-    
+    modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].update(orbit.keplerElem.sma)
+    modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["ecc"].update(orbit.keplerElem.ecc)
+    modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].update(orbit.keplerElem.inc)
+    modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].update(orbit.keplerElem.raan)
+    modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(orbit.keplerElem.argPer)
+    modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(orbit.keplerElem.ta)
+
     # Sensor
     modelsBus.subBuses["sensors"] = scParam.senParam.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
+
+    # LVLH frame
+    modelsBus = envModel.computeLvlhFrame(orbit, modelsBus)
+
+    # Performance (additional models signals)
+    modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
 
     # [FSW]
     # ==================================
@@ -288,7 +328,7 @@ for ii in range(1, simParam.nbPts):
 
     # [Guidance] Compute guidance angular rates and euler angles
     # Depends on the current guidance mode
-    fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, lvlhFrame, modelsBus, fswBus)
+    fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, modelsBus.subBuses["environment"], fswBus)
 
     # [Control] Compute control torque
     # Depends on the current control mode
@@ -317,32 +357,53 @@ print("Post-processing...")
 # --------------------------------------------------
 print("Plots...")
 
-plt.show(block = False)
+#plt.show(block = False)
 plt.pause(3)
 plt.close("all")
 
 
-plots.plotOrbit3d(modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].timeseries, const.earthRadius)
+#plots.plotOrbit3d(modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].timeseries, const.earthRadius)
 
-modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].timeseries.addNorm().rad2deg().plot()
+
+modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].timeseries.rad2deg().plot()
+fswBus.subBuses["guidance"].signals["angRate_RI_R"].timeseries.rad2deg().plot()
+
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].timeseries.rad2deg().plot()
+fswBus.subBuses["guidance"].signals["eulerAng_RI"].timeseries.rad2deg().plot()
+modelsBus.subBuses["environment"].signals["eulerAng_LI"].timeseries.rad2deg().plot()
 modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].timeseries.addNorm().plot()
-modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].timeseries.addNorm().plot()
+#modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].timeseries.addNorm().plot()
 
-modelsBus.subBuses["sensors"].signals["angRateMeas_BI_B"].timeseries.addNorm().rad2deg().plot()
-modelsBus.subBuses["actuators"].signals["torqueThr_B"].timeseries.addNorm().plot()
+fswBus.subBuses["control"].signals["eulerAngEst_BR"].timeseries.rad2deg().plot()
+modelsBus.subBuses["performance"].signals["eulerAng_BL"].timeseries.rad2deg().plot()
+modelsBus.subBuses["performance"].signals["angRate_BL_B"].timeseries.rad2deg().plot()
 
-modelsBus.subBuses["environment"].signals["torqueExt_B"].timeseries.addNorm().plot()
+# modelsBus.subBuses["sensors"].signals["angRateMeas_BI_B"].timeseries.addNorm().rad2deg().plot()
+# modelsBus.subBuses["actuators"].signals["torqueThr_B"].timeseries.addNorm().plot()
 
-fswBus.subBuses["guidance"].signals["angRateGuid_BI_B"].timeseries.rad2deg().plot()
-fswBus.subBuses["control"].signals["forceCtrl_B"].timeseries.addNorm().plot()
-fswBus.subBuses["control"].signals["torqueCtrl_B"].timeseries.addNorm().plot()
-fswBus.subBuses["control"].signals["torqueCtrlThr_B"].timeseries.addNorm().plot()
-fswBus.subBuses["control"].signals["torqueCtrlRw_B"].timeseries.addNorm().plot()
+#modelsBus.subBuses["environment"].signals["torqueExt_B"].timeseries.addNorm().plot()
 
+# fswBus.subBuses["guidance"].signals["angRate_RI_R"].timeseries.rad2deg().plot()
+# fswBus.subBuses["guidance"].signals["eulerAng_RI"].timeseries.rad2deg().plot()
 
-fswBus.subBuses["command"].signals["torqueCmdRw_B"].timeseries.addNorm().plot()
-fswBus.subBuses["command"].signals["torqueCmdThr_B"].timeseries.addNorm().plot()
+fswBus.subBuses["control"].signals["qEstBR_sca"].timeseries.plot()
+fswBus.subBuses["control"].signals["qEstBR_vec"].timeseries.plot()
+fswBus.subBuses["control"].signals["rotAngEst_BR"].timeseries.rad2deg().plot()
+fswBus.subBuses["control"].signals["angRateEst_BR_B"].timeseries.rad2deg().plot()
+#fswBus.subBuses["control"].signals["forceCtrl_B"].timeseries.addNorm().plot()
+#fswBus.subBuses["control"].signals["torqueCtrl_B"].timeseries.addNorm().plot()
+fswBus.subBuses["control"].signals["torqueCtrlThr_B"].timeseries.plot()
+#fswBus.subBuses["control"].signals["torqueCtrlRw_B"].timeseries.plot()
 
-fswBus.subBuses["modeMgt"].signals["aocsModeElapsedTime"].timeseries.plot()
+#fswBus.subBuses["command"].signals["torqueCmdRw_B"].timeseries.addNorm().plot()
+#fswBus.subBuses["command"].signals["torqueCmdThr_B"].timeseries.addNorm().plot()
+
+#fswBus.subBuses["modeMgt"].signals["aocsModeElapsedTime"].timeseries.plot()
+
+modelsBus.subBuses["environment"].signals["qLI_sca"].timeseries.plot()
+modelsBus.subBuses["environment"].signals["qLI_vec"].timeseries.plot()
+
+modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].timeseries.rad2deg().plot()
+modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].timeseries.rad2deg().plot()
+
 

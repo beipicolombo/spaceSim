@@ -25,10 +25,12 @@ class SenModelParam:
 
 	def computeMeasurements(self, modelsSenBus, modelsBus):
 		angRateMeas_BI_B = self.imuModelParam.computeAngRateMeasurement(modelsBus)
-		eulerAngMeas_BI = self.strModelParam.computeAttitudeMeasurement(modelsBus)
+		(qBImeas, eulerAngMeas_BI) = self.strModelParam.computeAttitudeMeasurement(modelsBus)
 
 		modelsSenBus.signals["angRateMeas_BI_B"].update(angRateMeas_BI_B)
 		modelsSenBus.signals["eulerAngMeas_BI"].update(eulerAngMeas_BI)
+		modelsSenBus.signals["qBImeas_sca"].update(qBImeas.sca)
+		modelsSenBus.signals["qBImeas_vec"].update(qBImeas.vec)
 
 		return modelsSenBus
 

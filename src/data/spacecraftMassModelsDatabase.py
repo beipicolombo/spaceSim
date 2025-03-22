@@ -28,6 +28,17 @@ def getSpaceceraftMassModel(spacecraftName = ""):
 		# Position of CoM
 		posComSc_G = np.zeros(3)
 
+	elif (spacecraftName == "spacecraft_100kg_rectangle"):
+		# Mass
+		massSc = 100 # [kg]
+		# Construct inertia
+		lx = 1 # [m]
+		ly = 0.5 # [m]
+		lz = 0.5 # [m]
+		inertialSc_G = massModels.getUniformRectanglePrismInertia(massSc, lx, ly, lz)
+		# Position of CoM
+		posComSc_G = np.zeros(3)
+
 	else:
 		print("		Specified spacecraft name not recognized, default mass parameters are used")
 

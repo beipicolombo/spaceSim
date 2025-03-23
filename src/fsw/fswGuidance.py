@@ -75,8 +75,10 @@ def computeGuidance(fswGuidanceParam, envBusIn, fswBus):
         aocsGuidMode = "GUIDMODE_OFF"
         (angRate_RI_R, qRI) = offGuidance()   
     
+    qRI.normalize()
+    
     # Compute guidance with respect to the nadir reference frame
-    qRL = attitudeKinematics.multiplyQuat(qRI, qLI.conjugate())
+    qRL = attitudeKinematics.multiplyQuat(qLI.conjugate(), qRI)
 
     # Compute euler angles
     eulerAng_RI = qRI.toEuler() 

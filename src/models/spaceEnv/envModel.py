@@ -9,6 +9,7 @@ import numpy as np
 import ephem
 import src.utils.conversions as conversions
 import src.attitudeKinematics as attKin
+import src.attitudeDynamics as attDyn
 from src.attitudeKinematics import Rx as Rx
 from src.attitudeKinematics import Ry as Ry
 from src.attitudeKinematics import Rz as Rz
@@ -97,16 +98,21 @@ def computeAeroTorque():
     return np.array([0, 0, 0])
 
 
-def computeExtTorque(simParam, attDynParam, myDynState, orbit, envBusIn):
+def computeExtTorque(simParam, attDynParam, orbit, modelsBus):
     # Initialize output bus
-    envBusOut = envBusIn
+    modelsBusOut = modelsBus
 
     # Retrieve signals / parameters of interest
-    qLI_sca = envBusIn.signals["qLI_sca"].value
-    qLI_vec = envBusIn.signals["qLI_vec"].value
+    qLI_sca = modelsBus.subBuses["environment"].signals["qLI_sca"].value
+    qLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
+    qBI_sca = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].value
+    qBI_vec = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].value
+    angRate_BI_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].value
 
-    # Reconstruct the LVLH frame quaternion
+    # Reconstruct the dynamic state and LVLH frame quaternion
     qLI = attKin.Quaternion(qLI_sca, qLI_vec)
+    qBI = attKin.Quaternion(qBI_sca, qBI_vec)
+    myDynState = attDyn.DynamicsState(qBI, angRate_BI_B)
 
     # Gravity gradient disturbance torque
     torqueGG_B = computeGGTorque(simParam, attDynParam, orbit.orbitContext.orbitPulse, myDynState.qBI, qLI)
@@ -116,11 +122,11 @@ def computeExtTorque(simParam, attDynParam, myDynState, orbit, envBusIn):
     torqueExt_B = torqueGG_B + torqueAero_B
 
     # Update output bus signals
-    envBusOut.signals["torqueGG_B"].update(torqueGG_B)
-    envBusOut.signals["torqueAero_B"].update(torqueAero_B)
-    envBusOut.signals["torqueExt_B"].update(torqueExt_B)
+    modelsBusOut.subBuses["environment"].signals["torqueGG_B"].update(torqueGG_B)
+    modelsBusOut.subBuses["environment"].signals["torqueAero_B"].update(torqueAero_B)
+    modelsBusOut.subBuses["environment"].signals["torqueExt_B"].update(torqueExt_B)
 
-    return envBusOut
+    return modelsBusOut
 
 
 # --------------------------------------------------

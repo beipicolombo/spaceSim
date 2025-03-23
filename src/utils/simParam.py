@@ -19,14 +19,20 @@ deg2rad = pi/180
 # Simulation parameters
 class SimParam:
     # To be moved as higher level class
-    def __init__(self, Ts, Tend):
-        self.Ts = Ts
-        self.Tend = Tend
-        self.timeVec = np.arange(0, Tend+Ts, Ts)
-        self.nbPts = len(self.timeVec)
+    def __init__(self):
+        self.dateTimeStart = ephem.Date("2024/3/9 5:10:10")
+        self.Ts = 1 # [s]
+        self.Tend = 10*60 # [s]
         self.simOptions = SimOptions()        
         self.runOptions = RunOptions()
         self.ephemEpoch = ephem.J2000
+        # Depends on other parameters
+        self.timeVec = np.arange(0, self.Tend+self.Ts, self.Ts)
+        self.nbPts = len(self.timeVec)
+
+    def updateTimeVec(self):
+        self.timeVec = np.arange(0, self.Tend+self.Ts, self.Ts)
+        self.nbPts = len(self.timeVec)
 
 # Simulation options
 class SimOptions:
@@ -36,6 +42,7 @@ class SimOptions:
         self.isRwAct = False
         self.isThrAct = True
         self.swInitAttitudeFrame = "I"
+        self.massModelName = "Default"
                 
 # Run options       
 class RunOptions:

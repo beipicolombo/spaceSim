@@ -6,7 +6,8 @@ Created on Sun Mar 27 13:15:55 2022
 """
 
 import numpy as np
-import math as m
+import ephem
+import src.utils.conversions as conversions
 import src.attitudeKinematics as attKin
 from src.attitudeKinematics import Rx as Rx
 from src.attitudeKinematics import Ry as Ry
@@ -20,46 +21,31 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-class LVLHframe:
-    def __init__(self):
-        self.dcmLI = np.identity(3)
-        self.eulerAng_LI = np.array([0, 0, 0])
-        self.qLI = attKin.Quaternion()
-        self.angRate_LI_L = np.array([0, 0, 0])
 
-    def update(self, orbit):
-        # Get the DCM from inertial frame
-        raan = orbit.keplerElem.raan
-        inc = orbit.keplerElem.inc
-        argPer = orbit.keplerElem.argPer
-        ta = orbit.keplerElem.ta
-
-        #xVec = np.array([1, 0, 0])
-        #yVec = np.array([0, 1, 0])
-        #zVec = np.array([0, 0, 1])
-        #quat = attKin.trans_AngVecToQuat(raan, zVec)
-        #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(inc, xVec), quat)
-        #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(argPer+ta, zVec), quat)
-        #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(-np.pi/2, yVec), quat)
-        #qLI  = attKin.multiplyQuat(attKin.trans_AngVecToQuat(np.pi/2, zVec), quat)
-        #dcmLI = qLI.toDcm()
-        #eulerAng_LI = qLI.toEuler()
-
-        mat = np.matmul(Rx(inc), Rz(raan))
-        mat = np.matmul(Rz(argPer+ta), mat)
-        mat = np.matmul(Ry(-np.pi/2), mat)
-        dcmLI = np.matmul(Rz(np.pi/2), mat)
-        qLI = attKin.trans_DcmToQuat(dcmLI).normalize()
-        eulerAng_LI = qLI.toEuler()
-
-        self.dcmLI = dcmLI
-        self.eulerAng_LI = eulerAng_LI
-        self.qLI = qLI
-        self.angRate_LI_L = 0.001*np.array([0, -orbit.orbitContext.orbitPulse, 0])
 
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
+def computeEphemerides(simBus, modelsBus, simParam):
+    # Initialize outputs bus
+    modelsEnvBusOut = modelsBus.subBuses["environment"]
+
+    # Retrieve inputs / parameters
+    elapsedTime = simBus.signals["elapsedTime"].value
+    dateTimeStart = simParam.dateTimeStart
+    ephemEpoch = simParam.ephemEpoch
+    # Compute ephemerides
+    currDateTime = ephem.date(dateTimeStart + elapsedTime/(24*3600))
+    marsEphem = ephem.Mars()
+    marsEphem.compute(currDateTime, epoch = ephemEpoch)
+    # Compute directions
+    sunToMarsDir_I = conversions.latLonToCartesian(marsEphem.hlat/deg2rad, marsEphem.hlon/deg2rad, 1)
+
+    # Update output bus signals
+    modelsEnvBusOut.signals["sunToMarsDir_I"].update(sunToMarsDir_I)
+    return modelsEnvBusOut
+    
+
 def computeLvlhFrame(orbit, modelsBus):
     # Initialize output
     modelsBusOut = modelsBus

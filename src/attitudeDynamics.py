@@ -61,7 +61,7 @@ def setInitialDynStateAndBus(modelsBus, simParam, qInitVec = np.array([1, 0, 0, 
         # Initialize attitude and angular rates
         angRate_BI_B = angRate_BL_B + np.matmul(qBL.toDcm(), angRate_LI_L)
         qBI = attitudeKinematics.multiplyQuat(qLI, qBL)
-    elif (swInitAttitudeFrame == "J"):
+    elif (swInitAttitudeFrame == "I"):
         # Initial attitude is initialized wrt inertial reference frame
         angRate_BI_B = angRateInit_B
         qBI = qInit

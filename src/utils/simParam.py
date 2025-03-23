@@ -35,7 +35,8 @@ class SimOptions:
         self.isCtrlTorqueEnabled = True
         self.isRwAct = False
         self.isThrAct = True
-
+        self.swInitAttitudeFrame = "I"
+                
 # Run options       
 class RunOptions:
     def __init__(self):

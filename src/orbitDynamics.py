@@ -102,10 +102,25 @@ class Orbit:
         # Update kepler elements state
         self.keplerElem.set(self.pos_I, self.vel_I, mu)
 
-
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
+def updateOrbitDynBus(orbit, modelsBus):
+    # TBW => more generic to include all orbit dynamics processings
+    # Initialize output bus
+    modelsBusOut = modelsBus
+    # Update output bus signals
+    modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(orbit.pos_I)
+    modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(orbit.vel_I)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].update(orbit.keplerElem.sma)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ecc"].update(orbit.keplerElem.ecc)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].update(orbit.keplerElem.inc)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].update(orbit.keplerElem.raan)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(orbit.keplerElem.argPer)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(orbit.keplerElem.ta)
+
+    return modelsBusOut
+
 
 # Intertial position/velocity to orbit elements
 def posVelInertialToElements(posVec, velVec, mu):
@@ -226,14 +241,7 @@ def geocentricToLatLon(pos_e):
 
 
 # Orbit elements to perifocal position/velocity
-def elementsToPosVelPerifocal(sma, ecc, inc, raan, argPer, ta, mu, orbitElemBus):
-    sma = orbitElemBus.signals["sma"].value
-    ecc = orbitElemBus.signals["ecc"].value
-    inc = orbitElemBus.signals["inc"].value
-    raan = orbitElemBus.signals["raan"].value
-    argPer = orbitElemBus.signals["argPer"].value
-    ta = orbitElemBus.signals["ta"].value
-
+def elementsToPosVelPerifocal(sma, ecc, inc, raan, argPer, ta, mu):
     # pre processing
     X_f = np.array([1,0,0])
     Y_f = np.array([0,1,0])
@@ -254,19 +262,12 @@ def elementsToPosVelPerifocal(sma, ecc, inc, raan, argPer, ta, mu, orbitElemBus)
 
 
 # Orbit elements to inertial position/velocity
-def elementsToPosVelInertial(sma, ecc, inc, raan, argPer, ta, mu, orbitElemBus):
-    sma = orbitElemBus.signals["sma"].value
-    ecc = orbitElemBus.signals["ecc"].value
-    inc = orbitElemBus.signals["inc"].value
-    raan = orbitElemBus.signals["raan"].value
-    argPer = orbitElemBus.signals["argPer"].value
-    ta = orbitElemBus.signals["ta"].value
-
+def elementsToPosVelInertial(sma, ecc, inc, raan, argPer, ta, mu):
     # Default outputs
     posVec_i = np.array([0,0,0])
     velVec_i = np.array([0,0,0])
     # Compute pos/vel in perifocal frame
-    (posVec_f, velVec_f) = elementsToPosVelPerifocal(sma, ecc, inc, raan, argPer, ta, mu, orbitElemBus)
+    (posVec_f, velVec_f) = elementsToPosVelPerifocal(sma, ecc, inc, raan, argPer, ta, mu)
     # Compute transformation matrix
     M_if = dcm_perifocalToInertial(raan,inc,argPer)
     # Compute pos/vel in inertial frame

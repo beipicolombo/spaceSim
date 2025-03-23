@@ -6,8 +6,12 @@ Created on Sun Mar 27 13:15:55 2022
 """
 
 import numpy as np
-import math as m
+import ephem
+import src.utils.constants as const
+import src.utils.conversions as conversions
+import src.orbitDynamics as orbDyn
 import src.attitudeKinematics as attKin
+import src.attitudeDynamics as attDyn
 from src.attitudeKinematics import Rx as Rx
 from src.attitudeKinematics import Ry as Ry
 from src.attitudeKinematics import Rz as Rz
@@ -20,47 +24,32 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-class LVLHframe:
-    def __init__(self):
-        self.dcmLI = np.identity(3)
-        self.eulerAng_LI = np.array([0, 0, 0])
-        self.qLI = attKin.Quaternion()
-        self.angRate_LI_L = np.array([0, 0, 0])
 
-    def update(self, orbit):
-        # Get the DCM from inertial frame
-        raan = orbit.keplerElem.raan
-        inc = orbit.keplerElem.inc
-        argPer = orbit.keplerElem.argPer
-        ta = orbit.keplerElem.ta
-
-        #xVec = np.array([1, 0, 0])
-        #yVec = np.array([0, 1, 0])
-        #zVec = np.array([0, 0, 1])
-        #quat = attKin.trans_AngVecToQuat(raan, zVec)
-        #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(inc, xVec), quat)
-        #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(argPer+ta, zVec), quat)
-        #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(-np.pi/2, yVec), quat)
-        #qLI  = attKin.multiplyQuat(attKin.trans_AngVecToQuat(np.pi/2, zVec), quat)
-        #dcmLI = qLI.toDcm()
-        #eulerAng_LI = qLI.toEuler()
-
-        mat = np.matmul(Rx(inc), Rz(raan))
-        mat = np.matmul(Rz(argPer+ta), mat)
-        mat = np.matmul(Ry(-np.pi/2), mat)
-        dcmLI = np.matmul(Rz(np.pi/2), mat)
-        qLI = attKin.trans_DcmToQuat(dcmLI).normalize()
-        eulerAng_LI = qLI.toEuler()
-
-        self.dcmLI = dcmLI
-        self.eulerAng_LI = eulerAng_LI
-        self.qLI = qLI
-        self.angRate_LI_L = 0.001*np.array([0, -orbit.orbitContext.orbitPulse, 0])
 
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
-def computeLvlhFrame(orbit, modelsBus):
+def computeEphemerides(simBus, modelsBus, simParam):
+    # Initialize outputs bus
+    modelsEnvBusOut = modelsBus.subBuses["environment"]
+
+    # Retrieve inputs / parameters
+    elapsedTime = simBus.signals["elapsedTime"].value
+    dateTimeStart = simParam.dateTimeStart
+    ephemEpoch = simParam.ephemEpoch
+    # Compute ephemerides
+    currDateTime = ephem.date(dateTimeStart + elapsedTime/(24*3600))
+    marsEphem = ephem.Mars()
+    marsEphem.compute(currDateTime, epoch = ephemEpoch)
+    # Compute directions
+    sunToMarsDir_I = conversions.latLonToCartesian(marsEphem.hlat/deg2rad, marsEphem.hlon/deg2rad, 1)
+
+    # Update output bus signals
+    modelsEnvBusOut.signals["sunToMarsDir_I"].update(sunToMarsDir_I)
+    return modelsEnvBusOut
+    
+
+def computeLvlhFrame(modelsBus):
     # Initialize output
     modelsBusOut = modelsBus
 
@@ -69,21 +58,10 @@ def computeLvlhFrame(orbit, modelsBus):
     raan = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].value
     argPer = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].value
     ta = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].value
+    sma = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].value
+    mu = const.earthMu # TBW => use single common parameter for gravity model config
 
     # Compute attitude
-    # 1. Using quaternion multiplication
-    #xVec = np.array([1, 0, 0])
-    #yVec = np.array([0, 1, 0])
-    #zVec = np.array([0, 0, 1])
-    #quat = attKin.trans_AngVecToQuat(raan, zVec)
-    #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(inc, xVec), quat)
-    #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(argPer+ta, zVec), quat)
-    #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(-np.pi/2, yVec), quat)
-    #qLI  = attKin.multiplyQuat(attKin.trans_AngVecToQuat(np.pi/2, zVec), quat)
-    #dcmLI = qLI.toDcm()
-    #eulerAng_LI = qLI.toEuler()
-
-    # 2. Using DCM multiplication
     mat = np.matmul(Rx(inc), Rz(raan))
     mat = np.matmul(Rz(argPer+ta), mat)
     mat = np.matmul(Ry(-np.pi/2), mat)
@@ -91,7 +69,7 @@ def computeLvlhFrame(orbit, modelsBus):
     qLI = attKin.trans_DcmToQuat(dcmLI).normalize()
     eulerAng_LI = qLI.toEuler()
     # Compute angular rates
-    angRate_LI_L = np.array([0, -orbit.orbitContext.orbitPulse, 0])
+    angRate_LI_L = np.array([0, -orbDyn.getOrbitRate(mu, sma), 0])
 
     # Update output bus signals
     modelsBusOut.subBuses["environment"].signals["eulerAng_LI"].update(eulerAng_LI)
@@ -124,30 +102,37 @@ def computeAeroTorque():
     return np.array([0, 0, 0])
 
 
-def computeExtTorque(simParam, attDynParam, myDynState, orbit, envBusIn):
+def computeExtTorque(simParam, attDynParam, modelsBus):
     # Initialize output bus
-    envBusOut = envBusIn
+    modelsBusOut = modelsBus
 
     # Retrieve signals / parameters of interest
-    qLI_sca = envBusIn.signals["qLI_sca"].value
-    qLI_vec = envBusIn.signals["qLI_vec"].value
+    qLI_sca = modelsBus.subBuses["environment"].signals["qLI_sca"].value
+    qLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
+    qBI_sca = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].value
+    qBI_vec = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].value
+    angRate_BI_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].value
+    sma = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].value
+    mu = const.earthMu # TBW => use single common parameter for gravity model config
 
-    # Reconstruct the LVLH frame quaternion
+    # Reconstruct the dynamic state and LVLH frame quaternion
     qLI = attKin.Quaternion(qLI_sca, qLI_vec)
+    qBI = attKin.Quaternion(qBI_sca, qBI_vec)
+    myDynState = attDyn.DynamicsState(qBI, angRate_BI_B)
 
     # Gravity gradient disturbance torque
-    torqueGG_B = computeGGTorque(simParam, attDynParam, orbit.orbitContext.orbitPulse, myDynState.qBI, qLI)
+    torqueGG_B = computeGGTorque(simParam, attDynParam, orbDyn.getOrbitRate(mu, sma), myDynState.qBI, qLI)
     # Aerodynamic disturbance torque
     torqueAero_B = computeAeroTorque()
     # Total disturbance torque
     torqueExt_B = torqueGG_B + torqueAero_B
 
     # Update output bus signals
-    envBusOut.signals["torqueGG_B"].update(torqueGG_B)
-    envBusOut.signals["torqueAero_B"].update(torqueAero_B)
-    envBusOut.signals["torqueExt_B"].update(torqueExt_B)
+    modelsBusOut.subBuses["environment"].signals["torqueGG_B"].update(torqueGG_B)
+    modelsBusOut.subBuses["environment"].signals["torqueAero_B"].update(torqueAero_B)
+    modelsBusOut.subBuses["environment"].signals["torqueExt_B"].update(torqueExt_B)
 
-    return envBusOut
+    return modelsBusOut
 
 
 # --------------------------------------------------

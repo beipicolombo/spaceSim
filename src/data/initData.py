@@ -10,6 +10,8 @@ Created on Thu Jan  2 11:38:17 2025
 import src.utils.dataStructures as dataStructures
 
 def initializeBusesAndSignals(simParam):
+    simBus = dataStructures.DataBus("simBus")
+    simBus.addSignal("elapsedTime", 1, unit = "s")
     modelsBus = dataStructures.DataBus("modelsBus")
     modelsBus.addSubBus("dynamics")
     modelsBus.subBuses["dynamics"].addSubBus("attitude")
@@ -36,6 +38,7 @@ def initializeBusesAndSignals(simParam):
     modelsBus.subBuses["performance"].addSignal("eulerAng_BL", 3, unit = "rad", isLogged = True, timeVec = simParam.timeVec)
     modelsBus.subBuses["performance"].addSignal("angRate_BL_B", 3, unit = "rad/s", isLogged = True, timeVec = simParam.timeVec)
     modelsBus.addSubBus("environment")
+    modelsBus.subBuses["environment"].addSignal("sunToMarsDir_I", 3, unit = "-")
     modelsBus.subBuses["environment"].addSignal("torqueGG_B", 3, unit = "N*m")
     modelsBus.subBuses["environment"].addSignal("torqueAero_B", 3, unit = "N*m")
     modelsBus.subBuses["environment"].addSignal("torqueExt_B", 3, unit = "N*m", isLogged = True, timeVec = simParam.timeVec)    
@@ -85,4 +88,4 @@ def initializeBusesAndSignals(simParam):
     fswBus.subBuses["modeMgt"].addSignal("aocsCtrActMode", 1, unit = "-")
     fswBus.subBuses["modeMgt"].addSignal("aocsModeElapsedTime", 1, unit = "s", isLogged = True, timeVec = simParam.timeVec)
     
-    return (modelsBus, fswBus)
+    return (modelsBus, fswBus, simBus)

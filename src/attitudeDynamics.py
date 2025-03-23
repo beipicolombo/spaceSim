@@ -19,30 +19,76 @@ deg2rad = pi/180
 
 # Attitude dynamics state
 class DynamicsState():
-    def __init__(self):
-        # Angular rates between S/C and inertial frame in S/C frame
-        angRate_BI_B = np.zeros(3)
-        # Angular rates between S/c and LVLV frame in S/C frame
-        angRate_BL_B = np.zeros(3)
-        # Attitude quaternion between S/C frame and inetial frame
-        qBI = attitudeKinematics.Quaternion(1, np.array([0, 0, 0]))
-        qBI = qBI.normalize()
-
+    def __init__(self, qBI, angRate_BI_B):
         self.angRate_BI_B = angRate_BI_B
-        self.angRate_BL_B = angRate_BL_B
-        self.qBI = qBI 
+        self.qBI = qBI
             
-    def propagateState(self, attDynParam, simParam, modelsBus):
-        # Retrieve useful inputs
-        torqueTot_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].value
-        # Propagate state
+    def propagateState(self, scMassParam, simParam, torqueTot_B):
         self.qBI.propagateState(self.angRate_BI_B, simParam)
-        self.angRate_BI_B = propagateAngRates(self.angRate_BI_B, torqueTot_B, attDynParam, simParam)
+        self.angRate_BI_B = propagateAngRates(self.angRate_BI_B, torqueTot_B, scMassParam, simParam)
     
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
+def propagateAttitude(scMassParam, simParam, modelsBus):
+    # Initialize output bus
+    modelsBusOut = modelsBus
+    # Retrieve inputs
+    torqueTot_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].value
+    qBI_sca = modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].value
+    qBI_vec = modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].value
+    angRate_BI_B = modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].value
+    # Reconstruct quaternion and dynamics state
+    qBI = attitudeKinematics.Quaternion(qBI_sca, qBI_vec)
+    dynState = DynamicsState(qBI, angRate_BI_B)
+    # Propagate
+    dynState.propagateState(scMassParam, simParam, torqueTot_B)
+    # Set output bus signals
+    modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].update(dynState.qBI.sca)
+    modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].update(dynState.qBI.vec)
+    modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(dynState.angRate_BI_B)
+    modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(dynState.qBI.toEuler())
 
+    return modelsBusOut
+
+
+def setInitialAttitude(modelsBus, simParam, qInitVec = np.array([1, 0, 0, 0]), angRateInit_B = np.zeros(3)):
+    # Initialize output bus
+    modelsBusOut = modelsBus
+
+    # Retrieve inputs
+    swInitAttitudeFrame = simParam.simOptions.swInitAttitudeFrame
+    qInit = attitudeKinematics.trans_VecToQuat(qInitVec, isScalarFirst = True)
+
+    if (swInitAttitudeFrame == "L"):
+        # Initial attitude is initialized wrt nadir reference frame
+        qLI_sca = modelsBus.subBuses["environment"].signals["qLI_sca"].value 
+        qLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
+        qLI = attitudeKinematics.Quaternion(qLI_sca, qLI_vec)
+        angRate_LI_L = modelsBus.subBuses["environment"].signals["angRate_LI_L"].value
+        angRate_BL_B = angRateInit_B
+        qBL = qInit
+        # Initialize attitude and angular rates
+        angRate_BI_B = angRate_BL_B + np.matmul(qBL.toDcm(), angRate_LI_L)
+        qBI = attitudeKinematics.multiplyQuat(qLI, qBL)
+    elif (swInitAttitudeFrame == "I"):
+        # Initial attitude is initialized wrt inertial reference frame
+        angRate_BI_B = angRateInit_B
+        qBI = qInit
+    else:
+        # Initial attitude is initialized wrt inertial reference frame by default
+        angRate_BI_B = np.zeros(3)
+        qBI = attitudeKinematics.Quaternion()
+    qBI = qBI.normalize()    
+
+    # Update output bus signals
+    modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].update(qBI.sca)
+    modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].update(qBI.vec)
+    modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(angRate_BI_B)
+    modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(qBI.toEuler())
+
+    return modelsBusOut
+    
 # Angular acceleration
 def angRatesDot(angRates, externalTorque, attDynParam):   
     scInertia    = attDynParam.inertiaSc_B

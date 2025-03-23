@@ -2,12 +2,12 @@ import numpy as np
 import src.models.dyn.massModels as massModels
 
 
-def getSpaceceraftMassModel(spacecraftName = ""):
+def getSpaceceraftMassModel(massModelName = "Default"):
 	# Initialize output
 	massParam = massModels.MassParam()
 
 	# Switch depending on the specified spacecraft name
-	if (spacecraftName == "spacecraft1"):
+	if (massModelName == "SC_1000kg_cyl"):
 		# Mass
 		massSc = 1000 # [kg]
 		# Construct inertia
@@ -17,18 +17,29 @@ def getSpaceceraftMassModel(spacecraftName = ""):
 		# Position of CoM
 		posComSc_G = np.zeros(3)
 
-	elif (spacecraftName == "spacecraft2"):
+	elif (massModelName == "SC_1000kg_rect"):
 		# Mass
 		massSc = 1000 # [kg]
 		# Construct inertia
-		lx = 2 # [m]
+		lx = 4 # [m]
 		ly = 2 # [m]
-		lz = 4 # [m]
+		lz = 2 # [m]
 		inertialSc_G = massModels.getUniformRectanglePrismInertia(massSc, lx, ly, lz)
 		# Position of CoM
 		posComSc_G = np.zeros(3)
 
-	elif (spacecraftName == "spacecraft_100kg_rectangle"):
+	elif (massModelName == "SC_100kg_rect"):
+		# Mass
+		massSc = 100 # [kg]
+		# Construct inertia
+		lx = 1 # [m]
+		ly = 0.5 # [m]
+		lz = 0.5 # [m]
+		inertialSc_G = massModels.getUniformRectanglePrismInertia(massSc, lx, ly, lz)
+		# Position of CoM
+		posComSc_G = np.zeros(3)
+		
+	elif (massModelName == "Default"):
 		# Mass
 		massSc = 100 # [kg]
 		# Construct inertia

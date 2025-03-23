@@ -18,7 +18,7 @@ class FswModeMgtParam:
 		self.isAutoSafeToNomPtngModeAllwd = False
 		# NOM_PTNG parameters
 		self.aocsNomPtngModeMinDur = 30*60 # [s]
-		self.isAutoNomPtngToNomEqAllwd = True
+		self.isAutoNomPtngToNomEqAllwd = False
 		# NOM_EQ parameters
 		self.aocsNomEqModeMinDur = 90*60 # [s
 		self.isAutoNomToOcmAllwd = False

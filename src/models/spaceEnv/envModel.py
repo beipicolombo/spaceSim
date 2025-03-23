@@ -71,19 +71,6 @@ def computeLvlhFrame(orbit, modelsBus):
     ta = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].value
 
     # Compute attitude
-    # 1. Using quaternion multiplication
-    #xVec = np.array([1, 0, 0])
-    #yVec = np.array([0, 1, 0])
-    #zVec = np.array([0, 0, 1])
-    #quat = attKin.trans_AngVecToQuat(raan, zVec)
-    #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(inc, xVec), quat)
-    #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(argPer+ta, zVec), quat)
-    #quat = attKin.multiplyQuat(attKin.trans_AngVecToQuat(-np.pi/2, yVec), quat)
-    #qLI  = attKin.multiplyQuat(attKin.trans_AngVecToQuat(np.pi/2, zVec), quat)
-    #dcmLI = qLI.toDcm()
-    #eulerAng_LI = qLI.toEuler()
-
-    # 2. Using DCM multiplication
     mat = np.matmul(Rx(inc), Rz(raan))
     mat = np.matmul(Rz(argPer+ta), mat)
     mat = np.matmul(Ry(-np.pi/2), mat)

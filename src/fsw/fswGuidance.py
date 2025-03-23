@@ -61,6 +61,13 @@ def computeGuidance(fswGuidanceParam, envBusIn, fswBus):
     qLI = attitudeKinematics.Quaternion(qLI_sca, qLI_vec)
 
     # Compute guidance angular rates and euler angles depending on the current guidance mode
+    # Guidance modes:
+    # GUIDMODE_OFF (Off)
+    # GUIDMODE_RATE_DAMPING (Rate damping)
+    # GUIDMODE_ATT_NADIR (Nadir pointing)
+    # GUIDMODE_SLEW (Slew) => TBW
+    # GUIDMODE_ATT_INERT (Attitude inertial pointing)
+
     if (aocsGuidMode == "GUIDMODE_ATT_INERT"):
         # Inertial attitude guidance mode
         (angRate_RI_R, qRI) = attitudeInertialGuidance(fswGuidanceParam)

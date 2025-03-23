@@ -110,6 +110,12 @@ def computeControl(fswControlParam, fswBus):
     (rotDirEst_BR_B, rotAngEst_BR) = qEstBR.toVecRot()
 
     # Compute control toraque depending on the current control mode
+    # Control modes:
+    # CTRLMODE_OFF (Off)
+    # CTRLMODE_ATT_CTRL (Attitude control)
+    # CTRLMODE_RATE_DAMP_CTRL (Rate control)
+    # CTRLMOD_THRUST_CTRL  (Thrust control)
+
     if (aocsCtrMode == "CTRLMODE_OFF"):
         # OFF control mode
         (forceCtrl_B, torqueCtrl_B) = offControl()
@@ -133,7 +139,13 @@ def computeControl(fswControlParam, fswBus):
         torqueCtrl_B = torqueCtrl_B + inertiaTrqCompensation(fswControlParam, angRateEst_BI_B)        
 
     
-    # Switch between THR and RW control torques
+    # Switch between THR and RW control torques depending on the actuator mode
+    # Actuator modes:
+    # NONE (None)
+    # THR (Thrusters)
+    # RW (Reaction wheels) => TBW
+    # RW_OFFLOADING (Reaction wheels offloading) => TBW
+
     if (aocsCtrActMode == "THR"):
         # THR only
         torqueCtrlThr_B = torqueCtrl_B

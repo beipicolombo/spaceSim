@@ -22,15 +22,15 @@ class FswControlParam:
         self.inertiaSc_B = np.identity(3) # Inertia at the center of mass, in body frame [kg*m^2]
         self.swInertiaTrqCompensation = False
 
-    def getAttCtrlTuningFrom_overshootAndTimeResp(self, overshoot, timeResp, inertia):
+    def getAttCtrlTuningFrom_overshootAndTimeResp(self, overshoot, timeResp):
         # Get damping
         damp = np.sqrt(np.log(overshoot)**2/(np.pi**2 + np.log(overshoot)**2))
         # Get natural pulse
         omega_n = 2/(timeResp * damp)
 
         # Get controller gains
-        Kp = omega_n**2 * inertia
-        Kd = 2*damp*omega_n * inertia
+        Kp = omega_n**2 * self.inertiaSc_B
+        Kd = 2*damp*omega_n * self.inertiaSc_B
         
         print("damping: %.4f [-]" % (damp))
         print("natural frequency: %.4f [rad/s]" % (omega_n))
@@ -38,13 +38,20 @@ class FswControlParam:
         self.attControlKd = Kd
         self.attControlKp = Kp
 
-    def getAttCtrlTuningFrom_dampingAndNaturalFrequency(self, damp, omega_n, inertia):
+    def getAttCtrlTuningFrom_dampingAndNaturalFrequency(self, damp, omega_n):
         # Get controller gains
-        Kp = omega_n**2 * inertia
-        Kd = 2*damp*omega_n * inertia
+        Kp = omega_n**2 * self.inertiaSc_B
+        Kd = 2*damp*omega_n * self.inertiaSc_B
 
         self.attControlKd = Kd
         self.attControlKp = Kp
+
+    def getRateCtrlTuningFrom_timeResp(self, timeResp):
+        # 2% time response formula: Tr(2%) = 4 x tau, with tau = 1/omega (1st order system cutoff frequency)
+        # Get controller gain
+        Kd = self.inertiaSc_B / timeResp
+
+        self.rateDampingKd = Kd
 
 
 # --------------------------------------------------
@@ -55,30 +62,11 @@ def thrustControl(fswControlParam):
     forceCtrl_B = np.array([0, 0, 0])
     return forceCtrl_B
 
-def rateControl(fswControlParam, angRateEst_B, angRateGuid_B):
-    torqueCtrl_B = np.matmul(fswControlParam.rateDampingKd, (angRateGuid_B - angRateEst_B)) 
-    return torqueCtrl_B
-
-def rateControlNew(fswControlParam, angRateEst_BR_B):
+def rateControl(fswControlParam, angRateEst_BR_B):
     torqueCtrl_B = -np.matmul(fswControlParam.rateDampingKd, angRateEst_BR_B) 
     return torqueCtrl_B    
 
-def attitudeControl(fswControlParam, angRateMeas_B, eulerAngMeas_BI, angRateGuid_B, eulerAngGuid_BI):
-    torqueCtrl_B = np.matmul(fswControlParam.attControlKd, (angRateGuid_B - angRateMeas_B)) - np.matmul(fswControlParam.attControlKp, (eulerAngGuid_BI - eulerAngMeas_BI))
-    return torqueCtrl_B
-
-def attitudeControlNew(fswControlParam, angRateEst_BR_B, qEstBR):
-    # 1. Using rotation angle + vector
-    # (rotDirEst_B, rotAngEst) = qEstBR.toVecRot()
-    # torqueCtrl_B = -np.matmul(fswControlParam.attControlKd, angRateEst_BR_B) - np.matmul(fswControlParam.attControlKp, rotDirEst_B*rotAngEst)
-    # 2. Using rotation angle + vector (alternative)
-    # if (rotAngEst > np.pi):
-    #     torqueCtrl_P_B = + np.matmul(fswControlParam.attControlKp, rotDirEst_B*(2*np.pi-rotAngEst))
-    # else:
-    #     torqueCtrl_P_B = - np.matmul(fswControlParam.attControlKp, rotDirEst_B*rotAngEst)
-    # torqueCtrl_D_B = -np.matmul(fswControlParam.attControlKd, angRateEst_BR_B)
-    # torqueCtrl_B = torqueCtrl_D_B + torqueCtrl_P_B
-    # 3. Using euler angles
+def attitudeControl(fswControlParam, angRateEst_BR_B, qEstBR):
     eulerAngEst_BR = qEstBR.toEuler()
     #torqueCtrl_B = -np.matmul(fswControlParam.attControlKd, angRateEst_BR_B) - np.matmul(fswControlParam.attControlKp, qEstBR.vec)
     torqueCtrl_B = -np.matmul(fswControlParam.attControlKd, angRateEst_BR_B) - np.matmul(fswControlParam.attControlKp, eulerAngEst_BR)
@@ -127,15 +115,14 @@ def computeControl(fswControlParam, fswBus):
         (forceCtrl_B, torqueCtrl_B) = offControl()
     elif (aocsCtrMode == "CTRLMODE_RATE_DAMP_CTRL"):
         # Rate damping control mode
-        # torqueCtrl_B = rateControl(fswControlParam, angRateEst_BR_B)
-        torqueCtrl_B = rateControlNew(fswControlParam, angRateEst_BR_B)
+        torqueCtrl_B = rateControl(fswControlParam, angRateEst_BR_B)
         forceCtrl_B = np.array([0, 0, 0])
     elif (aocsCtrMode == "CTRLMODE_ATT_CTRL"):
         # Inertial attitude control mode
-        torqueCtrl_B = attitudeControlNew(fswControlParam, angRateEst_BR_B, qEstBR)
+        torqueCtrl_B = attitudeControl(fswControlParam, angRateEst_BR_B, qEstBR)
         forceCtrl_B = np.array([0, 0, 0])
     elif (aocsCtrMode == "CTRLMOD_THRUST_CTRL"):
-        torqueCtrl_B = attitudeControlNew(fswControlParam, angRateEst_BR_B, qEstBR)
+        torqueCtrl_B = attitudeControl(fswControlParam, angRateEst_BR_B, qEstBR)
         forceCtrl_B = np.array([0, 0, 0])
     else:
         # OFF control mode or current mode is not defined

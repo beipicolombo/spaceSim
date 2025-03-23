@@ -7,7 +7,9 @@ Created on Sun Mar 27 13:15:55 2022
 
 import numpy as np
 import ephem
+import src.utils.constants as const
 import src.utils.conversions as conversions
+import src.orbitDynamics as orbDyn
 import src.attitudeKinematics as attKin
 import src.attitudeDynamics as attDyn
 from src.attitudeKinematics import Rx as Rx
@@ -47,7 +49,7 @@ def computeEphemerides(simBus, modelsBus, simParam):
     return modelsEnvBusOut
     
 
-def computeLvlhFrame(orbit, modelsBus):
+def computeLvlhFrame(modelsBus):
     # Initialize output
     modelsBusOut = modelsBus
 
@@ -56,6 +58,8 @@ def computeLvlhFrame(orbit, modelsBus):
     raan = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].value
     argPer = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].value
     ta = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].value
+    sma = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].value
+    mu = const.earthMu # TBW => use single common parameter for gravity model config
 
     # Compute attitude
     mat = np.matmul(Rx(inc), Rz(raan))
@@ -65,7 +69,7 @@ def computeLvlhFrame(orbit, modelsBus):
     qLI = attKin.trans_DcmToQuat(dcmLI).normalize()
     eulerAng_LI = qLI.toEuler()
     # Compute angular rates
-    angRate_LI_L = np.array([0, -orbit.orbitContext.orbitPulse, 0])
+    angRate_LI_L = np.array([0, -orbDyn.getOrbitRate(mu, sma), 0])
 
     # Update output bus signals
     modelsBusOut.subBuses["environment"].signals["eulerAng_LI"].update(eulerAng_LI)
@@ -98,7 +102,7 @@ def computeAeroTorque():
     return np.array([0, 0, 0])
 
 
-def computeExtTorque(simParam, attDynParam, orbit, modelsBus):
+def computeExtTorque(simParam, attDynParam, modelsBus):
     # Initialize output bus
     modelsBusOut = modelsBus
 
@@ -108,6 +112,8 @@ def computeExtTorque(simParam, attDynParam, orbit, modelsBus):
     qBI_sca = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].value
     qBI_vec = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].value
     angRate_BI_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].value
+    sma = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].value
+    mu = const.earthMu # TBW => use single common parameter for gravity model config
 
     # Reconstruct the dynamic state and LVLH frame quaternion
     qLI = attKin.Quaternion(qLI_sca, qLI_vec)
@@ -115,7 +121,7 @@ def computeExtTorque(simParam, attDynParam, orbit, modelsBus):
     myDynState = attDyn.DynamicsState(qBI, angRate_BI_B)
 
     # Gravity gradient disturbance torque
-    torqueGG_B = computeGGTorque(simParam, attDynParam, orbit.orbitContext.orbitPulse, myDynState.qBI, qLI)
+    torqueGG_B = computeGGTorque(simParam, attDynParam, orbDyn.getOrbitRate(mu, sma), myDynState.qBI, qLI)
     # Aerodynamic disturbance torque
     torqueAero_B = computeAeroTorque()
     # Total disturbance torque

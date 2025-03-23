@@ -5,6 +5,7 @@ Created on Sun Mar 27 13:15:55 2022
 @author: Xela
 """
 
+import src.utils.constants as const
 import numpy as np
 import math as m
 import matplotlib.pyplot as plt
@@ -16,12 +17,22 @@ import time as ti
 
 # Retrieve useful constants
 pi  = np.pi
-dtR = pi/180 # TBW: use constants module
+deg2rad = pi/180 # TBW: use constants module
 
 
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+class OrbitInitParam():
+    def __init__(self):
+        self.perAltitudeInit = 500 * 1e3 # [m]
+        self.ecc = 0.01
+        self.inc = 10 * deg2rad # [rad]
+        self.raan = 10 * deg2rad # [rad]
+        self.argPer = 90 * deg2rad # [rad]
+        self.ta = 0 * deg2rad # [rad]
+
+
 class OrbitContext():
     def __init__(self):
         self.longPer = 0
@@ -72,10 +83,6 @@ class Orbit:
         self.keplerElem.set(pos_I, vel_I, mu)
         self.orbitContext.set(self.keplerElem, mu)
 
-# elementsToPosVelInertial(sma, ecc, inc, raan, argPer, ta, mu):
-# posVelInertialToElements(posVec, velVec, mu):
-# (sma ,ecc, inc, raan, argPer, taEp, lonPer, lonEp, perRad, apoRad, angMomVec)
-
     def posVelToVec(self):
         vec = np.concatenate((np.array(self.pos_I), np.array(self.vel_I)),0)
         return vec
@@ -101,15 +108,51 @@ class Orbit:
         self.vel_I = velNext_I
         # Update kepler elements state
         self.keplerElem.set(self.pos_I, self.vel_I, mu)
+        self.orbitContext.set(self.keplerElem, mu)
 
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
-def updateOrbitDynBus(orbit, modelsBus):
-    # TBW => more generic to include all orbit dynamics processings
-    # Initialize output bus
+def propagateOrbit(simParam, modelsBus):
+    # Initialize ouput bus
     modelsBusOut = modelsBus
+    pos_I = modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].value
+    vel_I = modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].value
+    mu = const.earthMu # TBW => use single common parameter for gravity model config
+    # Get orbit object
+    orbitObj = Orbit(mu, pos_I = pos_I, vel_I = vel_I)
+    # Propagate
+    orbitObj.propagate(simParam, mu)
     # Update output bus signals
+    modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(orbitObj.pos_I)
+    modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(orbitObj.vel_I)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].update(orbitObj.keplerElem.sma)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ecc"].update(orbitObj.keplerElem.ecc)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].update(orbitObj.keplerElem.inc)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].update(orbitObj.keplerElem.raan)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(orbitObj.keplerElem.argPer)
+    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(orbitObj.keplerElem.ta)
+
+    return modelsBusOut
+
+
+def setInitialOrbit(modelsBus, orbitInitParam):
+    # Initialize outputs bus
+    modelsBusOut = modelsBus
+    perAltitudeInit = orbitInitParam.perAltitudeInit
+    ecc = orbitInitParam.ecc
+    inc = orbitInitParam.inc
+    raan = orbitInitParam.raan
+    argPer = orbitInitParam.argPer
+    ta = orbitInitParam.ta
+
+    # Compute initial orbit
+    perRadiusInit = perAltitudeInit + const.earthRadius
+    sma = perRadiusInit / (1-ecc)
+    (pos_I, vel_I) = elementsToPosVelInertial(sma, ecc, inc, raan, argPer, ta, const.earthMu)
+    orbit = Orbit(const.earthMu, pos_I, vel_I)
+
+    # Set output bus signals
     modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(orbit.pos_I)
     modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(orbit.vel_I)
     modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].update(orbit.keplerElem.sma)
@@ -119,7 +162,7 @@ def updateOrbitDynBus(orbit, modelsBus):
     modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(orbit.keplerElem.argPer)
     modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(orbit.keplerElem.ta)
 
-    return modelsBusOut
+    return (modelsBusOut, orbit)
 
 
 # Intertial position/velocity to orbit elements
@@ -276,6 +319,11 @@ def elementsToPosVelInertial(sma, ecc, inc, raan, argPer, ta, mu):
     # Outputs
     return(posVec_i, velVec_i)
    
+# Compute orbit rate
+def getOrbitRate(mu, sma):
+    orbitRate = np.sqrt(mu / pow(sma, 3))
+    return orbitRate
+
 
 # --------------------------------------------------
 # POSITION AND VELOCITY DYNAMICS
@@ -399,8 +447,8 @@ def computeNorm(timeData):
 # display latitude/longitude
 def plotLatLon(time,timeLat,timeLon):
     figLatLonTime = plt.figure("LatLonTime")
-    plt.plot(time,timeLat/dtR, label="lat", color="blue")
-    plt.plot(time,timeLon/dtR, label="lon", color="red")
+    plt.plot(time,timeLat/deg2rad, label="lat", color="blue")
+    plt.plot(time,timeLon/deg2rad, label="lon", color="red")
     plt.grid()
     plt.title("Latitude/longitude in geocentric frame")
     plt.xlabel("Time [s]")
@@ -409,7 +457,7 @@ def plotLatLon(time,timeLat,timeLon):
     # plt.show()
     
     figLatLonProj = plt.figure("LatLonProj")
-    plt.scatter(timeLon/dtR,timeLat/dtR,label="trace",color="blue")
+    plt.scatter(timeLon/deg2rad,timeLat/deg2rad,label="trace",color="blue")
     plt.grid()
     plt.title("Orbit trace")
     plt.xlabel("Lon [deg]")
@@ -464,15 +512,15 @@ def plotElements(time,timeSma,timeEcc, timeInc, timeRaan, timeArgPer, timeApoRad
     figAngles, axs = plt.subplots(3,1)
     figAngles.tight_layout()
     figAngles.canvas.manager.set_window_title("Angles")      
-    axs[0].plot(time,timeInc/dtR,label="Inc",color="blue")
+    axs[0].plot(time,timeInc/deg2rad,label="Inc",color="blue")
     axs[0].set_ylabel("Inc [deg]")
     axs[0].set_xlabel("Time [s]")
     axs[0].grid()    
-    axs[1].plot(time,timeRaan/dtR,label="Raan",color="blue")
+    axs[1].plot(time,timeRaan/deg2rad,label="Raan",color="blue")
     axs[1].set_ylabel("Raan [deg]")
     axs[1].set_xlabel("Time [s]")
     axs[1].grid()    
-    axs[2].plot(time,timeArgPer/dtR,label="ArgPer",color="blue")
+    axs[2].plot(time,timeArgPer/deg2rad,label="ArgPer",color="blue")
     axs[2].set_ylabel("ArgPer [deg]")
     axs[2].set_xlabel("Time [s]")    
     axs[2].grid()    

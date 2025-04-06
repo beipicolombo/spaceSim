@@ -29,7 +29,7 @@ class Quaternion:
     def isIdentity(self):
         vecnorm = np.linalg.norm(self.vec)
         eps = 1e-10
-        isIdentity = ((vecnorm < eps) and ((self.sca-1)<eps))
+        isIdentity = ((vecnorm < eps) and ((abs(self.sca)-1)<eps))
         return isIdentity
     
     def normalize(self):
@@ -93,8 +93,13 @@ class Quaternion:
 
     def toVecRot(self):
         if not self.isIdentity():
-            vec = self.vec/np.linalg.norm(self.vec)
-            ang = 2*np.arccos(self.sca)
+            ang0 = 2*np.arccos(self.sca)
+            if (ang0 < np.pi):
+                ang = ang0
+                vec = self.vec/np.sin(ang/2)
+            else:
+                ang = ang0 - 2*np.pi # take a negative angle
+                vec = self.vec/abs(np.sin(ang)) # keep the same direction
         else:
             vec = np.array([1, 0, 0])
             ang = 0

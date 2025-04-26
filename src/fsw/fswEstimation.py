@@ -24,6 +24,37 @@ class FswEstimationParam:
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
+def positionVelocityEstimation(fswEstimationParam, fswBus, modelsBus):
+    # Retrieve useful inputs
+    pos_J = modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].value
+    vel_J = modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].value
+    qLI_sca = modelsBus.subBuses["environment"].signals["qLI_sca"].value
+    qLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
+    angRate_LI_L = modelsBus.subBuses["environment"].signals["angRate_LI_L"].value
+
+    # Initialize output bus
+    fswEstBusOut = fswBus.subBuses["estimation"]
+
+    # Position estimation
+    posEst_J = pos_J
+    # Velocity estimation
+    velEst_J = vel_J
+    # Nadir frame estimation
+    qLIest_sca = qLI_sca 
+    qLIest_vec = qLI_vec
+    angRateEst_LI_L = angRate_LI_L
+
+    # Update output bus signals
+    fswEstBusOut.signals["posEst_J"].update(posEst_J)
+    fswEstBusOut.signals["velEst_J"].update(velEst_J)
+    fswEstBusOut.signals["qLIest_sca"].update(qLIest_sca)
+    fswEstBusOut.signals["qLIest_vec"].update(qLIest_vec)
+    fswEstBusOut.signals["angRateEst_LI_L"].update(angRateEst_LI_L)
+
+
+    return fswEstBusOut
+
+
 def attitudeEstimation(fswEstimationParam, fswBus, modelsBus):
     # Retrieve useful inputs
     angRateMeas_BI_B = modelsBus.subBuses["sensors"].signals["angRateMeas_BI_B"].value
@@ -31,7 +62,7 @@ def attitudeEstimation(fswEstimationParam, fswBus, modelsBus):
     qBImeas_sca = modelsBus.subBuses["sensors"].signals["qBImeas_sca"].value
     qBImeas_vec = modelsBus.subBuses["sensors"].signals["qBImeas_vec"].value
 
-    # Initialie output bus
+    # Initialize output bus
     fswEstBusOut = fswBus.subBuses["estimation"]
 
     # Angular rates estimation

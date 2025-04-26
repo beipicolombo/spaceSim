@@ -132,6 +132,7 @@ def initializeSimulation(patches):
     fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, joystickSerialPort, interfaceInputsParam)
 
     # [Estimation]
+    fswBus.subBuses["estimation"] = fswEstimation.positionVelocityEstimation(fswParam.estParam, fswBus, modelsBus)
     fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
     
     # [Guidance]

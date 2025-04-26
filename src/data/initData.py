@@ -23,7 +23,7 @@ def initializeBusesAndSignals(simParam):
     modelsBus.subBuses["dynamics"].subBuses["attitude"].addSignal("angMomSc_B", 3, unit = "N*m*s", isLogged = True, timeVec = simParam.timeVec)
     modelsBus.subBuses["dynamics"].addSubBus("posVel")
     modelsBus.subBuses["dynamics"].subBuses["posVel"].addSignal("pos_I", 3, unit = "m", isLogged = True, timeVec = simParam.timeVec)
-    modelsBus.subBuses["dynamics"].subBuses["posVel"].addSignal("vel_I", 3, unit = "m")
+    modelsBus.subBuses["dynamics"].subBuses["posVel"].addSignal("vel_I", 3, unit = "m/s")
     modelsBus.subBuses["dynamics"].addSubBus("orbitElem")
     modelsBus.subBuses["dynamics"].subBuses["orbitElem"].addSignal("sma", 3, unit = "m")
     modelsBus.subBuses["dynamics"].subBuses["orbitElem"].addSignal("ecc", 3)
@@ -78,6 +78,11 @@ def initializeBusesAndSignals(simParam):
     fswBus.subBuses["estimation"].addSignal("eulerAngEst_BI", 3, unit = "rad")
     fswBus.subBuses["estimation"].addSignal("qBIest_sca", 1, unit = "-")
     fswBus.subBuses["estimation"].addSignal("qBIest_vec", 3, unit = "-")
+    fswBus.subBuses["estimation"].addSignal("qLIest_sca", 1, unit = "-", isLogged = True, timeVec = simParam.timeVec)
+    fswBus.subBuses["estimation"].addSignal("qLIest_vec", 3, unit = "-", isLogged = True, timeVec = simParam.timeVec)
+    fswBus.subBuses["estimation"].addSignal("posEst_J", 3, unit = "m")
+    fswBus.subBuses["estimation"].addSignal("velEst_J", 3, unit = "m/s") 
+    fswBus.subBuses["estimation"].addSignal("angRateEst_LI_L", 3, unit = "rad/s") 
     fswBus.addSubBus("command")
     fswBus.subBuses["command"].addSignal("torqueCmdThr_B", 3, unit = "N*m", isLogged = True, timeVec = simParam.timeVec)
     fswBus.subBuses["command"].addSignal("torqueCmdRw_B", 3, unit = "N*m", isLogged = True, timeVec = simParam.timeVec)
@@ -89,7 +94,5 @@ def initializeBusesAndSignals(simParam):
     fswBus.subBuses["modeMgt"].addSignal("aocsModeElapsedTime", 1, unit = "s", isLogged = True, timeVec = simParam.timeVec)
     fswBus.addSubBus("interfaces")
     fswBus.subBuses["interfaces"].addSignal("trqCmdManual_B", 3, unit = "N*m", isLogged = True, timeVec = simParam.timeVec)
-
-
 
     return (modelsBus, fswBus, simBus)

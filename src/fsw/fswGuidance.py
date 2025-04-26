@@ -47,15 +47,15 @@ def nadirGuidance(fswGuidanceParam, angRate_LI_L, qLI):
     qRI = qLI
     return (angRate_RI_R, qRI)
 
-def computeGuidance(fswGuidanceParam, envBusIn, fswBus):
+def computeGuidance(fswGuidanceParam, envBusIn, fswBusIn):
     # Initialize output bus
-    fswGuidBusOut = fswBus.subBuses["guidance"]
+    fswGuidBusOut = fswBusIn.subBuses["guidance"]
 
     # Retrieve signals / parameters
-    aocsGuidMode = fswBus.subBuses["modeMgt"].signals["aocsGuidMode"].value
-    angRate_LI_L = envBusIn.signals["angRate_LI_L"].value
-    qLI_sca = envBusIn.signals["qLI_sca"].value
-    qLI_vec = envBusIn.signals["qLI_vec"].value
+    aocsGuidMode = fswBusIn.subBuses["modeMgt"].signals["aocsGuidMode"].value
+    angRate_LI_L = fswBusIn.subBuses["estimation"].signals["angRateEst_LI_L"].value
+    qLI_sca = fswBusIn.subBuses["estimation"].signals["qLIest_sca"].value
+    qLI_vec = fswBusIn.subBuses["estimation"].signals["qLIest_vec"].value
 
     # Reconstruct the LVLH frame quaternion
     qLI = attitudeKinematics.Quaternion(qLI_sca, qLI_vec)

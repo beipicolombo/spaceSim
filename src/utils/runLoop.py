@@ -83,21 +83,16 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
         # [Interfaces]
         fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, joystickSerialPort, interfaceInputsParam)
 
-        # [Estimation] Compute estimated position, velocity and nadir reference frame
-        fswBus.subBuses["estimation"] = fswEstimation.positionVelocityEstimation(fswParam.estParam, fswBus, modelsBus)
-        
-        # [Estimation] Compute estimated angular rates and / or attitude
-        fswBus.subBuses["estimation"] = fswEstimation.attitudeEstimation(fswParam.estParam, fswBus, modelsBus)
+        # [Estimation]
+        fswBus.subBuses["estimation"] = fswEstimation.computeEstimation(fswParam.estParam, fswBus, modelsBus)
 
-        # [Guidance] Compute guidance angular rates and euler angles
-        # Depends on the current guidance mode
+        # [Guidance]
         fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, modelsBus.subBuses["environment"], fswBus)
 
-        # [Control] Compute control torque
+        # [Control]
         fswBus.subBuses["control"] = fswControl.computeControl(fswParam.ctrParam, fswBus)
 
-
-        # [Command] Compute actuator commands
+        # [Command]
         fswBus.subBuses["command"] = fswCommand.computeCommand(fswParam.cmdParam, fswBus)
 
         # [Graphics]

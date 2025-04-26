@@ -24,6 +24,30 @@ class FswEstimationParam:
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
+def computeEstimation(fswEstimationParam, fswBusIn, modelsBus):
+    # Initialize output bus
+    fswEstBusOut = fswBusIn.subBuses["estimation"]
+
+    # Position and velocity estimation
+    (posEst_J, velEst_J, qLIest, angRateEst_LI_L) = positionVelocityEstimation(fswEstimationParam, fswBusIn, modelsBus)
+    # Attitude estimation
+    (angRateEst_BI_B, eulerAngEst_BI, qBIest) = attitudeEstimation(fswEstimationParam, fswBusIn, modelsBus)
+
+    # Update output bus signals
+    fswEstBusOut.signals["posEst_J"].update(posEst_J)
+    fswEstBusOut.signals["velEst_J"].update(velEst_J)
+    fswEstBusOut.signals["qLIest_sca"].update(qLIest.sca)
+    fswEstBusOut.signals["qLIest_vec"].update(qLIest.vec)
+    fswEstBusOut.signals["angRateEst_LI_L"].update(angRateEst_LI_L)
+
+    fswEstBusOut.signals["angRateEst_BI_B"].update(angRateEst_BI_B)
+    fswEstBusOut.signals["eulerAngEst_BI"].update(eulerAngEst_BI)
+    fswEstBusOut.signals["qBIest_sca"].update(qBIest.sca)
+    fswEstBusOut.signals["qBIest_vec"].update(qBIest.vec)
+
+    return fswEstBusOut
+
+
 def positionVelocityEstimation(fswEstimationParam, fswBus, modelsBus):
     # Retrieve useful inputs
     pos_J = modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].value
@@ -42,17 +66,10 @@ def positionVelocityEstimation(fswEstimationParam, fswBus, modelsBus):
     # Nadir frame estimation
     qLIest_sca = qLI_sca 
     qLIest_vec = qLI_vec
+    qLIest = attitudeKinematics.Quaternion(qLIest_sca, qLIest_vec)
     angRateEst_LI_L = angRate_LI_L
 
-    # Update output bus signals
-    fswEstBusOut.signals["posEst_J"].update(posEst_J)
-    fswEstBusOut.signals["velEst_J"].update(velEst_J)
-    fswEstBusOut.signals["qLIest_sca"].update(qLIest_sca)
-    fswEstBusOut.signals["qLIest_vec"].update(qLIest_vec)
-    fswEstBusOut.signals["angRateEst_LI_L"].update(angRateEst_LI_L)
-
-
-    return fswEstBusOut
+    return (posEst_J, velEst_J, qLIest, angRateEst_LI_L)
 
 
 def attitudeEstimation(fswEstimationParam, fswBus, modelsBus):
@@ -70,14 +87,8 @@ def attitudeEstimation(fswEstimationParam, fswBus, modelsBus):
     # Attitude estimation
     eulerAngEst_BI = eulerAngMeas_BI
     qBIest = attitudeKinematics.Quaternion(qBImeas_sca, qBImeas_vec).normalize()
-
-    # Update output bus signals
-    fswEstBusOut.signals["angRateEst_BI_B"].update(angRateEst_BI_B)
-    fswEstBusOut.signals["eulerAngEst_BI"].update(eulerAngEst_BI)
-    fswEstBusOut.signals["qBIest_sca"].update(qBIest.sca)
-    fswEstBusOut.signals["qBIest_vec"].update(qBIest.vec)
     
-    return fswEstBusOut
+    return (angRateEst_BI_B, eulerAngEst_BI, qBIest)
 
 
 # --------------------------------------------------

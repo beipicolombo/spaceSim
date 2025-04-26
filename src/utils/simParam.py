@@ -20,6 +20,7 @@ deg2rad = pi/180
 class SimParam:
     # To be moved as higher level class
     def __init__(self):
+        self.caseName = "Default"
         self.dateTimeStart = ephem.Date("2024/3/9 5:10:10")
         self.Ts = 1 # [s]
         self.Tend = 10*60 # [s]
@@ -48,3 +49,11 @@ class SimOptions:
 class RunOptions:
     def __init__(self):
         self.isPlot = True
+        self.swVisualPy = True
+        self.swVisualPyLabelsAocsMode = True
+        self.swVisualPyLabelsAttitude = False
+        self.visualPyRate = 100
+
+
+
+

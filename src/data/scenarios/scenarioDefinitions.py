@@ -10,6 +10,47 @@ pi  = np.pi
 deg2rad = pi/180
 
 
+def scenarioDefinition_template():
+    print("Patches...")
+    
+    # Initialize output
+    patches = {}
+    
+    # Simulation parameters
+    simParamPatch = {}
+    simParamPatch["caseName"] = "template"
+    patches.update({"simParamPatch": simParamPatch})
+    
+    runOptionsPatch = {}
+    patches.update({"runOptionsPatch": runOptionsPatch})
+    
+    simOptionsPatch = {}
+    patches.update({"simOptionsPatch": simOptionsPatch})
+    
+    # Initial attitude
+    initDynStatePatch = {}
+    patches.update({"initDynStatePatch": initDynStatePatch})
+    
+    # Initial orbit
+    orbitInitParamPatch = {}
+    patches.update({"orbitInitParamPatch": orbitInitParamPatch})
+    
+    # Mode management
+    modeMgtParamPatch = {}
+    patches.update({"modeMgtParamPatch": modeMgtParamPatch})
+    
+    # Guidance
+    guidParamPatch = {}
+    patches.update({"guidParamPatch": guidParamPatch})
+    
+    # Control
+    ctrParamPatch = {}
+    patches.update({"ctrParamPatch": ctrParamPatch})
+
+    return patches
+
+
+
 def scenarioDefinition_testDevelopment():
     print("Patches...")
     
@@ -18,7 +59,7 @@ def scenarioDefinition_testDevelopment():
     
     # Simulation parameters
     simParamPatch = {}
-    simParamPatch["caseName"] = "dev"
+    simParamPatch["caseName"] = "testDevelopment"
     simParamPatch["dateTimeStart"] = ephem.Date("2024/3/9 5:10:10")
     simParamPatch["Ts"] = 0.5 # [s]
     simParamPatch["Tend"] = 3*60 # [s]
@@ -73,6 +114,6 @@ def scenarioDefinition_testDevelopment():
     ctrParamPatch["swInertiaTrqCompensation"] = False
     patches.update({"ctrParamPatch": ctrParamPatch})
 
-    return patches        
+    return patches
     
     

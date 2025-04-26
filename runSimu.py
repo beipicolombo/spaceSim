@@ -10,8 +10,8 @@ import numpy as np
 
 from src.utils.runLoop import *
 from src.utils.runPlots import *
+from src.utils.runInitialization import *
 
-import src.utils.initialization as initialization
 import src.utils.constants as const
 import src.data.scenarios.scenarioDefinitions as scenarioDefinitions
 
@@ -22,17 +22,16 @@ deg2rad = const.deg2rad
 earthRadius = const.earthRadius
 earthMu = const.earthMu
 
+# Define the scenario name
+scenarioPatchFcnHdl = scenarioDefinitions.scenarioDefinition_testDevelopment
+
 
 # --------------------------------------------------
-# SETUP
+# INITIALIZATION
 # --------------------------------------------------
 print("==================================")
-print("Setup")
-# Patches
-patches = scenarioDefinitions.scenarioDefinition_testDevelopment()
-
-# Initialization
-(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays) = initialization.initializeSimulation(patches)
+print("Initialization")
+(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays) = runInitialization(scenarioPatchFcnHdl)
 
 
 # --------------------------------------------------
@@ -42,11 +41,6 @@ print("==================================")
 print("Simulation")
 (modelsBus, fswBus, simBus) = runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays)
 
-    
-# --------------------------------------------------
-# DEBUG
-# --------------------------------------------------
-
 
 # --------------------------------------------------
 # POST-PROCESSING
@@ -54,6 +48,7 @@ print("Simulation")
 print("==================================")
 print("Post-processing")
 runPlots(modelsBus, fswBus)
+
 
 # --------------------------------------------------
 # PLOTS

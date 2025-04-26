@@ -10,6 +10,15 @@ deg2rad = pi/180
 # --------------------------------------------------
 class FswModeMgtParam:
 	def __init__(self):
+        # Initial AOCS mode
+        # OFF (Off)
+        # SAFE (Safe)
+        # NOM_PTNG (Nominal - pointing)
+        # NOM_EQ (Nominal - equilibrium)
+        # NOM_SLEW (Nominal - slew) => To be added
+        # OCM (Orbit Control Mode)
+        # MANUAL
+		self.aocsModeInit = "OFF"
 		self.aocsOffModeMinDur = 10 # [s]
 		# SAFE mode parameters
 		self.aocsSafeModeMinDur = 0*60 # [s]
@@ -149,6 +158,9 @@ def aocsGuidanceModeLogic(aocsMode):
 		aocsGuidMode = "GUIDMODE_ATT_NADIR"
 	elif (aocsMode == "OCM"):
 		aocsGuidMode = "GUIDMODE_ATT_INERT"
+	elif (aocsMode == "MANUAL"):
+		aocsGuidMode = "GUIDMODE_OFF"
+        # TBW: GUIDMODE_OFF for now
 	else:
 		aocsGuidMode = "GUIDMODE_OFF"
 
@@ -166,6 +178,9 @@ def aocsCtrModeLogic(aocsMode):
 		aocsCtrActMode = "THR"
 	elif (aocsMode == "OCM"):
 		aocsCtrMode = "CTRLMODE_THRUST_CTRL"
+		aocsCtrActMode = "THR"
+	elif (aocsMode == "MANUAL"):
+		aocsCtrMode = "CTRLMOD_MANUAL"
 		aocsCtrActMode = "THR"
 	else:
 		aocsCtrMode = "CTRLMODE_OFF"

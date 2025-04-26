@@ -84,11 +84,16 @@ def inertiaTrqCompensation(fswControlParam, angRateEst_BI_B):
     trq_B = np.array([0, 0, 0])
     return trq_B
 
+def manualAttitudeControl(trqCmdManual_B):
+    return trqCmdManual_B
+
 def computeControl(fswControlParam, fswBus):
     # Initialize output bus
     fswControlBusOut = fswBus.subBuses["control"]
 
     # Retrieve useful inputs
+    trqCmdManual_B = fswBus.subBuses["interfaces"].signals["trqCmdManual_B"].value
+
     angRate_RI_R = fswBus.subBuses["guidance"].signals["angRate_RI_R"].value
     qRI_sca = fswBus.subBuses["guidance"].signals["qRI_sca"].value
     qRI_vec = fswBus.subBuses["guidance"].signals["qRI_vec"].value
@@ -115,6 +120,7 @@ def computeControl(fswControlParam, fswBus):
     # CTRLMODE_ATT_CTRL (Attitude control)
     # CTRLMODE_RATE_DAMP_CTRL (Rate control)
     # CTRLMOD_THRUST_CTRL  (Thrust control)
+    # CTRLMOD_MANUAL (Manual control)
 
     if (aocsCtrMode == "CTRLMODE_OFF"):
         # OFF control mode
@@ -129,6 +135,9 @@ def computeControl(fswControlParam, fswBus):
         forceCtrl_B = np.array([0, 0, 0])
     elif (aocsCtrMode == "CTRLMOD_THRUST_CTRL"):
         torqueCtrl_B = attitudeControl(fswControlParam, angRateEst_BR_B, qEstBR)
+        forceCtrl_B = np.array([0, 0, 0])
+    elif (aocsCtrMode == "CTRLMOD_MANUAL"):
+        torqueCtrl_B = manualAttitudeControl(trqCmdManual_B)
         forceCtrl_B = np.array([0, 0, 0])
     else:
         # OFF control mode or current mode is not defined

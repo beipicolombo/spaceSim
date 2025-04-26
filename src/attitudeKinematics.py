@@ -92,14 +92,18 @@ class Quaternion:
         return dcm
 
     def toVecRot(self):
+        eps = 1e-10
         if not self.isIdentity():
             ang0 = 2*np.arccos(self.sca)
-            if (ang0 < np.pi):
+            if (abs(ang0) < eps) or (abs(ang0-2*np.pi) < eps):
+                ang = 0
+                vec = np.array([1, 0, 0]) 
+            elif (ang0 < np.pi):
                 ang = ang0
                 vec = self.vec/np.sin(ang/2)
             else:
                 ang = ang0 - 2*np.pi # take a negative angle
-                vec = self.vec/abs(np.sin(ang)) # keep the same direction
+                vec = self.vec/abs(np.sin(ang/2)) # keep the same direction
         else:
             vec = np.array([1, 0, 0])
             ang = 0

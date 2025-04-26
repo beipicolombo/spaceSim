@@ -19,7 +19,11 @@ deg2rad = pi/180
 
 # Attitude dynamics state
 class DynamicsState():
-    def __init__(self, qBI, angRate_BI_B):
+    def __init__(self, qBI = attitudeKinematics.Quaternion(), angRate_BI_B = np.array([0, 0, 0])):
+        # Initial attitude and angular rates
+        self.qInitVec = attitudeKinematics.Quaternion()
+        self.angRateInit_B = np.array([0, 0, 0])
+        # Current attitude and angular rates
         self.angRate_BI_B = angRate_BI_B
         self.qBI = qBI
             
@@ -52,11 +56,13 @@ def propagateAttitude(scMassParam, simParam, modelsBus):
     return modelsBusOut
 
 
-def setInitialAttitude(modelsBus, simParam, qInitVec = np.array([1, 0, 0, 0]), angRateInit_B = np.zeros(3)):
+def setInitialAttitude(modelsBus, simParam, dynState):
     # Initialize output bus
     modelsBusOut = modelsBus
 
     # Retrieve inputs
+    qInitVec = dynState.qInitVec
+    angRateInit_B = dynState.angRateInit_B
     swInitAttitudeFrame = simParam.simOptions.swInitAttitudeFrame
     qInit = attitudeKinematics.trans_VecToQuat(qInitVec, isScalarFirst = True)
 
@@ -71,7 +77,7 @@ def setInitialAttitude(modelsBus, simParam, qInitVec = np.array([1, 0, 0, 0]), a
         # Initialize attitude and angular rates
         angRate_BI_B = angRate_BL_B + np.matmul(qBL.toDcm(), angRate_LI_L)
         qBI = attitudeKinematics.multiplyQuat(qLI, qBL)
-    elif (swInitAttitudeFrame == "I"):
+    elif (swInitAttitudeFrame == "J"):
         # Initial attitude is initialized wrt inertial reference frame
         angRate_BI_B = angRateInit_B
         qBI = qInit

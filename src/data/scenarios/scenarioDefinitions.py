@@ -69,6 +69,7 @@ def scenarioDefinition_testDevelopment():
     runOptionsPatch["isPlot"] = True
     runOptionsPatch["swVisualPyLabelsAttitude"] = True
     runOptionsPatch["visualPyRate"] = 300
+    runOptionsPatch["saveData"] = True
     patches.update({"runOptionsPatch": runOptionsPatch})
     
     simOptionsPatch = {}

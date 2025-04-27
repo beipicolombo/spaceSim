@@ -38,4 +38,10 @@ def runSimu(scenarioPatchFcnHdl):
     print("Plots")
     runPlots(modelsBus, fswBus)
 
+    # --------------------------------------------------
+    # SAVE DATA
+    # --------------------------------------------------
+    print("==================================")
+    print("Save data")
+
     return (modelsBus, fswBus, simBus)

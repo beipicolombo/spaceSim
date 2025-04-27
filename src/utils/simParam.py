@@ -53,6 +53,7 @@ class RunOptions:
         self.swVisualPyLabelsAocsMode = True
         self.swVisualPyLabelsAttitude = False
         self.visualPyRate = 100
+        self.saveData = False
 
 
 

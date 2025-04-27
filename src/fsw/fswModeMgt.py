@@ -1,4 +1,5 @@
 import numpy as np
+import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
 # To be moved as common constants
 pi  = np.pi
@@ -60,10 +61,11 @@ class FswModeMgtState:
 		self.angRateThdDur = 0
 
 
-	def update(self, simParam, modeMgtParam, fswEstBus):
+	def update(self, simParam, modeMgtParam, fswEstBus, simBus):
 		# Retrieve useful data
 		Ts = simParam.Ts
 		angRateEst_BI_B = fswEstBus.signals["angRateEst_BI_B"].value # from previous timestep	
+		elapsedTime = time = simBus.signals["elapsedTime"].value
 
 		# 0. Check angular rates convergence
 		isRateBelowThd = (np.linalg.norm(angRateEst_BI_B) < self.angRateThd)
@@ -78,17 +80,22 @@ class FswModeMgtState:
 		if ((self.aocsMode == "OFF") and (self.aocsModeElapsedTime >= modeMgtParam.aocsOffModeMinDur)):
 			# Transition OFF -> SAFE
 			aocsMode = "SAFE"
+			event = eventsAndTmTc.Event(name = "AOCS_MODE_SWITCH", id = 1, time = elapsedTime)
 		elif ((self.aocsMode == "SAFE") and (self.aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur) and isRateCvg and modeMgtParam.isAutoSafeToNomPtngModeAllwd):
 			# Transition SAFE -> NOM_PTNG
 			aocsMode = "NOM_PTNG"
+			event = eventsAndTmTc.Event(name = "AOCS_MODE_SWITCH", id = 1, time = elapsedTime)
 		elif ((self.aocsMode == "NOM_PTNG") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur) and isRateCvg and modeMgtParam.isAutoNomPtngToNomEqAllwd):
 			# Transition NOM -> OCM, TBW dummy for now
 			aocsMode = "NOM_EQ"
+			event = eventsAndTmTc.Event(name = "AOCS_MODE_SWITCH", id = 1, time = elapsedTime)
 		elif ((self.aocsMode == "NOM_EQ") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomEqModeMinDur) and isRateCvg and modeMgtParam.isAutoNomToOcmAllwd):
 			aocsMode = "OCM"
+			event = eventsAndTmTc.Event(name = "AOCS_MODE_SWITCH", id = 1, time = elapsedTime)
 		else: 
 			# Otherwise in current mode
 			aocsMode = self.aocsMode
+			event = eventsAndTmTc.Event()
 
 		# 2. Set states specific to the current AOCS mode
 		if (aocsMode == "SAFE"):
@@ -129,15 +136,20 @@ class FswModeMgtState:
 		self.angRateThd = angRateThd
 		self.angRateThdDur = angRateThdDur
 
+		return event
+
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
 
-def computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus):
-	# Update mode management states
-	fswModeMgtState.update(simParam, fswParam.modeMgtParam, fswBus.subBuses["estimation"])
-
+def computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus):
+	# Initialize output bus
 	fswModeMgtBusOut = fswBus.subBuses["modeMgt"]
+
+	# Update mode management states
+	event = fswModeMgtState.update(simParam, fswParam.modeMgtParam, fswBus.subBuses["estimation"], simBus)
+	if (event.id != 0):
+		event.display()
 
 	# Update signals
 	fswBusOut = fswBus

@@ -48,6 +48,7 @@ class SimOptions:
 # Run options       
 class RunOptions:
     def __init__(self):
+        self.isReferenceData = False
         self.isPlot = True
         self.swVisualPy = True
         self.swVisualPyLabelsAocsMode = True

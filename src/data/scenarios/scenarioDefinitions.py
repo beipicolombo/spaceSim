@@ -10,7 +10,7 @@ pi  = np.pi
 deg2rad = pi/180
 
 
-def scenarioDefinition_template():
+def scenarioDefinition_template(isReference = False):
     print("Patches...")
     
     # Initialize output
@@ -51,7 +51,7 @@ def scenarioDefinition_template():
 
 
 
-def scenarioDefinition_testDevelopment():
+def scenarioDefinition_testDevelopment(isReference = False):
     print("Patches...")
     
     # Initialize output
@@ -98,6 +98,7 @@ def scenarioDefinition_testDevelopment():
     
     runOptionsPatch["signalPathsToLog"] = signalPathsToLog
     runOptionsPatch["signalPathsToExport"] = signalPathsToExport
+    runOptionsPatch["isReference"] = False
     patches.update({"runOptionsPatch": runOptionsPatch})
     
     simOptionsPatch = {}

@@ -42,9 +42,14 @@ def runExport(modelsBus, fswBus, simParam):
     # Setup filename
     nowDt = datetime.now()
     timeStamp = (nowDt.strftime("%Y_%m_%d_%H_%M_%S"))
-    exportDataFileName = ("outputData_" + timeStamp + ".csv")
+    if simParam.runOptions.isReference:
+        exportDataFileName = ("referenceData.csv")
+    else:
+        exportDataFileName = ("outputData_" + timeStamp + ".csv")
 
     # Save dataframe   
     exportDataPath = os.path.join(exportDataFolderPath, exportDataFileName)
     print(f"   Output data saved in : {exportDataPath}")
     df.to_csv(exportDataPath)
+    
+    return (dictDataExport)

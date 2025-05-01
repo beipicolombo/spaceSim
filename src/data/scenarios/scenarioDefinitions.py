@@ -70,6 +70,34 @@ def scenarioDefinition_testDevelopment():
     runOptionsPatch["swVisualPyLabelsAttitude"] = True
     runOptionsPatch["visualPyRate"] = 300
     runOptionsPatch["saveData"] = True
+    signalPathsToLog = []
+    signalPathsToLog.append("modelsBus/dynamics/attitude/angRate_BI_B")
+    signalPathsToLog.append("modelsBus/dynamics/attitude/eulerAng_BI")
+    signalPathsToLog.append("modelsBus/dynamics/attitude/torqueTot_B")
+    signalPathsToLog.append("modelsBus/dynamics/attitude/angMomSc_B")
+    signalPathsToLog.append("modelsBus/dynamics/posVel/pos_I")
+    signalPathsToLog.append("modelsBus/dynamics/orbitElem/argPer")
+    signalPathsToLog.append("modelsBus/dynamics/orbitElem/ta")
+    signalPathsToLog.append("modelsBus/performance/eulerAng_BL")
+    signalPathsToLog.append("modelsBus/performance/angRate_BL_B")
+    signalPathsToLog.append("modelsBus/environment/torqueExt_B")
+    signalPathsToLog.append("modelsBus/environment/eulerAng_LI")
+    signalPathsToLog.append("modelsBus/environment/qLI_sca")
+    signalPathsToLog.append("modelsBus/environment/qLI_vec")
+    signalPathsToLog.append("modelsBus/environment/angRate_LI_L")
+    signalPathsToLog.append("modelsBus/actuators/torqueThr_B")
+    signalPathsToLog.append("fswBus/guidance/angRate_RI_R")
+    signalPathsToLog.append("fswBus/guidance/eulerAng_RI")
+    signalPathsToLog.append("fswBus/guidance/eulerAng_RL")
+    signalPathsToLog.append("fswBus/modeMgt/aocsModeElapsedTime")
+    signalPathsToExport = []
+    signalPathsToExport.append("fswBus/estimation/posEst_J")
+    signalPathsToExport.append("fswBus/estimation/velEst_J")
+    signalPathsToExport.append("fswBus/estimation/angRateEst_LI_L")
+    signalPathsToExport.append("fswBus/estimation/angRateEst_LI_L")
+    
+    runOptionsPatch["signalPathsToLog"] = signalPathsToLog
+    runOptionsPatch["signalPathsToExport"] = signalPathsToExport
     patches.update({"runOptionsPatch": runOptionsPatch})
     
     simOptionsPatch = {}

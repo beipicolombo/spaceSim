@@ -16,26 +16,39 @@ deg2rad = pi/180
 
 # Data bus
 class DataBus():
-    def __init__(self, busName = ""):
+    def __init__(self, busName = "", busPath = ""):
         self.name = busName
         self.subBuses = {}
         self.signals = {}
+        self.path = busPath
     
-    def addSubBus(self, busName):
-        self.subBuses[busName] = DataBus(busName)
+    def addSubBus(self, subBusName):
+        subBusPath = (self.name + "/" + subBusName)
+        self.subBuses[subBusName] = DataBus(busName = subBusName, busPath = subBusPath)
         
-    def addSignal(self, signalName, signalSize, unit = "-", isLogged = False, timeVec = []):
-        self.signals[signalName] = Signal(signalName, signalSize, unit, isLogged, timeVec)
+    def addSignal(self, signalName, signalSize, unit = "-", isLogged = False, timeVec = [], isExport = False):
+        signalPath = (self.path + "/" + signalName)
+        self.signals[signalName] = Signal(signalName, signalSize, unit, isLogged, timeVec, isExport, signalPath)
 
+    def setSignalsLog(self, signalPathsToLog, timeVec):
+        for path in signalPathsToLog:
+            setSignalLog(self, path, timeVec)
+
+    def setSignalsExport(self, signalPathsToExport, timeVec):
+        for path in signalPathsToExport:
+            setSignalExport(self, path, timeVec)
+        
 # Data signal
 class Signal():
-    def __init__(self, signalName = "", signalSize = 0, unit = "-", isLogged = False, timeVec = []):
+    def __init__(self, signalName = "", signalSize = 0, unit = "-", isLogged = False, timeVec = [], isExport = False, signalPath = ""):
         self.name = signalName
         self.size = signalSize
         self.isLogged = isLogged
+        self.isExport = isExport
         self.unit = unit
         self.value = 0
         self.timeseries = Timeseries(timeVec, self.size, self.unit, self.name)
+        self.path = signalPath
 
     def update(self, value):
         self.value = value
@@ -98,3 +111,69 @@ class Timeseries:
         plt.xlabel("s")
         plt.title(self.name)
         plt.show()
+
+    def toDic(self):
+        dict = {}
+        for ii in range(self.nComponents):
+            axisName = self.name + "_" + str(ii)
+            axisData = self.dataVec[:, ii]
+            dict.update({axisName : axisData})
+
+        return dict
+
+
+
+def getSignalObjFromPath(myDataBus, path):
+    sep = "/"
+    pathSplit = path.split(sep)
+    signalName = pathSplit[-1]
+    subBusesNames = pathSplit[0:-1]
+
+    if (myDataBus.name == pathSplit[0]):    
+        if len(subBusesNames) == 1:
+            signalObj = myDataBus.signals[signalName]
+        else:
+            redPath = sep.join(subBusesNames[1:])
+            redPath = (redPath + sep + signalName)     
+            signalObj = getSignalObjFromPath(myDataBus.subBuses[subBusesNames[1]], redPath)
+            
+    return signalObj
+
+
+def setSignalLog(myDataBus, path, timeVec):
+    sep = "/"
+    pathSplit = path.split(sep)
+    signalName = pathSplit[-1]
+    subBusesNames = pathSplit[0:-1]
+
+    if (myDataBus.name == pathSplit[0]):    
+        if len(subBusesNames) == 1:
+            myDataBus.signals[signalName].isLogged = True
+            myDataBus.signals[signalName].timeseries.timeVec = timeVec
+            myDataBus.signals[signalName].timeseries.dataVec = np.zeros((len(timeVec), myDataBus.signals[signalName].timeseries.nComponents))  
+        else:
+            redPath = sep.join(subBusesNames[1:])
+            redPath = (redPath + sep + signalName)     
+            setSignalLog(myDataBus.subBuses[subBusesNames[1]], redPath, timeVec)
+
+
+def setSignalExport(myDataBus, path, timeVec):
+    sep = "/"
+    pathSplit = path.split(sep)
+    signalName = pathSplit[-1]
+    subBusesNames = pathSplit[0:-1]
+
+    if (myDataBus.name == pathSplit[0]):    
+        if len(subBusesNames) == 1:
+            # Log automatically if it is not already the case
+            if not(myDataBus.signals[signalName].isLogged):
+                myDataBus.signals[signalName].isLogged = True
+                myDataBus.signals[signalName].timeseries.timeVec = timeVec
+                myDataBus.signals[signalName].timeseries.dataVec = np.zeros((len(timeVec), myDataBus.signals[signalName].timeseries.nComponents))  
+            # Set the export parameter
+            myDataBus.signals[signalName].isExport = True
+
+        else:
+            redPath = sep.join(subBusesNames[1:])
+            redPath = (redPath + sep + signalName)     
+            setSignalLog(myDataBus.subBuses[subBusesNames[1]], redPath, timeVec)

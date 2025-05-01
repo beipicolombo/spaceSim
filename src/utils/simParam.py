@@ -55,6 +55,9 @@ class RunOptions:
         self.visualPyRate = 100
         self.saveData = False
 
+        self.signalPathsToLog = []
+        self.signalPathsToExport = []
+
 
 
 

@@ -1,6 +1,7 @@
 
 from src.utils.runLoop import *
 from src.utils.runPlots import *
+from src.utils.runExport import *
 from src.utils.runInitialization import *
 
 import src.data.scenarios.scenarioDefinitions as scenarioDefinitions
@@ -28,9 +29,8 @@ def runSimu(scenarioPatchFcnHdl):
     # --------------------------------------------------
     print("==================================")
     print("Post-processing")
-    runPlots(modelsBus, fswBus)
-
-
+    
+    
     # --------------------------------------------------
     # PLOTS
     # --------------------------------------------------
@@ -38,10 +38,13 @@ def runSimu(scenarioPatchFcnHdl):
     print("Plots")
     runPlots(modelsBus, fswBus)
 
+
     # --------------------------------------------------
-    # SAVE DATA
+    # EXPORT DATA
     # --------------------------------------------------
     print("==================================")
-    print("Save data")
+    print("Export data")
+    runExport(modelsBus, fswBus, simParam)
+    
 
-    return (modelsBus, fswBus, simBus)
+    return (modelsBus, fswBus, simBus, simParam)

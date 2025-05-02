@@ -110,7 +110,9 @@ class Timeseries:
         plt.ylabel(self.unit)
         plt.xlabel("s")
         plt.title(self.name)
-        plt.show()
+        
+        return fig
+        
 
     def toDic(self):
         dict = {}

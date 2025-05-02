@@ -4,16 +4,15 @@ import matplotlib.pyplot as plt
 
 def runPlots(modelsBus, fswBus):
     
-    #plt.show(block = False)
-    plt.pause(3)
-    plt.close("all")
+    figuresList = []
 
+    #plt.show(block = False)
     # plots.plotOrbit3d(modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].timeseries, const.earthRadius)
     
-    modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].timeseries.rad2deg().plot()
+    figuresList.append(modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].timeseries.rad2deg().plot())
     # fswBus.subBuses["guidance"].signals["angRate_RI_R"].timeseries.rad2deg().plot()
     
-    modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].timeseries.rad2deg().plot()
+    figuresList.append(modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].timeseries.rad2deg().plot())
     # fswBus.subBuses["guidance"].signals["eulerAng_RI"].timeseries.rad2deg().plot()
     # modelsBus.subBuses["environment"].signals["eulerAng_LI"].timeseries.rad2deg().plot()
     # modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].timeseries.addNorm().plot()
@@ -24,7 +23,7 @@ def runPlots(modelsBus, fswBus):
     # modelsBus.subBuses["performance"].signals["angRate_BL_B"].timeseries.rad2deg().plot()
     
     # # modelsBus.subBuses["sensors"].signals["angRateMeas_BI_B"].timeseries.addNorm().rad2deg().plot()
-    modelsBus.subBuses["actuators"].signals["torqueThr_B"].timeseries.addNorm().plot()
+    figuresList.append(modelsBus.subBuses["actuators"].signals["torqueThr_B"].timeseries.addNorm().plot())
     
     # #modelsBus.subBuses["environment"].signals["torqueExt_B"].timeseries.addNorm().plot()
     
@@ -51,3 +50,5 @@ def runPlots(modelsBus, fswBus):
     # modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].timeseries.rad2deg().plot()
     # modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].timeseries.rad2deg().plot()
 
+    for fig in figuresList:
+        plt.show(block = False)

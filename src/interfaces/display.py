@@ -18,8 +18,14 @@ class Displays():
         self.fswDisplay = {}
         self.canvasBodyDisplay = canvas(width = 600, height = 300, align  = "left")
         self.canvasFswDisplay = canvas(width = 600, height = 300, align  = "right")
+        self.graph_angRate_BI_B_X = graph(title = "angRate_BI_B_X", xtitle = "time [s]", ytitle = "[deg/s]", width = 200, height = 200, align = "left")
+        self.gcurve_angRate_BI_B_X = gcurve(graph = self.graph_angRate_BI_B_X)
+        self.graph_angRate_BI_B_Y = graph(title = "angRate_BI_B_Y", xtitle = "time [s]", ytitle = "[deg/s]", width = 200, height = 200, align = "left")
+        self.gcurve_angRate_BI_B_Y = gcurve(graph = self.graph_angRate_BI_B_Y)
+        self.graph_angRate_BI_B_Z = graph(title = "angRate_BI_B_Z", xtitle = "time [s]", ytitle = "[deg/s]", width = 200, height = 200, align = "left")
+        self.gcurve_angRate_BI_B_Z = gcurve(graph = self.graph_angRate_BI_B_Z)
 
-    def initialize(self, simParam, modelsBus, fswBus, fswModeMgtState):
+    def initialize(self, simParam, modelsBus, fswBus, simBus, fswModeMgtState):
         # Set the display if required
         if simParam.runOptions.swVisualPy:
 
@@ -117,7 +123,12 @@ class Displays():
             self.fswDisplay.update({"label_eulerAng_BI_P": label_eulerAng_BI_P})
             self.fswDisplay.update({"label_eulerAng_BI_Y": label_eulerAng_BI_Y})
 
-    def update(self, simParam, modelsBus, fswBus, fswModeMgtState, qPrevLI, qPrevBI):
+            # 3. Graphs
+            self.gcurve_angRate_BI_B_X.plot(simBus.signals["elapsedTime"].value, angRate_BI_B[0]/deg2rad)
+            self.gcurve_angRate_BI_B_Y.plot(simBus.signals["elapsedTime"].value, angRate_BI_B[1]/deg2rad)
+            self.gcurve_angRate_BI_B_Z.plot(simBus.signals["elapsedTime"].value, angRate_BI_B[2]/deg2rad)
+
+    def update(self, simParam, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI):
         if simParam.runOptions.swVisualPy:
             # Set rate
             rate(simParam.runOptions.visualPyRate)
@@ -171,3 +182,8 @@ class Displays():
             self.fswDisplay["label_eulerAng_BI_R"].text = ("ROLL (X): " + ("%.2f" % (eulerAng_BI[0]/deg2rad)) + " deg")
             self.fswDisplay["label_eulerAng_BI_P"].text = ("PITCH (Y): " + ("%.2f" % (eulerAng_BI[1]/deg2rad)) + " deg")
             self.fswDisplay["label_eulerAng_BI_Y"].text = ("YAW (Z): " + ("%.2f" % (eulerAng_BI[2]/deg2rad)) + " deg")
+
+            # 3. Graphs
+            self.gcurve_angRate_BI_B_X.plot(simBus.signals["elapsedTime"].value, angRate_BI_B[0]/deg2rad)
+            self.gcurve_angRate_BI_B_Y.plot(simBus.signals["elapsedTime"].value, angRate_BI_B[1]/deg2rad)
+            self.gcurve_angRate_BI_B_Z.plot(simBus.signals["elapsedTime"].value, angRate_BI_B[2]/deg2rad)

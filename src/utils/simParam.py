@@ -42,7 +42,7 @@ class SimOptions:
         self.isCtrlTorqueEnabled = True
         self.isRwAct = False
         self.isThrAct = True
-        self.swInitAttitudeFrame = "I"
+        self.swInitAttitudeFrame = "J"
         self.massModelName = "Default"
                 
 # Run options       

@@ -10,8 +10,8 @@ import numpy as np
 import math as m
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-import cartopy.crs as ccrs
-import cartopy
+# import cartopy.crs as ccrs
+# import cartopy
 import time as ti
 
 
@@ -556,16 +556,17 @@ def plotElements(time,timeSma,timeEcc, timeInc, timeRaan, timeArgPer, timeApoRad
 
 
 # display orbit
-def plotOrbit(timePos,time):
-    figPos3d = plt.figure(figsize=(12,12))
+# TBW: errors when importing cartopy and launching from windows command prompt
+# def plotOrbit(timePos,time):
+#     figPos3d = plt.figure(figsize=(12,12))
     
-    ax = plt.axes(projection=ccrs.Orthographic(0, 0))
+#     ax = plt.axes(projection=ccrs.Orthographic(0, 0))
     
-    ax.add_feature(cartopy.feature.OCEAN, zorder=0)
-    ax.add_feature(cartopy.feature.LAND, zorder=0, edgecolor='black')
+#     ax.add_feature(cartopy.feature.OCEAN, zorder=0)
+#     ax.add_feature(cartopy.feature.LAND, zorder=0, edgecolor='black')
     
-    ax.set_global()
-    ax.gridlines()
+#     ax.set_global()
+#     ax.gridlines()
     
     # ax1 = plt.axes(projection='3d')
     # ax1.plot3D(timePos[:,0]/10**3,timePos[:,1]/10**3,timePos[:,2]/10**3)

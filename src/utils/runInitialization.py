@@ -54,6 +54,7 @@ def runInitialization(scenarioPatchFcnHdl):
     # ==================================
     print("   Interfaces")
     interfaceInputsParam = interfaceInputs.InterfaceInputsParam()
+    interfaceInputsParam.keyboardInputsParam = paramTools.patchAttributes(interfaceInputsParam.keyboardInputsParam, patches["ifKeyboardParamPatch"])
     joystickSerialPort = interfaceInputsParam.joystickParam.initializeSerialPort()
 
     print("   FSW / models")
@@ -134,7 +135,7 @@ def runInitialization(scenarioPatchFcnHdl):
     fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus)
     
     # [Interfaces]
-    fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, joystickSerialPort, interfaceInputsParam)
+    fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)
 
     # [Estimation]
     fswBus.subBuses["estimation"] = fswEstimation.computeEstimation(fswParam.estParam, fswBus, modelsBus)
@@ -172,6 +173,6 @@ def runInitialization(scenarioPatchFcnHdl):
     # ==================================
     print("      [Displays]")
     displays = display.Displays()
-    displays.initialize(simParam, modelsBus, fswBus, fswModeMgtState)
+    displays.initialize(simParam, modelsBus, fswBus, simBus, fswModeMgtState)
         
     return (simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays)

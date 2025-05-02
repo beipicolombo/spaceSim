@@ -81,7 +81,7 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
         fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus)
 
         # [Interfaces]
-        fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, joystickSerialPort, interfaceInputsParam)
+        fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)
 
         # [Estimation]
         fswBus.subBuses["estimation"] = fswEstimation.computeEstimation(fswParam.estParam, fswBus, modelsBus)
@@ -97,7 +97,7 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
 
         # [Graphics]
         # ==================================    
-        displays.update(simParam, modelsBus, fswBus, fswModeMgtState, qPrevLI, qPrevBI)
+        displays.update(simParam, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI)
 
     simuEndTime = time.time()
     simuDuration = simuEndTime - simuStrTime

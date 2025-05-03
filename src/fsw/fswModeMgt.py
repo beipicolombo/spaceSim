@@ -24,8 +24,8 @@ class FswModeMgtParam:
 		self.aocsOffModeMinDur = 10 # [s]
 		# SAFE mode parameters
 		self.aocsSafeModeMinDur = 0*60 # [s]
-		self.aocsSafeModeAngRateThd = 0.1*deg2rad # [s]
-		self.aocsSafeModeAngRateThdDur = 30*60 # [s]
+		self.aocsSafeModeAngRateThd = 0.02*deg2rad # [s]
+		self.aocsSafeModeAngRateThdDur = 10*60 # [s]
 		self.isAutoSafeToNomPtngModeAllwd = False
 		# NOM_PTNG parameters
 		self.aocsNomPtngModeMinDur = 30*60 # [s]

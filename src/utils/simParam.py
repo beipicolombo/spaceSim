@@ -7,6 +7,7 @@ Created on Sun Jun 30 22:06:57 2024
 
 import numpy as np
 import ephem
+import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
 
 # To be moved as common constants
@@ -30,6 +31,8 @@ class SimParam:
         # Depends on other parameters
         self.timeVec = np.arange(0, self.Tend+self.Ts, self.Ts)
         self.nbPts = len(self.timeVec)
+        # TC timeline
+        self.tcTimeline = []
 
     def updateTimeVec(self):
         self.timeVec = np.arange(0, self.Tend+self.Ts, self.Ts)

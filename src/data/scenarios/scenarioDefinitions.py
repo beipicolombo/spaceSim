@@ -107,12 +107,6 @@ def scenarioDefinition_manualModeDev(isReference = False):
     
     # Initial orbit
     orbitInitParamPatch = {}
-    orbitInitParamPatch["perAltitudeInit"] = 500 * 1e3 # [m]
-    orbitInitParamPatch["ecc"] = 0.01
-    orbitInitParamPatch["inc"] = 10 * deg2rad # [rad]
-    orbitInitParamPatch["raan"] = 10 * deg2rad # [rad]
-    orbitInitParamPatch["argPer"] = 90 * deg2rad # [rad]
-    orbitInitParamPatch["ta"] = 0 * deg2rad # [rad]
     patches.update({"orbitInitParamPatch": orbitInitParamPatch})
     
     # Interface
@@ -136,8 +130,7 @@ def scenarioDefinition_manualModeDev(isReference = False):
     return patches
 
 
-
-def scenarioDefinition_testDevelopment(isReference = False):
+def scenarioDefinition_nominalScenario(isReference = False):
     print("Patches...")
     
     # Initialize output
@@ -179,7 +172,7 @@ def scenarioDefinition_testDevelopment(isReference = False):
     signalPathsToExport.append("fswBus/estimation/angRateEst_LI_L")  
     runOptionsPatch["signalPathsToLog"] = signalPathsToLog
     runOptionsPatch["signalPathsToExport"] = signalPathsToExport
-    runOptionsPatch["isReference"] = False
+    # runOptionsPatch["isReference"] = True
     patches.update({"runOptionsPatch": runOptionsPatch})
     
     simOptionsPatch = {}
@@ -195,12 +188,6 @@ def scenarioDefinition_testDevelopment(isReference = False):
     
     # Initial orbit
     orbitInitParamPatch = {}
-    orbitInitParamPatch["perAltitudeInit"] = 500 * 1e3 # [m]
-    orbitInitParamPatch["ecc"] = 0.01
-    orbitInitParamPatch["inc"] = 10 * deg2rad # [rad]
-    orbitInitParamPatch["raan"] = 10 * deg2rad # [rad]
-    orbitInitParamPatch["argPer"] = 90 * deg2rad # [rad]
-    orbitInitParamPatch["ta"] = 0 * deg2rad # [rad]
     patches.update({"orbitInitParamPatch": orbitInitParamPatch})
 
     # Interface
@@ -210,11 +197,66 @@ def scenarioDefinition_testDevelopment(isReference = False):
     # Mode management
     modeMgtParamPatch = {}
     modeMgtParamPatch["aocsModeInit"] = "SAFE"
-    modeMgtParamPatch["aocsOffModeMinDur"] = 10
-    modeMgtParamPatch["aocsSafeModeAngRateThdDur"] = 10*60
-    modeMgtParamPatch["aocsSafeModeAngRateThd"] = 0.02*deg2rad
     modeMgtParamPatch["isAutoSafeToNomPtngModeAllwd"] = True
     modeMgtParamPatch["isAutoNomPtngToNomEqAllwd"] = True
+    patches.update({"modeMgtParamPatch": modeMgtParamPatch})
+    
+    # Guidance
+    guidParamPatch = {}
+    guidParamPatch["GUIDMODE_ATT_INERT_eulerAngGuid_RI"] = np.array([0, 45, 45]) * deg2rad
+    patches.update({"guidParamPatch": guidParamPatch})
+    
+    # Control
+    ctrParamPatch = {}
+    patches.update({"ctrParamPatch": ctrParamPatch})
+
+    return patches
+
+
+def scenarioDefinition_testDevelopment(isReference = False):
+    print("Patches...")
+    
+    # Initialize output
+    patches = {}
+    
+    # Simulation parameters
+    simParamPatch = {}
+    simParamPatch["caseName"] = "testDevelopment"
+    simParamPatch["dateTimeStart"] = ephem.Date("2024/3/9 5:10:10")
+    simParamPatch["Ts"] = 0.5 # [s]
+    simParamPatch["Tend"] = 2*90*60 # [s]
+    patches.update({"simParamPatch": simParamPatch})
+    
+    runOptionsPatch = {}
+    signalPathsToLog = []
+    signalPathsToExport = []
+    runOptionsPatch["signalPathsToLog"] = signalPathsToLog
+    runOptionsPatch["signalPathsToExport"] = signalPathsToExport
+    runOptionsPatch["swExportData"] = False
+    patches.update({"runOptionsPatch": runOptionsPatch})
+    
+    simOptionsPatch = {}
+    simOptionsPatch["isGGTorqueEnabled"] = False
+    simOptionsPatch["massModelName"] = "SC_100kg_rect"
+    patches.update({"simOptionsPatch": simOptionsPatch})
+    
+    # Initial attitude
+    initDynStatePatch = {}
+    initDynStatePatch["qInitVec"] = attitudeKinematics.trans_EulerAngToQuat(np.array([0, 0, 0]) * deg2rad).toVec()
+    initDynStatePatch["angRateInit_B"] = np.array([2.0, 0.5, 0.9])*deg2rad
+    patches.update({"initDynStatePatch": initDynStatePatch})
+    
+    # Initial orbit
+    orbitInitParamPatch = {}
+    patches.update({"orbitInitParamPatch": orbitInitParamPatch})
+
+    # Interface
+    ifKeyboardParamPatch = {}
+    patches.update({"ifKeyboardParamPatch": ifKeyboardParamPatch})
+    
+    # Mode management
+    modeMgtParamPatch = {}
+    modeMgtParamPatch["aocsModeInit"] = "SAFE"
     patches.update({"modeMgtParamPatch": modeMgtParamPatch})
     
     # Guidance

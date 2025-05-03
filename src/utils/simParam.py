@@ -49,12 +49,10 @@ class SimOptions:
 class RunOptions:
     def __init__(self):
         self.isReferenceData = False
-        self.isPlot = True
+        self.swPlot = True
         self.swVisualPy = True
-        self.swVisualPyLabelsAocsMode = True
-        self.swVisualPyLabelsAttitude = False
-        self.visualPyRate = 100
-        self.saveData = False
+        self.visualPyRate = 300
+        self.swExportData = True
 
         self.signalPathsToLog = []
         self.signalPathsToExport = []

@@ -65,10 +65,6 @@ def scenarioDefinition_manualModeDev(isReference = False):
     patches.update({"simParamPatch": simParamPatch})
     
     runOptionsPatch = {}
-    runOptionsPatch["isPlot"] = True
-    runOptionsPatch["swVisualPyLabelsAttitude"] = True
-    runOptionsPatch["visualPyRate"] = 300
-    runOptionsPatch["saveData"] = True
     signalPathsToLog = []
     signalPathsToLog.append("modelsBus/dynamics/attitude/angRate_BI_B")
     signalPathsToLog.append("modelsBus/dynamics/attitude/eulerAng_BI")
@@ -156,10 +152,6 @@ def scenarioDefinition_testDevelopment(isReference = False):
     patches.update({"simParamPatch": simParamPatch})
     
     runOptionsPatch = {}
-    runOptionsPatch["isPlot"] = True
-    runOptionsPatch["swVisualPyLabelsAttitude"] = True
-    runOptionsPatch["visualPyRate"] = 300
-    runOptionsPatch["saveData"] = True
     signalPathsToLog = []
     signalPathsToLog.append("modelsBus/dynamics/attitude/angRate_BI_B")
     signalPathsToLog.append("modelsBus/dynamics/attitude/eulerAng_BI")

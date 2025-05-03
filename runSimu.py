@@ -36,7 +36,7 @@ def runSimu(scenarioPatchFcnHdl):
     # --------------------------------------------------
     print("==================================")
     print("Plots")
-    runPlots(modelsBus, fswBus)
+    runPlots(modelsBus, fswBus, simParam)
 
 
     # --------------------------------------------------

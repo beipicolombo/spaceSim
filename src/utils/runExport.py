@@ -5,51 +5,53 @@ import src.utils.dataStructures as dataStruct
 
 
 def runExport(modelsBus, fswBus, simParam):
-    # Export output data
+    # Initial output data
     dictDataExport = {}
-         
-    # Time
-    dictDataExport.update({"time": simParam.timeVec})
 
-    # Add signals to export
-    print("   Exporting saved data :")
-    for path in simParam.runOptions.signalPathsToExport:
-        sep = "/"
-        pathSplit = path.split(sep)
-        if (pathSplit[0] == fswBus.name):
-            signalObj = dataStruct.getSignalObjFromPath(fswBus, path)
-            dictDataExport.update(signalObj.timeseries.toDic())
-        elif (pathSplit[0] == modelsBus.name):
-            signalObj = dataStruct.getSignalObjFromPath(modelsBus, path)
-            dictDataExport.update(signalObj.timeseries.toDic())
-        print(f"      {signalObj.name}")
+    if simParam.runOptions.swExportData:
+             
+        # Time
+        dictDataExport.update({"time": simParam.timeVec})
 
-    # Build dataframe
-    df = pd.DataFrame(dictDataExport)
-         
-    # Setup destination folder
-    exportDataFolderPath = os.path.join("bin", simParam.caseName)
-    try:
-        os.mkdir(exportDataFolderPath)
-        print(f"   Directory '{exportDataFolderPath}' created successfully.")
-    except FileExistsError:
-        print(f"   Directory '{exportDataFolderPath}' already exists.")
-    except PermissionError:
-        print(f"   Permission denied: Unable to create '{exportDataFolderPath}'.")
-    except Exception as e:
-        print(f"   An error occurred: {e}")
+        # Add signals to export
+        print("   Exporting saved data :")
+        for path in simParam.runOptions.signalPathsToExport:
+            sep = "/"
+            pathSplit = path.split(sep)
+            if (pathSplit[0] == fswBus.name):
+                signalObj = dataStruct.getSignalObjFromPath(fswBus, path)
+                dictDataExport.update(signalObj.timeseries.toDic())
+            elif (pathSplit[0] == modelsBus.name):
+                signalObj = dataStruct.getSignalObjFromPath(modelsBus, path)
+                dictDataExport.update(signalObj.timeseries.toDic())
+            print(f"      {signalObj.name}")
 
-    # Setup filename
-    nowDt = datetime.now()
-    timeStamp = (nowDt.strftime("%Y_%m_%d_%H_%M_%S"))
-    if simParam.runOptions.isReference:
-        exportDataFileName = ("referenceData.csv")
-    else:
-        exportDataFileName = ("outputData_" + timeStamp + ".csv")
+        # Build dataframe
+        df = pd.DataFrame(dictDataExport)
+             
+        # Setup destination folder
+        exportDataFolderPath = os.path.join("bin", simParam.caseName)
+        try:
+            os.mkdir(exportDataFolderPath)
+            print(f"   Directory '{exportDataFolderPath}' created successfully.")
+        except FileExistsError:
+            print(f"   Directory '{exportDataFolderPath}' already exists.")
+        except PermissionError:
+            print(f"   Permission denied: Unable to create '{exportDataFolderPath}'.")
+        except Exception as e:
+            print(f"   An error occurred: {e}")
 
-    # Save dataframe   
-    exportDataPath = os.path.join(exportDataFolderPath, exportDataFileName)
-    print(f"   Output data saved in : {exportDataPath}")
-    df.to_csv(exportDataPath)
+        # Setup filename
+        nowDt = datetime.now()
+        timeStamp = (nowDt.strftime("%Y_%m_%d_%H_%M_%S"))
+        if simParam.runOptions.isReference:
+            exportDataFileName = ("referenceData.csv")
+        else:
+            exportDataFileName = ("outputData_" + timeStamp + ".csv")
+
+        # Save dataframe   
+        exportDataPath = os.path.join(exportDataFolderPath, exportDataFileName)
+        print(f"   Output data saved in : {exportDataPath}")
+        df.to_csv(exportDataPath)
     
     return (dictDataExport)

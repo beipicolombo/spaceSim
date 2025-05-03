@@ -19,6 +19,7 @@ import src.fsw.fswCommand as fswCommand
 
 import src.interfaces.interfaceInputs as interfaceInputs
 import src.interfaces.display as display
+import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
 import src.attitudeDynamics as attitudeDynamics
 import src.orbitDynamics as orbitDynamics
@@ -132,7 +133,7 @@ def runInitialization(scenarioPatchFcnHdl):
     print("      [FSW] Functions states")
     
     # [Mode management]
-    fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus)
+    fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, [])
     
     # [Interfaces]
     fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)

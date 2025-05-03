@@ -3,6 +3,7 @@ import numpy as np
 
 import ephem
 import src.attitudeKinematics as attitudeKinematics
+import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
 
 # To be moved as common constants
@@ -225,6 +226,12 @@ def scenarioDefinition_testDevelopment(isReference = False):
     simParamPatch["dateTimeStart"] = ephem.Date("2024/3/9 5:10:10")
     simParamPatch["Ts"] = 0.5 # [s]
     simParamPatch["Tend"] = 2*90*60 # [s]
+    tcTimeline = []
+    tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 10))
+    tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 20))
+    tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 30))
+    tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 90*60))
+    simParamPatch["tcTimeline"] = tcTimeline
     patches.update({"simParamPatch": simParamPatch})
     
     runOptionsPatch = {}

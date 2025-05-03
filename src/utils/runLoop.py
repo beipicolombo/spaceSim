@@ -12,8 +12,10 @@ import src.fsw.fswGuidance as fswGuidance
 import src.fsw.fswEstimation as fswEstimation 
 import src.fsw.fswControl as fswControl
 import src.fsw.fswCommand as fswCommand
+import src.fsw.fswCommand as fswCommand
 
 import src.interfaces.interfaceInputs as interfaceInputs
+import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
 import src.attitudeDynamics as attitudeDynamics
 import src.orbitDynamics as orbitDynamics
@@ -26,12 +28,14 @@ import src.models.spaceEnv.perfModel as perfModel
 def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays):
     
     simuStrTime = time.time()
+    tcList = simParam.tcTimeline # list of TC to be received
 
     for ii in range(1, simParam.nbPts):    
         # time.sleep(simParam.Ts)
         
         # [Simulation]
         # ==================================
+        # Update time
         elapsedTimePrev = simBus.signals["elapsedTime"].value
         simBus.signals["elapsedTime"].update(elapsedTimePrev + simParam.Ts)
 
@@ -77,8 +81,11 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
 
         # [FSW]
         # ==================================
+        # Retrieve received TCs
+        (receivedTcList, tcList) = eventsAndTmTc.listenTc(simBus, tcList)
+        
         # [Mode management]
-        fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus)
+        fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, receivedTcList)
 
         # [Interfaces]
         fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)

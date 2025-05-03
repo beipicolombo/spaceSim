@@ -69,17 +69,11 @@ class FswModeMgtState:
 		elapsedTime = simBus.signals["elapsedTime"].value
 
 		# Initialize
-		isTcFromSafeToNomPtngReceived = False
-		isTcFromNomPtngToNomEqReceived = False
 		eventsList = []
+		aocsMode = self.aocsMode
 
-		# 0. Retrieve TC
-		if (len(receivedTcList) > 0):
-			receivedTc = receivedTcList[0]
-			isTcFromSafeToNomPtngReceived = (receivedTc.name == "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG")
-			isTcFromNomPtngToNomEqReceived = (receivedTc.name == "TC_AOCS_MODE_SWITCH_NOM_PTNG_TO_NOM_EQ")
 
-		# 1. Check angular rates convergence
+		# 0. Check common conditions for transitions
 		isRateBelowThd = (np.linalg.norm(angRateEst_BI_B) < self.angRateThd)
 		isRateBelowThdCounterReset = (self.isRateBelowThdPre and ~isRateBelowThd)
 		rateBelowThdCounter = runCounter(self.rateBelowThdCounterPre, isRateBelowThdCounterReset, Ts)
@@ -88,42 +82,38 @@ class FswModeMgtState:
 		else:
 			isRateCvg = False
 
+
+		# 1. Retrieve TC
+		(isTcFromSafeToNomPtngAccepted, isTcFromNomPtngToNomEqAccepted, eventsList) = tcMgt(self.aocsMode, isRateCvg, self.aocsModeElapsedTime, elapsedTime, receivedTcList, eventsList, modeMgtParam)
+
+
 		# 2. Check AOCS modes transitions
 		if ((self.aocsMode == "OFF") and (self.aocsModeElapsedTime >= modeMgtParam.aocsOffModeMinDur)):
 			# Transition OFF -> SAFE
 			aocsMode = "SAFE"
 			eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
 		elif (self.aocsMode == "SAFE"):
-			isCommonCondOk = (self.aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur) and isRateCvg
 			# Check auto transition
-			isAutoSafeToNomPtngOk = (isCommonCondOk and modeMgtParam.isAutoSafeToNomPtngModeAllwd)
-			# Check TC transition
-			isTcFromSafeToNomPtngAccepted = False
-			if isTcFromSafeToNomPtngReceived:
-				isTcFromSafeToNomPtngAccepted = isCommonCondOk
-				if isTcFromSafeToNomPtngAccepted:
-					eventsList.append(eventsAndTmTc.Event(name = "EVT_TC_ACCEPTED", id = 3, time = elapsedTime))
-				else:
-					eventsList.append(eventsAndTmTc.Event(name = "EVT_TC_REJECTED", id = 4, time = elapsedTime))
-			isTcSafeToNomPtngOk = isTcFromSafeToNomPtngReceived and isTcFromSafeToNomPtngAccepted
-		
-			if (isAutoSafeToNomPtngOk or isTcSafeToNomPtngOk):
+			isAutoSafeToNomPtngOk = ((self.aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur) and isRateCvg and modeMgtParam.isAutoSafeToNomPtngModeAllwd)
+
+			if (isAutoSafeToNomPtngOk or isTcFromSafeToNomPtngAccepted):
 				# Transition SAFE -> NOM_PTNG
 				aocsMode = "NOM_PTNG"
 				eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
-			else:
-				# Otherwise in current mode
-				aocsMode = self.aocsMode
+
 		elif ((self.aocsMode == "NOM_PTNG") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur) and isRateCvg and modeMgtParam.isAutoNomPtngToNomEqAllwd):
 			# Transition NOM -> OCM, TBW dummy for now
-			aocsMode = "NOM_EQ"
-			eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
+			# Check auto transition
+			isAutoSafeNomPtngToNomEqOk = ((self.aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur) and isRateCvg and modeMgtParam.isAutoSafeToNomPtngModeAllwd)
+
+			if (isAutoSafeNomPtngToNomEqOk or isTcFromNomPtngToNomEqAccepted):
+				aocsMode = "NOM_EQ"
+				eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
+
 		elif ((self.aocsMode == "NOM_EQ") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomEqModeMinDur) and isRateCvg and modeMgtParam.isAutoNomToOcmAllwd):
 			aocsMode = "OCM"
 			eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
-		else: 
-			# Otherwise in current mode
-			aocsMode = self.aocsMode
+
 
 		# 3. Set states specific to the current AOCS mode
 		if (aocsMode == "SAFE"):
@@ -245,3 +235,33 @@ def runCounter(state, isReset, Ts):
 	else:
 		state = state + Ts
 	return state
+
+
+def tcMgt(aocsMode, isRateCvg, aocsModeElapsedTime, elapsedTime, receivedTcList, eventsListIn, modeMgtParam):
+	
+	# Initialize
+	isTcFromSafeToNomPtngAccepted = False
+	isTcFromNomPtngToNomEqAccepted = False
+	eventsList = eventsListIn
+
+	# Update the TC reception status
+	if (len(receivedTcList) > 0):
+		for receivedTc in receivedTcList:
+			isTcFromSafeToNomPtngReceived = (receivedTc.name == "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG")
+			isTcFromNomPtngToNomEqReceived = (receivedTc.name == "TC_AOCS_MODE_SWITCH_NOM_PTNG_TO_NOM_EQ")
+
+			isTcFromSafeToNomPtngAccepted = (isTcFromSafeToNomPtngReceived and (aocsMode == "SAFE") and isRateCvg and (aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur))
+			isTcFromNomPtngToNomEqAccepted = (isTcFromNomPtngToNomEqReceived and (aocsMode == "NOM_PTNG") and isRateCvg and (aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur))
+
+			if isTcFromSafeToNomPtngAccepted:
+				eventsList.append(eventsAndTmTc.Event(name = "EVT_TC_ACCEPTED", id = 3, time = elapsedTime))
+			elif (isTcFromSafeToNomPtngReceived and not(isTcFromSafeToNomPtngAccepted)):
+				eventsList.append(eventsAndTmTc.Event(name = "EVT_TC_REJECTED", id = 4, time = elapsedTime))
+
+			if isTcFromNomPtngToNomEqAccepted:
+				eventsList.append(eventsAndTmTc.Event(name = "EVT_TC_ACCEPTED", id = 3, time = elapsedTime))
+			elif (isTcFromNomPtngToNomEqReceived and not(isTcFromNomPtngToNomEqAccepted)):
+				eventsList.append(eventsAndTmTc.Event(name = "EVT_TC_REJECTED", id = 4, time = elapsedTime))
+
+	return (isTcFromSafeToNomPtngAccepted, isTcFromNomPtngToNomEqAccepted, eventsList)
+

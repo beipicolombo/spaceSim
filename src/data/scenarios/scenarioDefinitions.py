@@ -225,7 +225,7 @@ def scenarioDefinition_testDevelopment(isReference = False):
     simParamPatch["caseName"] = "testDevelopment"
     simParamPatch["dateTimeStart"] = ephem.Date("2024/3/9 5:10:10")
     simParamPatch["Ts"] = 0.5 # [s]
-    simParamPatch["Tend"] = 2*90*60 # [s]
+    simParamPatch["Tend"] = 1.2*90*60 # [s]
     tcTimeline = []
     tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 10))
     tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 20))

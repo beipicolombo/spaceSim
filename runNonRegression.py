@@ -2,7 +2,7 @@
 import os as os
 import numpy as np
 import pandas as pd
-
+from datetime import datetime
 import src.data.scenarios.scenarioDefinitions as scenarioDefinitions
 from runSimu import *
 
@@ -48,6 +48,21 @@ def checkResults(dictDataRef, dictDataExport):
     return (regResults, isOkAll)
 
 
+# Function to save the results
+def saveTestResults(dicDataSave, simParam):
+    # Convert dictionnary to dataframe
+    df = pd.DataFrame.from_dict(dicDataSave, orient = 'index')
+    # Setup destination folder
+    exportDataFolderPath = "bin"
+    # Setup filename
+    nowDt = datetime.now()
+    timeStamp = (nowDt.strftime("%Y_%m_%d_%H_%M_%S"))
+    exportDataFileName = ("regResults_" + simParam.caseName + "_" + timeStamp + ".csv")
+    # Save datafrime
+    exportDataPath = os.path.join(exportDataFolderPath, exportDataFileName)
+    print(f"   Test results saved in : {exportDataPath}")
+    df.to_csv(exportDataPath)
+    
 
 # Function to run the non-regression test
 def runNonRegression(scenarioPatchFcnHdl):
@@ -64,10 +79,15 @@ def runNonRegression(scenarioPatchFcnHdl):
     print("==================================")
     print("Checking simulations results with reference")
     (regResults, isAllOk) = checkResults(dictDataRef, dictData)
+    
+    # 4. Export results
+    print("==================================")
+    print("Export non regression test results")
+    saveTestResults(regResults, simParam)
 
-
+    return (regResults, isAllOk)
 
 
 scenarioPatchFcnHdl = scenarioDefinitions.scenarioDefinition_testDevelopment
 
-runNonRegression(scenarioPatchFcnHdl)
+(regResults, isAllOk) = runNonRegression(scenarioPatchFcnHdl)

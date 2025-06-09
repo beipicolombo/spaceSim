@@ -56,7 +56,7 @@ class SimOptions:
 # Run options       
 class RunOptions:
     def __init__(self):
-        self.isReferenceData = False
+        self.swSetReferenceData = False
         self.swPlot = True
         self.swVisualPy = True
         self.visualPyRate = 300

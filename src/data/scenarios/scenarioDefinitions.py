@@ -11,7 +11,7 @@ pi  = np.pi
 deg2rad = pi/180
 
 
-def scenarioDefinition_template(isReference = False):
+def scenarioDefinition_template(swSetReferenceData = False):
     print("Patches...")
     
     # Initialize output
@@ -51,7 +51,7 @@ def scenarioDefinition_template(isReference = False):
     return patches
 
 
-def scenarioDefinition_manualModeDev(isReference = False):
+def scenarioDefinition_manualModeDev(swSetReferenceData = False):
     print("Patches...")
     
     # Initialize output
@@ -62,7 +62,7 @@ def scenarioDefinition_manualModeDev(isReference = False):
     simParamPatch["caseName"] = "manualModeDev"
     simParamPatch["dateTimeStart"] = ephem.Date("2024/3/9 5:10:10")
     simParamPatch["Ts"] = 0.5 # [s]
-    simParamPatch["Tend"] = 5*60 # [s]
+    simParamPatch["Tend"] = 30*60 # [s]
     patches.update({"simParamPatch": simParamPatch})
     
     runOptionsPatch = {}
@@ -93,7 +93,7 @@ def scenarioDefinition_manualModeDev(isReference = False):
     signalPathsToExport.append("fswBus/estimation/angRateEst_LI_L")
     runOptionsPatch["signalPathsToLog"] = signalPathsToLog
     runOptionsPatch["signalPathsToExport"] = signalPathsToExport
-    runOptionsPatch["isReference"] = False
+    runOptionsPatch["swSetReferenceData"] = False
     patches.update({"runOptionsPatch": runOptionsPatch})
     
     simOptionsPatch = {}
@@ -131,7 +131,7 @@ def scenarioDefinition_manualModeDev(isReference = False):
     return patches
 
 
-def scenarioDefinition_nominalScenario(isReference = False):
+def scenarioDefinition_nominalScenario(swSetReferenceData = False):
     print("Patches...")
     
     # Initialize output
@@ -173,7 +173,7 @@ def scenarioDefinition_nominalScenario(isReference = False):
     signalPathsToExport.append("fswBus/estimation/angRateEst_LI_L")  
     runOptionsPatch["signalPathsToLog"] = signalPathsToLog
     runOptionsPatch["signalPathsToExport"] = signalPathsToExport
-    # runOptionsPatch["isReference"] = True
+    # runOptionsPatch["swSetReferenceData"] = True
     patches.update({"runOptionsPatch": runOptionsPatch})
     
     simOptionsPatch = {}
@@ -214,7 +214,7 @@ def scenarioDefinition_nominalScenario(isReference = False):
     return patches
 
 
-def scenarioDefinition_testDevelopment(isReference = False):
+def scenarioDefinition_testDevelopment(swSetReferenceData = False):
     print("Patches...")
     
     # Initialize output
@@ -225,7 +225,7 @@ def scenarioDefinition_testDevelopment(isReference = False):
     simParamPatch["caseName"] = "testDevelopment"
     simParamPatch["dateTimeStart"] = ephem.Date("2024/3/9 5:10:10")
     simParamPatch["Ts"] = 0.5 # [s]
-    simParamPatch["Tend"] = 1.2*90*60 # [s]
+    simParamPatch["Tend"] = 2*90*60 # [s]
     tcTimeline = []
     tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 10))
     tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 20))
@@ -237,9 +237,14 @@ def scenarioDefinition_testDevelopment(isReference = False):
     runOptionsPatch = {}
     signalPathsToLog = []
     signalPathsToExport = []
+    signalPathsToExport.append("fswBus/estimation/posEst_J")
+    signalPathsToExport.append("fswBus/estimation/velEst_J")
+    signalPathsToExport.append("fswBus/estimation/angRateEst_LI_L")
+    signalPathsToExport.append("fswBus/estimation/angRateEst_LI_L")  
     runOptionsPatch["signalPathsToLog"] = signalPathsToLog
     runOptionsPatch["signalPathsToExport"] = signalPathsToExport
-    runOptionsPatch["swExportData"] = False
+    runOptionsPatch["swExportData"] = True
+    runOptionsPatch["swSetReferenceData"] = False
     patches.update({"runOptionsPatch": runOptionsPatch})
     
     simOptionsPatch = {}

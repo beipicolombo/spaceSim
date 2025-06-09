@@ -44,7 +44,7 @@ def runExport(modelsBus, fswBus, simParam):
         # Setup filename
         nowDt = datetime.now()
         timeStamp = (nowDt.strftime("%Y_%m_%d_%H_%M_%S"))
-        if simParam.runOptions.isReference:
+        if simParam.runOptions.swSetReferenceData:
             exportDataFileName = ("referenceData.csv")
         else:
             exportDataFileName = ("outputData_" + timeStamp + ".csv")

@@ -50,7 +50,7 @@ def checkResults(dictDataRef, dictDataExport):
 
 
 # Function to run the non-regression test
-def runNonRegression(scenarioPatchFcnHdl):
+def run(scenarioPatchFcnHdl):
     # 1. Run the simulation
     (dictData, simParam) = runSimu(scenarioPatchFcnHdl)
     
@@ -65,9 +65,6 @@ def runNonRegression(scenarioPatchFcnHdl):
     print("Checking simulations results with reference")
     (regResults, isAllOk) = checkResults(dictDataRef, dictData)
 
-
-
-
-scenarioPatchFcnHdl = scenarioDefinitions.scenarioDefinition_testDevelopment
-
-runNonRegression(scenarioPatchFcnHdl)
+    # 4. Set outputs
+    outputDict = {"regResults": regResults, "isAllOk": isAllOk}
+    return outputDict

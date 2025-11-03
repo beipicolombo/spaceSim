@@ -1,25 +1,18 @@
-# test_validators.py
 import pytest
-from src.runSimuNew import runSimu
 import src.data.scenarios.scenarioDefinitions as scenarioDefinitions
-
+import src.utils.nonRegression as nonRegression 
 
 # Each scenario defines input + expected output
 scenarios = [
     {
-        "name": "DefaultSimulatorRun",
-        "expected": {"isRunOk": True},
+        "name": "testDevelopment",
+        "scenarioPatchFcnHdl": scenarioDefinitions.scenarioDefinition_testDevelopment,
     }
 ]
 
 
-# scenarioPatchFcnHdl = scenarioDefinitions.scenarioDefinition_testDevelopment
-# (dictDataExport, simParam) = runSimu(scenarioPatchFcnHdl)
-
 @pytest.mark.parametrize("scenario", scenarios)
-def test_runScenario(scenario):
-    scenarioPatchFcnHdl = scenarioDefinitions.scenarioDefinition_testDevelopment
-    (dictDataExport, simParam) = runSimu(scenarioPatchFcnHdl)
-    # Assertion to be implemented
-    assert scenario["expected"]== {"isRunOk": True}, f"Scenario failed: {scenario['name']}"
+def test_temporalSimulations(scenario):
+    nonRegressionOutput = nonRegression.run(scenario["scenarioPatchFcnHdl"])
+    assert nonRegressionOutput["isAllOk"] == True, f"Scenario failed: {scenario['name']}"
 

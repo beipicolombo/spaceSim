@@ -173,7 +173,8 @@ def runInitialization(scenarioPatchFcnHdl):
     # [Displays]
     # ==================================
     print("      [Displays]")
-    displays = display.Displays()
-    displays.initialize(simParam, modelsBus, fswBus, simBus, fswModeMgtState)
+    displays = 0
+    # displays = display.Displays()
+    #displays.initialize(simParam, modelsBus, fswBus, simBus, fswModeMgtState)
         
     return (simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays)

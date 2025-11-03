@@ -104,7 +104,7 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
 
         # [Graphics]
         # ==================================    
-        displays.update(simParam, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI)
+        # displays.update(simParam, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI)
 
     simuEndTime = time.time()
     simuDuration = simuEndTime - simuStrTime

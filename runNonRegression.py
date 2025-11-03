@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 import src.data.scenarios.scenarioDefinitions as scenarioDefinitions
-from runSimu import *
+from src.utils.runSimu import runSimu
 
 
 # Function to load the reference data

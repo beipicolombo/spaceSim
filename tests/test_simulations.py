@@ -12,7 +12,7 @@ scenarios = [
 
 
 @pytest.mark.parametrize("scenario", scenarios)
-def test_temporalSimulations(scenario):
+def test_simulations(scenario):
     nonRegressionOutput = nonRegression.run(scenario["scenarioPatchFcnHdl"])
     assert nonRegressionOutput["isAllOk"] == True, f"Scenario failed: {scenario['name']}"
 

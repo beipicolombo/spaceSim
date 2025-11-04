@@ -6,7 +6,7 @@ Created on Sun Jun 30 22:06:57 2024
 """
 
 import numpy as np
-import src.attitudeKinematics as attitudeKinematics
+import src.models.kin.attitudeKinematics as attitudeKinematics
 
 deg2rad = np.pi/180
 

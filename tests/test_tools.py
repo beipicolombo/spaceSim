@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import src.data.scenarios.scenarioDefinitions as scenarioDefinitions
 import src.utils.nonRegression as nonRegression
-import src.attitudeKinematics as attKin
+import src.models.kin.attitudeKinematics as attKin
 
 
 # Each scenario defines input + expected output

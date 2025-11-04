@@ -2,7 +2,7 @@
 import numpy as np
 
 import ephem
-import src.attitudeKinematics as attitudeKinematics
+import src.models.kin.attitudeKinematics as attitudeKinematics
 import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
 

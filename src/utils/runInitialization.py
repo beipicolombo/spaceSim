@@ -21,8 +21,8 @@ import src.interfaces.interfaceInputs as interfaceInputs
 import src.interfaces.display as display
 import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
-import src.attitudeDynamics as attitudeDynamics
-import src.orbitDynamics as orbitDynamics
+import src.models.dyn.attitudeDynamics as attitudeDynamics
+import src.models.dyn.orbitDynamics as orbitDynamics
 
 import src.models.scModel as scModel
 import src.models.spaceEnv.envModel as envModel

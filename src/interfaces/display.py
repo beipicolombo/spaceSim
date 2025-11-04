@@ -1,7 +1,7 @@
 import numpy as np
 from vpython import *
 
-import src.attitudeKinematics as attitudeKinematics
+import src.models.kin.attitudeKinematics as attitudeKinematics
 
 # To be moved as common constants
 pi  = np.pi

@@ -47,5 +47,10 @@ def runSimu(scenarioPatchFcnHdl):
     dictDataExport = 0
     dictDataExport = runExport(modelsBus, fswBus, simParam)
     
+    outputs = {"dictDataExport": dictDataExport,
+               "simParam": simParam,
+               "modelsBus": modelsBus,
+               "fswBus": fswBus,
+               "simBus": simBus}
 
-    return (dictDataExport, simParam)
+    return outputs

@@ -52,7 +52,9 @@ def checkResults(dictDataRef, dictDataExport):
 # Function to run the non-regression test
 def run(scenarioPatchFcnHdl):
     # 1. Run the simulation
-    (dictData, simParam) = runSimu(scenarioPatchFcnHdl)
+    simOutputs = runSimu(scenarioPatchFcnHdl) 
+    dicData = simOutputs["dictDataExport"]
+    simParam = simOutputs["simParam"]
     
     # 2. Retrieve the reference data
     print("==================================")

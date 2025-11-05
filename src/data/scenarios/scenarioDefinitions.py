@@ -10,6 +10,7 @@ import src.interfaces.eventsAndTmTc as eventsAndTmTc
 pi  = np.pi
 deg2rad = pi/180
 
+AVAILABLE_SCENARIOS = {}
 
 def scenarioDefinition_template(swSetReferenceData = False):
     print("Patches...")
@@ -49,6 +50,8 @@ def scenarioDefinition_template(swSetReferenceData = False):
     patches.update({"ctrParamPatch": ctrParamPatch})
 
     return patches
+
+AVAILABLE_SCENARIOS["template"] = scenarioDefinition_template
 
 
 def scenarioDefinition_manualModeDev(swSetReferenceData = False):
@@ -130,6 +133,7 @@ def scenarioDefinition_manualModeDev(swSetReferenceData = False):
 
     return patches
 
+AVAILABLE_SCENARIOS["manualModeDev"] = scenarioDefinition_manualModeDev
 
 def scenarioDefinition_nominalScenario(swSetReferenceData = False):
     print("Patches...")
@@ -213,6 +217,7 @@ def scenarioDefinition_nominalScenario(swSetReferenceData = False):
 
     return patches
 
+AVAILABLE_SCENARIOS["nominalScenario"] = scenarioDefinition_nominalScenario    
 
 def scenarioDefinition_testDevelopment(swSetReferenceData = False):
     print("Patches...")
@@ -226,6 +231,7 @@ def scenarioDefinition_testDevelopment(swSetReferenceData = False):
     simParamPatch["dateTimeStart"] = ephem.Date("2024/3/9 5:10:10")
     simParamPatch["Ts"] = 0.5 # [s]
     simParamPatch["Tend"] = 2*90*60 # [s]
+    # simParamPatch["Tend"] = 10 # [s]
     tcTimeline = []
     tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 10))
     tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 20))
@@ -236,6 +242,8 @@ def scenarioDefinition_testDevelopment(swSetReferenceData = False):
     
     runOptionsPatch = {}
     signalPathsToLog = []
+    signalPathsToLog.append("modelsBus/dynamics/attitude/eulerAng_BI")
+    signalPathsToLog.append("modelsBus/dynamics/attitude/angRate_BI_B")
     signalPathsToExport = []
     signalPathsToExport.append("fswBus/estimation/posEst_J")
     signalPathsToExport.append("fswBus/estimation/velEst_J")
@@ -282,4 +290,6 @@ def scenarioDefinition_testDevelopment(swSetReferenceData = False):
 
     return patches
     
-    
+
+AVAILABLE_SCENARIOS["testDevelopment"] = scenarioDefinition_testDevelopment
+

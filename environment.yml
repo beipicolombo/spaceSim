@@ -14,7 +14,7 @@ dependencies:
   - vpython
   - pytest
   - pip
-#  - scikit-learn=1.1
+#  - [TBW] plotly
 #  - matplotlib
 #  - pip # Include pip if you need to install packages not available via Conda
 # -  pip:

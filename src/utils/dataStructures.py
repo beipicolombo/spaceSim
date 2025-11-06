@@ -91,6 +91,11 @@ class Timeseries:
 
         return self
 
+    def getNorm(self):
+        outputTs = Timeseries(self.timeVec, 1, self.unit, ("norm_" + self.name))
+        outputTs.dataVec = np.linalg.norm(self.dataVec, axis = 1)
+        
+        return outputTs
 
     def deg2rad(self):      
         self.dataVec = self.dataVec * deg2rad

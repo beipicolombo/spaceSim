@@ -61,7 +61,10 @@ class Timeseries:
     def __init__(self, timeVec, nComponents, unit, name):
         self.timeVec = timeVec
         self.nComponents = nComponents
-        self.dataVec = np.zeros((len(timeVec), nComponents))
+        if nComponents>2:
+            self.dataVec = np.zeros((len(timeVec), nComponents))
+        else:
+            self.dataVec = np.zeros(len(timeVec))
         self.idx = 0
         self.unit = unit
         self.name = name

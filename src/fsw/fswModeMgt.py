@@ -71,6 +71,7 @@ class FswModeMgtState:
 		# Initialize
 		eventsList = []
 		aocsMode = self.aocsMode
+		isAocsModeTrans = False
 
 
 		# 0. Check common conditions for transitions
@@ -92,6 +93,7 @@ class FswModeMgtState:
 			# Transition OFF -> SAFE
 			aocsMode = "SAFE"
 			eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
+
 		elif (self.aocsMode == "SAFE"):
 			# Check auto transition
 			isAutoSafeToNomPtngOk = ((self.aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur) and isRateCvg and modeMgtParam.isAutoSafeToNomPtngModeAllwd)
@@ -114,6 +116,9 @@ class FswModeMgtState:
 			aocsMode = "OCM"
 			eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
 
+		# Detec if transition occured
+		if aocsMode != self.aocsMode:
+			isAocsModeTrans = True
 
 		# 3. Set states specific to the current AOCS mode
 		if (aocsMode == "SAFE"):
@@ -126,18 +131,17 @@ class FswModeMgtState:
 			angRateThd = 0
 			angRateThdDur = 0
 
-
 		# 4. Switch guidance  depending on current AOCS mode
 		aocsGuidMode = aocsGuidanceModeLogic(aocsMode)
 
 		# 5. Switch control and actuator mode depending on current AOCS mode
 		(aocsCtrMode, aocsCtrActMode) = aocsCtrModeLogic(aocsMode)
 
-		# 4. Compute elapsed times
-		isAocsModeElapsedTimeCounterReset = (aocsCtrMode != self.aocsCtrModePre)
+		# 6. Compute elapsed times
+		isAocsModeElapsedTimeCounterReset = isAocsModeTrans
 		aocsModeElapsedTime = runCounter(self.aocsModeElapsedTime, isAocsModeElapsedTimeCounterReset, Ts)
 
-		# 6. Update states
+		# 8. Update states
 		self.aocsModePre = self.aocsMode
 		self.aocsCtrModePre = self.aocsCtrMode
 		self.aocsGuidModePre = self.aocsGuidMode
@@ -154,7 +158,7 @@ class FswModeMgtState:
 		self.angRateThd = angRateThd
 		self.angRateThdDur = angRateThdDur
 
-		return eventsList
+		return (eventsList, isAocsModeTrans)
 
 # --------------------------------------------------
 # FUNCTIONS
@@ -172,7 +176,8 @@ def computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, received
 		allEvents.append(eventsAndTmTc.Event(name = "EVT_TC_RECEIVED", id = 2, time = receivedTc.time))
 
 	# Update mode management states
-	allEvents = allEvents + fswModeMgtState.update(simParam, fswParam.modeMgtParam, fswBus.subBuses["estimation"], simBus, receivedTcList)
+	(eventsList, isAocsModeTrans) = fswModeMgtState.update(simParam, fswParam.modeMgtParam, fswBus.subBuses["estimation"], simBus, receivedTcList)
+	allEvents = allEvents + eventsList 
 
 	# Update signals
 	fswBusOut = fswBus
@@ -181,6 +186,7 @@ def computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, received
 	fswModeMgtBusOut.signals["aocsCtrMode"].update(fswModeMgtState.aocsCtrMode)
 	fswModeMgtBusOut.signals["aocsCtrActMode"].update(fswModeMgtState.aocsCtrActMode)
 	fswModeMgtBusOut.signals["aocsModeElapsedTime"].update(fswModeMgtState.aocsModeElapsedTime)
+	fswModeMgtBusOut.signals["isAocsModeTrans"].update(isAocsModeTrans)
 
 	# Manage events
 	for event in allEvents:

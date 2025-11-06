@@ -23,6 +23,7 @@ if st.button("Run simulation"):
     fig1 = go.Figure()
     fig2 = go.Figure()
     fig3 = go.Figure()
+    fig4 = go.Figure()
     col1, col2 = st.columns(2)
 
     # Get signals to display
@@ -32,6 +33,7 @@ if st.button("Run simulation"):
     angRateNorm = out["modelsBus"].subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].timeseries.getNorm().dataVec
     scAngMom = out["modelsBus"].subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].timeseries.dataVec
     scAngMomNorm = out["modelsBus"].subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].timeseries.getNorm().dataVec
+    isAocsModeTrans = out["fswBus"].subBuses["modeMgt"].signals["isAocsModeTrans"].timeseries.dataVec.squeeze()
 
     # Update figures
     with col1:
@@ -53,7 +55,6 @@ if st.button("Run simulation"):
                            yaxis_title = "[Nms]")
         st.plotly_chart(fig2, use_container_width=True)
 
-    # fig2 = go.Figure()
     with col2:
         fig3.add_trace(go.Scatter(x=time, y=angles[:,0], name="roll"))
         fig3.add_trace(go.Scatter(x=time, y=angles[:,1], name="pitch"))
@@ -62,6 +63,12 @@ if st.button("Run simulation"):
                            xaxis_title = "Time [min]",
                            yaxis_title = "[deg]")
         st.plotly_chart(fig3, use_container_width=True)
+
+        fig4.add_trace(go.Scatter(x=time, y=isAocsModeTrans, name="isAocsModeTrans"))
+        fig4.update_layout(title="isAocsModeTrans",
+                           xaxis_title = "Time [min]",
+                           yaxis_title = "[-]")
+        st.plotly_chart(fig4, use_container_width=True)
 
     # st.write("Mode timeline:")
     # st.write(mode[:20])  # or plot as categorical

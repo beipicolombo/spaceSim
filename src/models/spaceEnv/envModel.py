@@ -9,12 +9,12 @@ import numpy as np
 import ephem
 import src.utils.constants as const
 import src.utils.conversions as conversions
-import src.orbitDynamics as orbDyn
-import src.attitudeKinematics as attKin
-import src.attitudeDynamics as attDyn
-from src.attitudeKinematics import Rx as Rx
-from src.attitudeKinematics import Ry as Ry
-from src.attitudeKinematics import Rz as Rz
+import src.models.dyn.orbitDynamics as orbDyn
+import src.models.kin.attitudeKinematics as attKin
+import src.models.dyn.attitudeDynamics as attDyn
+from src.models.kin.attitudeKinematics import Rx as Rx
+from src.models.kin.attitudeKinematics import Ry as Ry
+from src.models.kin.attitudeKinematics import Rz as Rz
 
 # To be moved as common constants
 pi  = np.pi

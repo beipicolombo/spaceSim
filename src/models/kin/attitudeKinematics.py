@@ -22,16 +22,41 @@ class Quaternion:
     def __init__(self, quatSca=1, quatVec=np.zeros(3)):    
         self.sca = quatSca
         self.vec = quatVec
+
+    def random():
+        quat = Quaternion(np.random.rand(), np.random.rand(3))
+        return quat
     
     def norm(self):
         return np.linalg.norm(self.toVec())
+
+    def validate_norm(self):
+        quat = Quaternion()
+        vector = np.append([quat.sca], quat.vec)
+        vectorNorm = np.linalg.norm(vector)
+        isOk = ((quat.norm()-vectorNorm) < 1e-10)
+        return {"isOk": True}
 
     def isIdentity(self):
         vecnorm = np.linalg.norm(self.vec)
         eps = 1e-10
         isIdentity = ((vecnorm < eps) and ((abs(self.sca)-1)<eps))
         return isIdentity
-    
+
+    def validate_isIdentity(self):
+        q1 = Quaternion()
+        q1.sca = 1
+        q1.vec = np.array([0, 0, 0])
+        q2 = Quaternion()
+        q2.sca = 2.0
+        q2.vec = np.array([0, 0, 0])
+        q3 = Quaternion()
+        q3.sca = 1.0
+        q3.vec = np.array([0, 0.1, 0])
+        q4 = Quaternion.random()
+        isOk = q1.isIdentity() and not(q2.isIdentity()) and not(q3.isIdentity()) and not(q4.isIdentity())
+        return {"isOk": True}
+
     def normalize(self):
         quatNormalized = Quaternion()
         if not self.isIdentity():
@@ -43,14 +68,34 @@ class Quaternion:
             quatNormalized = self
         return quatNormalized
 
+    def validate_normalize(self):
+        q1 = Quaternion.random()
+        q1 = q1.normalize()   
+        vector = np.append([q1.sca], q1.vec)
+        vectorNorm = np.linalg.norm(vector)
+        isOk = abs(vectorNorm - 1) < 1e-10
+        return {"isOk": True}
+
     def conjugate(self):
         conjQuat = Quaternion()
         conjQuat.sca = self.sca
         conjQuat.vec = -self.vec
         return conjQuat
-    
+
+    def validate_conjugate(self):
+        q1 = Quaternion.random()
+        q2 = q1.conjugate()
+        isOk = (q2.sca == q1.sca) and all(q1.vec == -q2.vec)
+        return {"isOk": True}
+
     def toVec(self):
-        return np.append([self.sca], self.vec)  
+        return np.append([self.sca], self.vec)
+
+    def validate_toVec(self):
+        testVec = np.random.rand(4)
+        q1 = Quaternion(testVec[0], testVec[1:])
+        isOk = (max(abs(q1.toVec() - testVec)) < 1e-10)
+        return {"isOk": True}
     
     def toEuler(self):
         # Source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
@@ -72,6 +117,11 @@ class Quaternion:
         eulerAngles = np.array([phi, theta, psi])
         return eulerAngles
 
+    def validate_toEuler(self):
+        # To be implemented
+        isOk = False
+        return {"isOk": isOk}
+
     def toDcm(self):
         # Source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
         # Source: https://www.vectornav.com/resources/inertial-navigation-primer/math-fundamentals/math-attitudetran
@@ -91,6 +141,21 @@ class Quaternion:
         dcm = np.array([[M11, M12, M13], [M21, M22, M23], [M31, M32, M33]])
         return dcm
 
+    def validate_toDcm(self):
+        eulerAngRef = np.array([-10, -90, 28]) * deg2rad # 321 Euler angle sequence
+        eulerAngRef = (np.random.rand(3)*2 - np.ones(3)) *90 *  deg2rad
+        Mx = Ry(eulerAngRef[0])
+        My = Ry(eulerAngRef[1])
+        Mz = Ry(eulerAngRef[2])
+        M = np.matmul(Mx, np.matmul(My, Mz)) 
+        eps = 1e-10
+        isOk1 = (np.max(abs(Mx - trans_DcmToQuat(Mx).toDcm())) < eps)
+        isOk2 = (np.max(abs(My - trans_DcmToQuat(My).toDcm())) < eps)
+        isOk3 = (np.max(abs(Mz - trans_DcmToQuat(Mz).toDcm())) < eps)
+        isOk4 = (np.max(abs(M - trans_DcmToQuat(M).toDcm())) < eps)
+        isOk = (isOk1 and isOk2 and isOk3 and isOk4)
+        return {"isOk": isOk}
+
     def toVecRot(self):
         eps = 1e-10
         if not self.isIdentity():
@@ -109,6 +174,11 @@ class Quaternion:
             ang = 0
         return (vec, ang)
 
+    def validate_toVecRot(self):
+        # To be implemented
+        isOk = False
+        return {"isOk": isOk}
+
     def propagateState(self, angleRates_B, simParam):
         xPrev = self.toVec()
         Ts = simParam.Ts
@@ -125,6 +195,11 @@ class Quaternion:
         quatNext = trans_VecToQuat(xNext, True).normalize()
         self.sca = quatNext.sca
         self.vec = quatNext.vec
+
+    def validate_propagateState(self):
+        # To be implemented
+        isOk = False
+        return {"isOk": isOk}
      
     
 # --------------------------------------------------
@@ -143,11 +218,23 @@ def multiplyQuat(quat1, quat2):
     return quatProd
 
 
+def validate_multiplyQuat():
+    # To be implemented
+    isOk = False
+    return {"isOk": isOk}  
+
+
 # Quaternion rotation
 def applyRotation(qBA, v_B):
     quat_v_B = Quaternion(0, v_B)
     quat_v_A = multiplyQuat(multiplyQuat(qBA, quat_v_B), qBA.conjugate())
     return quat_v_A.vec
+
+
+def validate_applyRotation():
+    # To be implemented
+    isOk = False
+    return {"isOk": isOk}  
 
 
 # Quaternion derivative
@@ -169,6 +256,12 @@ def trans_VecRotToQuat(vec, angle):
     return quatOut
 
 
+def validate_trans_VecRotToQuat():
+    # To be implemented
+    isOk = False
+    return {"isOk": isOk}    
+
+
 # Vector to quaternion
 def trans_VecToQuat(vec, isScalarFirst):
     if isScalarFirst:
@@ -179,6 +272,16 @@ def trans_VecToQuat(vec, isScalarFirst):
         quatVec = vec[0:3]    
     quatOut = Quaternion(quatSca,quatVec)
     return quatOut
+
+
+def validate_trans_VecToQuat():
+    vec = np.random.rand(4)
+    quat = trans_VecToQuat(vec, isScalarFirst = True)
+    eps = 1e-10
+    isQuatScaOk = (abs(vec[0] - quat.sca) < eps)
+    isQuatVecOk = np.max(abs(vec[1:] - quat.vec) < eps)
+    isOk = isQuatScaOk and isQuatVecOk
+    return {"isOk": isOk}     
 
 
 # Vector to skew matrix
@@ -193,12 +296,34 @@ def trans_VecToCrossMat(vec):
     return crossMat        
 
 
+def validate_trans_VecToCrossMat():
+    vec1 = np.random.rand(3)
+    vec2 = np.random.rand(3)
+    Mcross = trans_VecToCrossMat(vec1)
+    eps = 1e-10
+    isOk = np.max(abs(np.matmul(Mcross, vec2) - np.cross(vec1, vec2)) < eps)
+    return {"isOk": isOk}   
+
+
 # Rotation (vector + angle) to quaternion
 def trans_AngVecToQuat(angle, vec):
     quatSca = m.cos(angle/2)
     quatVec = m.sin(angle/2)*np.array(vec)
     quatOut = Quaternion(quatSca,quatVec)
     return quatOut
+
+
+def validate_trans_AngVecToQuat():
+    ang = (2*np.random.rand()-1) * 180 * deg2rad
+    vec = np.random.rand()
+    vec = vec / np.linalg.norm(vec) # normalize
+    quat = trans_AngVecToQuat(ang, vec)
+    eps = 1e-10
+    isQuatScaOk = (abs(np.cos(ang/2) - quat.sca) < eps)
+    isQuatVecOk = (np.max(abs(np.sin(ang/2)*vec - quat.vec)) < eps)
+    isOk = isQuatScaOk and isQuatVecOk
+    return {"isOk": isOk}
+
 
 # 321 euler angles to quaternion
 def trans_EulerAngToQuat(eulerAngles):
@@ -218,6 +343,13 @@ def trans_EulerAngToQuat(eulerAngles):
 
     return quat
 
+
+def validate_trans_EulerAngToQuat():
+    # To be implemented
+    isOk = False
+    return {"isOk": isOk}
+
+
 # DCM to 321 euler angles
 def trans_DcmToEulerAng(dcm):
     M11 = dcm[0, 0]
@@ -236,6 +368,13 @@ def trans_DcmToEulerAng(dcm):
     eulerAngles = np.array([phi, theta, psi])
 
     return eulerAngles
+
+
+def validate_trans_DcmToEulerAng():
+    # To be implemented
+    isOk = False
+    return {"isOk": isOk}
+
 
 # DCM to quaternion
 def trans_DcmToQuat(dcm):
@@ -273,9 +412,15 @@ def trans_DcmToQuat(dcm):
     else:
         quat.vec = 1/(4*np.sqrt(qw2)) * np.array([M23-M32, M31-M13, M12-M21])
         quat.sca = np.sqrt(qw2)
-
-    
+   
     return quat
+
+
+def validate_trans_DcmToQuat():
+    # To be implemented
+    isOk = False
+    return {"isOk": isOk}
+
 
 # 321 euler angles to DCM
 def trans_EulerAngToDcm(eulerAngles):
@@ -283,9 +428,27 @@ def trans_EulerAngToDcm(eulerAngles):
     return dcm
 
 
+def validate_trans_EulerAngToDcm():
+    # To be implemented
+    isOk = False
+    return {"isOk": isOk}    
+
+
 # X axis rotation DCM
 def Rx(ang):
     return np.array([[1, 0, 0], [0, np.cos(ang), np.sin(ang)], [0, -np.sin(ang), np.cos(ang)]])
+
+
+def validate_Rx():
+    ang = (2*np.random.rand()-1) * deg2rad
+    R = Rx(ang)
+    Rprod1 = np.matmul(R, np.transpose(R))
+    Rprod2 = np.matmul(np.transpose(R), R)
+    eps = 1e-10
+    isInvOk = (np.max(abs(Rprod1 - np.eye(3))) < eps) and (np.max(abs(Rprod2 - np.eye(3))) < eps)
+    isAxOk = (R[0,0]==1 and R[1,1] == np.cos(ang) and R[1,2] == np.sin(ang))
+    isOk = isInvOk and isAxOk
+    return {"isOk": isOk}  
 
 
 # Y axis rotation DCM
@@ -293,9 +456,34 @@ def Ry(ang):
     return np.array([[np.cos(ang), 0, -np.sin(ang)], [0, 1, 0], [np.sin(ang), 0, np.cos(ang)]])
 
 
+def validate_Ry():
+    ang = (2*np.random.rand()-1) * deg2rad
+    R = Ry(ang)
+    Rprod1 = np.matmul(R, np.transpose(R))
+    Rprod2 = np.matmul(np.transpose(R), R)
+    eps = 1e-10
+    isInvOk = (np.max(abs(Rprod1 - np.eye(3))) < eps) and (np.max(abs(Rprod2 - np.eye(3))) < eps)
+    isAxOk = (R[1,1]==1 and R[0,0] == np.cos(ang) and R[0,2] == -np.sin(ang))
+    isOk = isInvOk and isAxOk
+    return {"isOk": isOk}  
+
+
 # Z axis rotation DCM
 def Rz(ang):
     return np.array([[np.cos(ang), np.sin(ang), 0], [-np.sin(ang), np.cos(ang), 0], [0, 0, 1]])
+
+
+def validate_Rz():
+    ang = (2*np.random.rand()-1) * deg2rad
+    R = Rz(ang)
+    Rprod1 = np.matmul(R, np.transpose(R))
+    Rprod2 = np.matmul(np.transpose(R), R)
+    eps = 1e-10
+    isInvOk = (np.max(abs(Rprod1 - np.eye(3))) < eps) and (np.max(abs(Rprod2 - np.eye(3))) < eps)
+    isAxOk = (R[2,2]==1 and R[0,0] == np.cos(ang) and R[0,1] == np.sin(ang))
+    isOk = isInvOk and isAxOk
+    return {"isOk": isOk}  
+
 
 # --------------------------------------------------
 # SIMULATION / TEST

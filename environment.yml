@@ -1,0 +1,22 @@
+# environment.yml
+name: spacesim
+channels:
+  - defaults
+  - conda-forge # Often provides more up-to-date or specific packages
+dependencies:
+  - python=3.9
+  - numpy
+  - matplotlib
+  - pandas
+  - pyserial
+  - keyboard
+  - ephem
+  - vpython
+  - pytest
+  - pip
+#  - [TBW] plotly
+#  - matplotlib
+#  - pip # Include pip if you need to install packages not available via Conda
+# -  pip:
+   # - pytest
+   # - some-pip-only-package==0.1.0

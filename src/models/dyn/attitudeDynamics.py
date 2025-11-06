@@ -6,7 +6,7 @@ Created on Mon Mar 28 23:27:46 2022
 """
 
 import numpy as np
-import src.attitudeKinematics as attitudeKinematics
+import src.models.kin.attitudeKinematics as attitudeKinematics
 
 # To be moved as common constants
 pi  = np.pi

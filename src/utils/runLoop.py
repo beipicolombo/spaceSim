@@ -17,9 +17,9 @@ import src.fsw.fswCommand as fswCommand
 import src.interfaces.interfaceInputs as interfaceInputs
 import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
-import src.attitudeDynamics as attitudeDynamics
-import src.orbitDynamics as orbitDynamics
-import src.attitudeKinematics as attitudeKinematics
+import src.models.dyn.attitudeDynamics as attitudeDynamics
+import src.models.dyn.orbitDynamics as orbitDynamics
+import src.models.kin.attitudeKinematics as attitudeKinematics
 
 import src.models.spaceEnv.envModel as envModel
 import src.models.spaceEnv.perfModel as perfModel
@@ -104,7 +104,7 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
 
         # [Graphics]
         # ==================================    
-        displays.update(simParam, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI)
+        # displays.update(simParam, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI)
 
     simuEndTime = time.time()
     simuDuration = simuEndTime - simuStrTime

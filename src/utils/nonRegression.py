@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import src.data.scenarios.scenarioDefinitions as scenarioDefinitions
-from runSimu import *
+from src.utils.runSimu import runSimu
 
 
 # Function to load the reference data
@@ -65,9 +65,11 @@ def saveTestResults(dicDataSave, simParam):
     
 
 # Function to run the non-regression test
-def runNonRegression(scenarioPatchFcnHdl):
+def run(scenarioPatchFcnHdl):
     # 1. Run the simulation
-    (dictData, simParam) = runSimu(scenarioPatchFcnHdl)
+    simOutputs = runSimu(scenarioPatchFcnHdl) 
+    dicData = simOutputs["dictDataExport"]
+    simParam = simOutputs["simParam"]
     
     # 2. Retrieve the reference data
     print("==================================")
@@ -85,9 +87,6 @@ def runNonRegression(scenarioPatchFcnHdl):
     print("Export non regression test results")
     saveTestResults(regResults, simParam)
 
-    return (regResults, isAllOk)
-
-
-scenarioPatchFcnHdl = scenarioDefinitions.scenarioDefinition_testDevelopment
-
-(regResults, isAllOk) = runNonRegression(scenarioPatchFcnHdl)
+    # 5. Set outputs
+    outputDict = {"regResults": regResults, "isAllOk": isAllOk}
+    return outputDict

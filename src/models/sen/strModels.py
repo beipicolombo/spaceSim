@@ -6,7 +6,7 @@ Created on Sun Mar 27 13:15:55 2022
 """
 
 import numpy as np
-import src.attitudeKinematics as attitudeKinematics
+import src.models.kin.attitudeKinematics as attitudeKinematics
 # import math as m
 
 

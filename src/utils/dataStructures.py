@@ -61,7 +61,10 @@ class Timeseries:
     def __init__(self, timeVec, nComponents, unit, name):
         self.timeVec = timeVec
         self.nComponents = nComponents
-        self.dataVec = np.zeros((len(timeVec), nComponents))
+        if nComponents>2:
+            self.dataVec = np.zeros((len(timeVec), nComponents))
+        else:
+            self.dataVec = np.zeros(len(timeVec))
         self.idx = 0
         self.unit = unit
         self.name = name
@@ -91,6 +94,11 @@ class Timeseries:
 
         return self
 
+    def getNorm(self):
+        outputTs = Timeseries(self.timeVec, 1, self.unit, ("norm_" + self.name))
+        outputTs.dataVec = np.linalg.norm(self.dataVec, axis = 1)
+        
+        return outputTs
 
     def deg2rad(self):      
         self.dataVec = self.dataVec * deg2rad

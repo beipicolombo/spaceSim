@@ -10,5 +10,4 @@ scenarioPatchFcnHdl = AVAILABLE_SCENARIOS["testDevelopment"]
 out = runSimu(scenarioPatchFcnHdl)
 
 print(out["modelsBus"].subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].timeseries.timeVec.shape)
-print(out["modelsBus"].subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].timeseries.rad2deg().dataVec[:,0].shape)
-print(out["modelsBus"].subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].timeseries.rad2deg().dataVec[:,0].shape)
+# print(out["fswBus"].subBuses["modeMgt"].signals["aocsMode"].timeseries)

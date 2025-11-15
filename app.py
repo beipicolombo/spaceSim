@@ -27,6 +27,7 @@ if st.button("Run simulation"):
     scAngMom = out["modelsBus"].subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].timeseries.dataVec
     scAngMomNorm = out["modelsBus"].subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].timeseries.getNorm().dataVec
     isAocsModeTrans = out["fswBus"].subBuses["modeMgt"].signals["isAocsModeTrans"].timeseries.dataVec.squeeze()
+    aocsMode = out["fswBus"].subBuses["modeMgt"].signals["aocsMode"].timeseries.dataVec.squeeze()
     # Get data to display
     allEvtDataframe = out["allEvtDataframe"]
 
@@ -39,6 +40,14 @@ if st.button("Run simulation"):
     with col1:
         st.write("EVENTS")
         st.dataframe(allEvtDataframe)
+
+        # Temporal of AOCS modes
+        fig5 = go.Figure()
+        fig5.add_trace(go.Scatter(x=time, y=aocsMode))
+        fig5.update_layout(title="AOCS Mode",
+                           xaxis_title = "Time [min]",
+                           yaxis_title = "-")
+        st.plotly_chart(fig5, use_container_width=True)
 
     # Temporal data
     # ==================================

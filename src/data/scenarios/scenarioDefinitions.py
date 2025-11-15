@@ -248,7 +248,7 @@ def scenarioDefinition_testDevelopment(swSetReferenceData = False):
     signalPathsToLog.append("modelsBus/dynamics/attitude/angRate_BI_B")
     signalPathsToLog.append("modelsBus/dynamics/attitude/angMomSc_B")
     signalPathsToLog.append("fswBus/modeMgt/isAocsModeTrans")
-    # signalPathsToLog.append("fswBus/modeMgt/aocsMode")
+    signalPathsToLog.append("fswBus/modeMgt/aocsMode")
     signalPathsToExport = []
     signalPathsToExport.append("fswBus/estimation/posEst_J")
     signalPathsToExport.append("fswBus/estimation/velEst_J")

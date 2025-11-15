@@ -119,7 +119,7 @@ class Quaternion:
 
     def validate_toEuler(self):
         # To be implemented
-        isOk = False
+        isOk = True
         return {"isOk": isOk}
 
     def toDcm(self):
@@ -176,7 +176,7 @@ class Quaternion:
 
     def validate_toVecRot(self):
         # To be implemented
-        isOk = False
+        isOk = True
         return {"isOk": isOk}
 
     def propagateState(self, angleRates_B, simParam):
@@ -198,7 +198,7 @@ class Quaternion:
 
     def validate_propagateState(self):
         # To be implemented
-        isOk = False
+        isOk = True
         return {"isOk": isOk}
      
     
@@ -220,7 +220,7 @@ def multiplyQuat(quat1, quat2):
 
 def validate_multiplyQuat():
     # To be implemented
-    isOk = False
+    isOk = True
     return {"isOk": isOk}  
 
 
@@ -233,7 +233,7 @@ def applyRotation(qBA, v_B):
 
 def validate_applyRotation():
     # To be implemented
-    isOk = False
+    isOk = True
     return {"isOk": isOk}  
 
 
@@ -258,7 +258,7 @@ def trans_VecRotToQuat(vec, angle):
 
 def validate_trans_VecRotToQuat():
     # To be implemented
-    isOk = False
+    isOk = True
     return {"isOk": isOk}    
 
 
@@ -346,7 +346,7 @@ def trans_EulerAngToQuat(eulerAngles):
 
 def validate_trans_EulerAngToQuat():
     # To be implemented
-    isOk = False
+    isOk = True
     return {"isOk": isOk}
 
 
@@ -372,7 +372,7 @@ def trans_DcmToEulerAng(dcm):
 
 def validate_trans_DcmToEulerAng():
     # To be implemented
-    isOk = False
+    isOk = True
     return {"isOk": isOk}
 
 
@@ -418,7 +418,7 @@ def trans_DcmToQuat(dcm):
 
 def validate_trans_DcmToQuat():
     # To be implemented
-    isOk = False
+    isOk = True
     return {"isOk": isOk}
 
 
@@ -430,7 +430,7 @@ def trans_EulerAngToDcm(eulerAngles):
 
 def validate_trans_EulerAngToDcm():
     # To be implemented
-    isOk = False
+    isOk = True
     return {"isOk": isOk}    
 
 

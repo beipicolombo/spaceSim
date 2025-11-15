@@ -6,6 +6,21 @@ import src.interfaces.eventsAndTmTc as eventsAndTmTc
 pi  = np.pi
 deg2rad = pi/180
 
+# Dictionary from AOCS modes to IDs
+AOCS_MODES = {}
+AOCS_MODES["OFF"] = 0
+AOCS_MODES["SAFE"] = 1
+AOCS_MODES["NOM_PTNG"] = 2
+AOCS_MODES["NOM_EQ"] = 3
+AOCS_MODES["NOM_SLEW"] = 4
+AOCS_MODES["OCM"] = 5
+AOCS_MODES["MANUAL"] = 6
+
+# Dictionary from IDs to AOCS modes
+AOCS_MODES_ID = {}
+for key in AOCS_MODES.keys():
+	aocsModeNb = AOCS_MODES[key]
+	AOCS_MODES_ID[str(aocsModeNb)] = key
 
 # --------------------------------------------------
 # CLASSES

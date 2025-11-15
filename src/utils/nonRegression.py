@@ -60,15 +60,15 @@ def saveTestResults(dicDataSave, simParam):
     exportDataFileName = ("regResults_" + simParam.caseName + "_" + timeStamp + ".csv")
     # Save datafrime
     exportDataPath = os.path.join(exportDataFolderPath, exportDataFileName)
-    print(f"   Test results saved in : {exportDataPath}")
     df.to_csv(exportDataPath)
+    print(f"   Test results saved in : {exportDataPath}")
     
 
 # Function to run the non-regression test
 def run(scenarioPatchFcnHdl):
     # 1. Run the simulation
     simOutputs = runSimu(scenarioPatchFcnHdl) 
-    dicData = simOutputs["dictDataExport"]
+    dictData = simOutputs["dictDataExport"]
     simParam = simOutputs["simParam"]
     
     # 2. Retrieve the reference data

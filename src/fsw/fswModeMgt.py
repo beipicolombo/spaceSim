@@ -1,6 +1,7 @@
 
 import numpy as np
 import src.interfaces.eventsAndTmTc as eventsAndTmTc
+from src.interfaces.eventsAndTmTcDatabase import EVT_DATABASE
 
 # To be moved as common constants
 pi  = np.pi
@@ -100,7 +101,8 @@ class FswModeMgtState:
 		if ((AOCSMODES_ID[self.aocsMode] == "OFF") and (self.aocsModeElapsedTime >= modeMgtParam.aocsOffModeMinDur)):
 			# Transition OFF -> SAFE
 			aocsMode = AOCSMODES["SAFE"]
-			eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
+			eventsList.append(EVT_DATABASE.getEvent("EVT_AOCS_MODE_SWITCH", elapsedTime))
+			# eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
 
 		elif (AOCSMODES_ID[self.aocsMode] == "SAFE"):
 			# Check auto transition

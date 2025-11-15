@@ -28,6 +28,11 @@ class TcDatabase():
         self.idList.append(tcToAdd.id)
         self.nameList.append(tcToAdd.name)
 
+    def getTc(self, tcName, time):
+        tcOut = self.dict[tcName]
+        tcOut.time = time
+        return tcOut
+
 
 # Class for events
 class Event():
@@ -41,6 +46,7 @@ class Event():
 
     def display(self):
         print("EVENT at elapsed time: " + str(self.time) + " [s] " + self.name + " ID: " + str(self.id))
+
 
 # Function to transform a list of events into an exploitable dataframe
 def eventListToDataFrame(evtList):
@@ -56,10 +62,6 @@ def eventListToDataFrame(evtList):
     df = pd.DataFrame(data)
     return df
 
-# # Class for event list
-# class EventList():
-#     def __init__(self):
-#         self.events = []
 
 # Class for events database
 class EventDatabase():
@@ -72,6 +74,11 @@ class EventDatabase():
         self.dict.update({eventToAdd.name: eventToAdd})
         self.idList.append(eventToAdd.id)
         self.nameList.append(eventToAdd.name)
+
+    def getEvent(self, evtName, time):
+        evtOut = self.dict[evtName]
+        evtOut.time = time
+        return evtOut
 
 
 # Function for TC listener

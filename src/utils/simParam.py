@@ -8,7 +8,8 @@ Created on Sun Jun 30 22:06:57 2024
 import numpy as np
 import ephem
 import src.interfaces.eventsAndTmTc as eventsAndTmTc
-import src.interfaces.eventsAndTmTcDatabase as eventsAndTmTcDatabase
+from src.interfaces.eventsAndTmTcDatabase import TC_DATABASE
+from src.interfaces.eventsAndTmTcDatabase import EVT_DATABASE
 
 
 
@@ -35,9 +36,9 @@ class SimParam:
         self.nbPts = len(self.timeVec)
         # TC 
         self.tcTimeline = []
-        self.tcDatabase = eventsAndTmTcDatabase.tcDatabase
+        self.tcDatabase = TC_DATABASE
         # Events
-        self.eventsDatabase = eventsAndTmTcDatabase.eventDatabase
+        self.eventsDatabase = EVT_DATABASE
 
     def updateTimeVec(self):
         self.timeVec = np.arange(0, self.Tend+self.Ts, self.Ts)

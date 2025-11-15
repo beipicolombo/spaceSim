@@ -5,7 +5,7 @@ import ephem
 from src.fsw.fswModeMgt import AOCSMODES
 from src.fsw.fswModeMgt import AOCSMODES_ID
 import src.models.kin.attitudeKinematics as attitudeKinematics
-import src.interfaces.eventsAndTmTc as eventsAndTmTc
+from src.interfaces.eventsAndTmTcDatabase import TC_DATABASE
 
 
 # To be moved as common constants
@@ -235,10 +235,10 @@ def scenarioDefinition_testDevelopment(swSetReferenceData = False):
     simParamPatch["Tend"] = 2*90*60 # [s]
     # simParamPatch["Tend"] = 10*60 # [s]
     tcTimeline = []
-    tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 10))
-    tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 20))
-    tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 30))
-    tcTimeline.append(eventsAndTmTc.Tc(name = "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", id = 1, time = 90*60))
+    tcTimeline.append(TC_DATABASE.getTc("TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", time = 10))
+    tcTimeline.append(TC_DATABASE.getTc("TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", time = 20))
+    tcTimeline.append(TC_DATABASE.getTc("TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", time = 30))
+    tcTimeline.append(TC_DATABASE.getTc("TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG", time = 90*60))
     simParamPatch["tcTimeline"] = tcTimeline
     patches.update({"simParamPatch": simParamPatch})
     

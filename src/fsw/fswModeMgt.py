@@ -7,20 +7,20 @@ pi  = np.pi
 deg2rad = pi/180
 
 # Dictionary from AOCS modes to IDs
-AOCS_MODES = {}
-AOCS_MODES["OFF"] = 0
-AOCS_MODES["SAFE"] = 1
-AOCS_MODES["NOM_PTNG"] = 2
-AOCS_MODES["NOM_EQ"] = 3
-AOCS_MODES["NOM_SLEW"] = 4
-AOCS_MODES["OCM"] = 5
-AOCS_MODES["MANUAL"] = 6
+AOCSMODES = {}
+AOCSMODES["OFF"] = 0
+AOCSMODES["SAFE"] = 1
+AOCSMODES["NOM_PTNG"] = 2
+AOCSMODES["NOM_EQ"] = 3
+AOCSMODES["NOM_SLEW"] = 4
+AOCSMODES["OCM"] = 5
+AOCSMODES["MANUAL"] = 6
 
 # Dictionary from IDs to AOCS modes
-AOCS_MODES_ID = {}
-for key in AOCS_MODES.keys():
-	aocsModeNb = AOCS_MODES[key]
-	AOCS_MODES_ID[str(aocsModeNb)] = key
+AOCSMODES_ID = {}
+for key in AOCSMODES.keys():
+	aocsModeNb = AOCSMODES[key]
+	AOCSMODES_ID[aocsModeNb] = key
 
 # --------------------------------------------------
 # CLASSES
@@ -28,14 +28,7 @@ for key in AOCS_MODES.keys():
 class FswModeMgtParam:
 	def __init__(self):
         # Initial AOCS mode
-        # OFF (Off)
-        # SAFE (Safe)
-        # NOM_PTNG (Nominal - pointing)
-        # NOM_EQ (Nominal - equilibrium)
-        # NOM_SLEW (Nominal - slew) => To be added
-        # OCM (Orbit Control Mode)
-        # MANUAL
-		self.aocsModeInit = "OFF"
+		self.aocsModeInit = AOCSMODES["OFF"]
 		self.aocsOffModeMinDur = 10 # [s]
 		# SAFE mode parameters
 		self.aocsSafeModeMinDur = 0*60 # [s]
@@ -104,31 +97,31 @@ class FswModeMgtState:
 
 
 		# 2. Check AOCS modes transitions
-		if ((self.aocsMode == "OFF") and (self.aocsModeElapsedTime >= modeMgtParam.aocsOffModeMinDur)):
+		if ((AOCSMODES_ID[self.aocsMode] == "OFF") and (self.aocsModeElapsedTime >= modeMgtParam.aocsOffModeMinDur)):
 			# Transition OFF -> SAFE
-			aocsMode = "SAFE"
+			aocsMode = AOCSMODES["SAFE"]
 			eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
 
-		elif (self.aocsMode == "SAFE"):
+		elif (AOCSMODES_ID[self.aocsMode] == "SAFE"):
 			# Check auto transition
 			isAutoSafeToNomPtngOk = ((self.aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur) and isRateCvg and modeMgtParam.isAutoSafeToNomPtngModeAllwd)
 
 			if (isAutoSafeToNomPtngOk or isTcFromSafeToNomPtngAccepted):
 				# Transition SAFE -> NOM_PTNG
-				aocsMode = "NOM_PTNG"
+				aocsMode = AOCSMODES["NOM_PTNG"]
 				eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
 
-		elif ((self.aocsMode == "NOM_PTNG") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur) and isRateCvg and modeMgtParam.isAutoNomPtngToNomEqAllwd):
+		elif ((AOCSMODES_ID[self.aocsMode] == "NOM_PTNG") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur) and isRateCvg and modeMgtParam.isAutoNomPtngToNomEqAllwd):
 			# Transition NOM -> OCM, TBW dummy for now
 			# Check auto transition
 			isAutoSafeNomPtngToNomEqOk = ((self.aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur) and isRateCvg and modeMgtParam.isAutoSafeToNomPtngModeAllwd)
 
 			if (isAutoSafeNomPtngToNomEqOk or isTcFromNomPtngToNomEqAccepted):
-				aocsMode = "NOM_EQ"
+				aocsMode = AOCSMODES["NOM_EQ"]
 				eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
 
-		elif ((self.aocsMode == "NOM_EQ") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomEqModeMinDur) and isRateCvg and modeMgtParam.isAutoNomToOcmAllwd):
-			aocsMode = "OCM"
+		elif ((AOCSMODES_ID[self.aocsMode] == "NOM_EQ") and (self.aocsModeElapsedTime > modeMgtParam.aocsNomEqModeMinDur) and isRateCvg and modeMgtParam.isAutoNomToOcmAllwd):
+			aocsMode = AOCSMODES["OCM"]
 			eventsList.append(eventsAndTmTc.Event(name = "EVT_AOCS_MODE_SWITCH", id = 1, time = elapsedTime))
 
 		# Detec if transition occured
@@ -136,10 +129,10 @@ class FswModeMgtState:
 			isAocsModeTrans = True
 
 		# 3. Set states specific to the current AOCS mode
-		if (aocsMode == "SAFE"):
+		if (AOCSMODES_ID[aocsMode] == "SAFE"):
 			angRateThd = modeMgtParam.aocsSafeModeAngRateThd
 			angRateThdDur = modeMgtParam.aocsSafeModeAngRateThdDur
-		elif ((aocsMode == "NOM_PTNG") or (aocsMode == "NOM_EQ")):
+		elif ((AOCSMODES_ID[aocsMode] == "NOM_PTNG") or (AOCSMODES_ID[aocsMode] == "NOM_EQ")):
 			angRateThd = modeMgtParam.aocsNomModeAngRateThd
 			angRateThdDur = modeMgtParam.aocsNomModeAngRateThdDur
 		else:
@@ -211,15 +204,15 @@ def computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, received
 	
 
 def aocsGuidanceModeLogic(aocsMode):
-	if (aocsMode == "SAFE"):
+	if (AOCSMODES_ID[aocsMode] == "SAFE"):
 		aocsGuidMode = "GUIDMODE_RATE_DAMPING"
-	elif (aocsMode == "NOM_PTNG"):
+	elif (AOCSMODES_ID[aocsMode] == "NOM_PTNG"):
 		aocsGuidMode = "GUIDMODE_ATT_INERT" 
-	elif (aocsMode == "NOM_EQ"):
+	elif (AOCSMODES_ID[aocsMode] == "NOM_EQ"):
 		aocsGuidMode = "GUIDMODE_ATT_NADIR"
-	elif (aocsMode == "OCM"):
+	elif (AOCSMODES_ID[aocsMode] == "OCM"):
 		aocsGuidMode = "GUIDMODE_ATT_INERT"
-	elif (aocsMode == "MANUAL"):
+	elif (AOCSMODES_ID[aocsMode] == "MANUAL"):
 		aocsGuidMode = "GUIDMODE_OFF"
         # TBW: GUIDMODE_OFF for now
 	else:
@@ -228,19 +221,19 @@ def aocsGuidanceModeLogic(aocsMode):
 	return aocsGuidMode
 
 def aocsCtrModeLogic(aocsMode):
-	if (aocsMode == "SAFE"):
+	if (AOCSMODES_ID[aocsMode] == "SAFE"):
 		aocsCtrMode = "CTRLMODE_RATE_DAMP_CTRL"
 		aocsCtrActMode = "THR"
-	elif (aocsMode == "NOM_PTNG"):
+	elif (AOCSMODES_ID[aocsMode] == "NOM_PTNG"):
 		aocsCtrMode = "CTRLMODE_ATT_CTRL"
 		aocsCtrActMode = "THR"
-	elif (aocsMode == "NOM_EQ"):
+	elif (AOCSMODES_ID[aocsMode] == "NOM_EQ"):
 		aocsCtrMode = "CTRLMODE_ATT_CTRL"
 		aocsCtrActMode = "THR"
-	elif (aocsMode == "OCM"):
+	elif (AOCSMODES_ID[aocsMode] == "OCM"):
 		aocsCtrMode = "CTRLMODE_THRUST_CTRL"
 		aocsCtrActMode = "THR"
-	elif (aocsMode == "MANUAL"):
+	elif (AOCSMODES_ID[aocsMode] == "MANUAL"):
 		aocsCtrMode = "CTRLMOD_MANUAL"
 		aocsCtrActMode = "THR"
 	else:
@@ -271,8 +264,8 @@ def tcMgt(aocsMode, isRateCvg, aocsModeElapsedTime, elapsedTime, receivedTcList,
 			isTcFromSafeToNomPtngReceived = (receivedTc.name == "TC_AOCS_MODE_SWITCH_SAFE_TO_NOM_PTNG")
 			isTcFromNomPtngToNomEqReceived = (receivedTc.name == "TC_AOCS_MODE_SWITCH_NOM_PTNG_TO_NOM_EQ")
 
-			isTcFromSafeToNomPtngAccepted = (isTcFromSafeToNomPtngReceived and (aocsMode == "SAFE") and isRateCvg and (aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur))
-			isTcFromNomPtngToNomEqAccepted = (isTcFromNomPtngToNomEqReceived and (aocsMode == "NOM_PTNG") and isRateCvg and (aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur))
+			isTcFromSafeToNomPtngAccepted = (isTcFromSafeToNomPtngReceived and (AOCSMODES_ID[aocsMode] == "SAFE") and isRateCvg and (aocsModeElapsedTime > modeMgtParam.aocsSafeModeMinDur))
+			isTcFromNomPtngToNomEqAccepted = (isTcFromNomPtngToNomEqReceived and (AOCSMODES_ID[aocsMode] == "NOM_PTNG") and isRateCvg and (aocsModeElapsedTime > modeMgtParam.aocsNomPtngModeMinDur))
 
 			if isTcFromSafeToNomPtngAccepted:
 				eventsList.append(eventsAndTmTc.Event(name = "EVT_TC_ACCEPTED", id = 3, time = elapsedTime))

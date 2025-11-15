@@ -2,6 +2,8 @@
 import numpy as np
 
 import ephem
+from src.fsw.fswModeMgt import AOCSMODES
+from src.fsw.fswModeMgt import AOCSMODES_ID
 import src.models.kin.attitudeKinematics as attitudeKinematics
 import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
@@ -120,7 +122,7 @@ def scenarioDefinition_manualModeDev(swSetReferenceData = False):
 
     # Mode management
     modeMgtParamPatch = {}
-    modeMgtParamPatch["aocsModeInit"] = "MANUAL"
+    modeMgtParamPatch["aocsModeInit"] = AOCSMODES["MANUAL"]
     patches.update({"modeMgtParamPatch": modeMgtParamPatch})
     
     # Guidance
@@ -201,7 +203,7 @@ def scenarioDefinition_nominalScenario(swSetReferenceData = False):
     
     # Mode management
     modeMgtParamPatch = {}
-    modeMgtParamPatch["aocsModeInit"] = "SAFE"
+    modeMgtParamPatch["aocsModeInit"] = AOCSMODES["SAFE"]
     modeMgtParamPatch["isAutoSafeToNomPtngModeAllwd"] = True
     modeMgtParamPatch["isAutoNomPtngToNomEqAllwd"] = True
     patches.update({"modeMgtParamPatch": modeMgtParamPatch})
@@ -279,7 +281,7 @@ def scenarioDefinition_testDevelopment(swSetReferenceData = False):
     
     # Mode management
     modeMgtParamPatch = {}
-    modeMgtParamPatch["aocsModeInit"] = "SAFE"
+    modeMgtParamPatch["aocsModeInit"] = AOCSMODES["SAFE"]
     patches.update({"modeMgtParamPatch": modeMgtParamPatch})
     
     # Guidance

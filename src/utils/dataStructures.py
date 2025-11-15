@@ -67,6 +67,7 @@ class Timeseries:
             self.dataVec = np.zeros(len(timeVec))
         self.idx = 0
         self.unit = unit
+        self.timeUnit = "s"
         self.name = name
             
     def store(self, ii, vecToLog):
@@ -75,6 +76,25 @@ class Timeseries:
     def m2km(self):
         self.dataVec = self.dataVec / 1e3
         self.unit = "km"
+
+        return self
+
+    def toMin(self):
+        if self.timeUnit == "s":
+            self.timeVec = self.timeVec / 60
+        elif self.timeUnit == "h":
+            self.timeVec = self.timeVec / 3600
+        self.timeUnit = "min"
+
+        return self
+
+    def toSec(self):
+        if self.timeUnit == "min":
+            self.timeVec = self.timeVec*60
+        elif self.timeUnit == "h":
+            self.timeVec = self.timeVec*3600
+        self.timeUnit = "s"
+
         return self
 
     def rad2deg(self):
@@ -85,6 +105,7 @@ class Timeseries:
             self.unit = "deg/s"
         else:
             self.unit = "deg/s^2"
+
         return self
 
     def addNorm(self):
@@ -97,7 +118,7 @@ class Timeseries:
     def getNorm(self):
         outputTs = Timeseries(self.timeVec, 1, self.unit, ("norm_" + self.name))
         outputTs.dataVec = np.linalg.norm(self.dataVec, axis = 1)
-        
+
         return outputTs
 
     def deg2rad(self):      
@@ -108,6 +129,8 @@ class Timeseries:
             self.unit = "rad/s"
         else:
             self.unit = "rad/s^2"
+
+        return self
             
     def plot(self):
         print("   " + self.name)

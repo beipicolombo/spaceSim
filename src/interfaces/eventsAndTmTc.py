@@ -1,5 +1,6 @@
 
 import numpy as np
+import pandas as pd
 
 # Class for telecommands
 class Tc():
@@ -41,6 +42,24 @@ class Event():
     def display(self):
         print("EVENT at elapsed time: " + str(self.time) + " [s] " + self.name + " ID: " + str(self.id))
 
+# Function to transform a list of events into an exploitable dataframe
+def eventListToDataFrame(evtList):
+    data = {}
+    data["TIME [s]"] = []
+    data["NAME"] = []
+    data["ID"] = []
+
+    for evt in evtList:
+        data["TIME [s]"].append(evt.time)
+        data["NAME"].append(evt.name)
+        data["ID"].append(evt.id)
+    df = pd.DataFrame(data)
+    return df
+
+# # Class for event list
+# class EventList():
+#     def __init__(self):
+#         self.events = []
 
 # Class for events database
 class EventDatabase():
@@ -71,3 +90,5 @@ def listenTc(simBus, tcList):
             receivedTcList.append(updatedTcList.pop(0))
 
     return (receivedTcList, updatedTcList)
+
+

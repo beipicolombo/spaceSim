@@ -133,7 +133,7 @@ def runInitialization(scenarioPatchFcnHdl):
     print("      [FSW] Functions states")
     
     # [Mode management]
-    fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, [])
+    (fswBus.subBuses["modeMgt"], modeMgtEvtList) = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, [])
     
     # [Interfaces]
     fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)

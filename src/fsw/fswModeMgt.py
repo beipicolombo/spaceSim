@@ -192,7 +192,7 @@ def computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, received
 	for event in allEvents:
 		event.display()
 
-	return fswModeMgtBusOut
+	return (fswModeMgtBusOut, allEvents)
 	
 
 def aocsGuidanceModeLogic(aocsMode):

@@ -29,6 +29,7 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
     
     simuStrTime = time.time()
     tcList = simParam.tcTimeline # list of TC to be received
+    allEvtList = []
 
     for ii in range(1, simParam.nbPts):    
         # time.sleep(simParam.Ts)
@@ -85,7 +86,8 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
         (receivedTcList, tcList) = eventsAndTmTc.listenTc(simBus, tcList)
         
         # [Mode management]
-        fswBus.subBuses["modeMgt"] = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, receivedTcList)
+        (fswBus.subBuses["modeMgt"], modeMgtEvtList) = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, receivedTcList)
+        allEvtList = allEvtList + modeMgtEvtList
 
         # [Interfaces]
         fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)
@@ -106,10 +108,13 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
         # ==================================    
         # displays.update(simParam, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI)
 
+    # Convert the events list into a dataframe
+    allEvtDataframe = eventsAndTmTc.eventListToDataFrame(allEvtList)
+
     simuEndTime = time.time()
     simuDuration = simuEndTime - simuStrTime
     print("   Duration: " + str(simuDuration))
 
     joystickSerialPort.close()
     
-    return (modelsBus, fswBus, simBus)
+    return (modelsBus, fswBus, simBus, allEvtDataframe)

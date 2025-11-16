@@ -66,11 +66,9 @@ def runInitialization(scenarioPatchFcnHdl):
     # Mass
     scParam = scModel.Spacecraft(massModelName = simParam.simOptions.massModelName)
     
-    # Actuators # [TBW]
-    scParam.actParam = actModels.Param(scParam.massParam)
-    scParam.actParam.thrModelParam.initThr(1, scParam.massParam);
-    scParam.actParam.thrModelParam.thrSets[0].isOn = True # TBW
-    
+    # Actuators
+    scParam.actParam.thrModel.addSet("RCS_A", 6)
+
     # [Models] Orbit state
     # ==================================
     print("      [Models] Orbit state")
@@ -119,8 +117,8 @@ def runInitialization(scenarioPatchFcnHdl):
     
     # [Command] Patch with context data (from models parameters)
     # FSW has full knowledge of actuator model => TBW to be descoped
-    fswParam.cmdParam.thrCmdParam = scParam.actParam.thrModelParam
-    fswParam.cmdParam.rwCmdParam = scParam.actParam.rwModelParam
+    fswParam.cmdParam.thrCmdParam = scParam.actParam.thrModel
+    fswParam.cmdParam.rwCmdParam = scParam.actParam.rwModel
     
     # [Mode management] Patch simulation-specific parameters    
     fswParam.modeMgtParam = paramTools.patchAttributes(fswParam.modeMgtParam, patches["modeMgtParamPatch"])

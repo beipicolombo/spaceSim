@@ -147,7 +147,7 @@ def scenarioDefinition_nominalScenario(swSetReferenceData = False):
     simParamPatch = {}
     simParamPatch["caseName"] = "testDevelopment"
     simParamPatch["dateTimeStart"] = ephem.Date("2024/3/9 5:10:10")
-    simParamPatch["Ts"] = 0.5 # [s]
+    # simParamPatch["Ts"] = 0.5 # [s]
     simParamPatch["Tend"] = 2*90*60 # [s]
     patches.update({"simParamPatch": simParamPatch})
     
@@ -247,6 +247,8 @@ def scenarioDefinition_testDevelopment(swSetReferenceData = False):
     signalPathsToLog.append("modelsBus/dynamics/attitude/eulerAng_BI")
     signalPathsToLog.append("modelsBus/dynamics/attitude/angRate_BI_B")
     signalPathsToLog.append("modelsBus/dynamics/attitude/angMomSc_B")
+    signalPathsToLog.append("modelsBus/actuators/torqueAct_B")
+    signalPathsToLog.append("modelsBus/dynamics/attitude/torqueTot_B")
     signalPathsToLog.append("fswBus/modeMgt/isAocsModeTrans")
     signalPathsToLog.append("fswBus/modeMgt/aocsMode")
     signalPathsToExport = []

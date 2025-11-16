@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Mar 27 13:15:55 2022
-
-@author: Xela
-"""
 
 import numpy as np
 
@@ -15,72 +9,59 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-# Thrusters model parameters
-class Param:
-    def __init__(self, attDynParam):
-        self.nbThrSet = 0
-        self.thrSets = []
-        for ii in range(1, self.nbThrSet+1):
-            self.thrSets.append(ThrSetParam(attDynParam))
+# THR model
+class Thr:
+    def __init__(self):
+        self.nbSets = 0
+        self.sets = {}
 
-    def initThr(self, nbThrSet, attDynParam):
-        self.nbThrSet = nbThrSet
-        for ii in range(1, self.nbThrSet+1):
-            self.thrSets.append(ThrSetParam(attDynParam))
+    def addSet(self, setName, nbUnits):
+        setId = self.nbSets + 1
+        self.nbSets += 1
+        self.sets.update({setName: ThrSet(name = setName, id = setId, nbUnits = nbUnits)})
 
-    def computeThrTorque(self, fswCmdBus):
+    def computeTrq(self, fswCmdBus):
         torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdThr_B"].value)
-        torqueThr_B = np.array([0, 0, 0])
-        if (self.nbThrSet > 0):
-            for thrSetParam in self.thrSets:
-                torqueThr_B = torqueThr_B + thrSetParam.computeThrSetTorque(torqueCmd_B)/self.nbThrSet
-        
-        return torqueThr_B
+        torque_B = np.array([0, 0, 0])
+        if (self.nbSets > 0):
+            for key in self.sets.keys():
+                torque_B = torque_B + self.sets[key].computeTrq(torqueCmd_B)/self.nbSets 
+        return torque_B
 
-# Thrusters set parameters
-class ThrSetParam:
-    def __init__(self, attDynParam):
-        self.nbThr = 0
-        self.thrUnits = []
-        for ii in range(1, self.nbThr+1):
-            self.thrUnits.append(ThrUnitParam(ii))
-        self.inflMat_B = self.getInfluenceMatrix(attDynParam)
-        self.isOn = False
-
-    def initThrSet(self, nbThr, attDynParam):
-        self.nbThr = nbThr
-        for ii in range(1, self.nbThr+1):
-            self.thrUnits.append(ThrUnitParam(ii))
-        self.inflMat_B = self.getInfluenceMatrix(attDynParam)
-
-    def computeThrSetTorque(self, torqueCmd_B):
-        # TBW once THR commanding is implemented
-        if self.isOn:
-            torqueThrSet_B = torqueCmd_B
-        else:
-            torqueThrSet_B = np.array([0, 0, 0])
-
-        return torqueThrSet_B
+# THR set model
+class ThrSet():
+    def __init__(self, name = "empty", id = 0, nbUnits = 0):
+        self.name = name
+        self.id = id
+        self.nbUnits = nbUnits
+        self.units = {}
+        for kk in range(1, nbUnits+1):
+            unitName = ("unit"+str(kk))
+            self.units.update({unitName: ThrUnit(name = unitName, id = kk)})
 
     # Compute the thrusters set influence matrix
-    def getInfluenceMatrix(self, attDynParam):
-        matOfInfluence_B = np.zeros([6, self.nbThr])
-        posComSc_G = attDynParam.posComSc_G
+    # def getInfluenceMatrix(self, attDynParam):
+    #     matOfInfluence_B = np.zeros([6, self.nbUnits])
+    #     posComSc_G = attDynParam.posComSc_G
 
-        for ii in range(self.nbThr):
-            dirUnit_G = self.thrUnits[ii].dirUnit_G
-            posUnit_B = self.thrUnits[ii].posUnit_G - posComSc_G
-            forceUnit = self.thrUnits[ii].forceUnit
-            matOfInfluence_B[0:3, ii] = dirUnit_G*forceUnit
-            matOfInfluence_B[3:6, ii] = np.cross(posUnit_B, dirUnit_G*forceUnit)
+    #     for ii in range(self.nbUnits):
+    #         dirUnit_G = self.units[ii].dirUnit_G
+    #         posUnit_B = self.units[ii].posUnit_G - posComSc_G
+    #         forceUnit = self.units[ii].forceUnit
+    #         matOfInfluence_B[0:3, ii] = dirUnit_G*forceUnit
+    #         matOfInfluence_B[3:6, ii] = np.cross(posUnit_B, dirUnit_G*forceUnit)
 
-        return matOfInfluence_B
+    #     return matOfInfluence_B
 
-# Thruster unit parameters
-class ThrUnitParam:
-    def __init__(self, thrId):
+    def computeTrq(self, torqueCmd_B):
+        torque_B = torqueCmd_B
+        return torque_B
 
-        self.thrId = thrId
+# THR unit model
+class ThrUnit():
+    def __init__(self, name = "empty", id = 0):
+        self.name = name
+        self.id = id
         self.posUnit_G = np.array([0, 0, 0]) # [-]
         self.dirUnit_G = np.array([0, 0, -1]) # [-]
         self.forceUnit = 10 # [N]
@@ -89,6 +70,7 @@ class ThrUnitParam:
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
+# [TBW] Consumption model
 
 
 

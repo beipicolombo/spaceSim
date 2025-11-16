@@ -18,7 +18,7 @@ deg2rad = pi/180
 # CLASSES
 # --------------------------------------------------
 # Reaction wheels model parameters
-class RwModelParam:
+class Param:
     def __init__(self):
         self.nbRwSet = 0
         self.rwSets = []

@@ -20,8 +20,8 @@ deg2rad = pi/180
 # --------------------------------------------------
 class Param:
 	def __init__(self, attDynParam):
-		self.thrModelParam = thrModels.ThrModelParam(attDynParam)
-		self.rwModelParam = rwModels.RwModelParam()
+		self.thrModelParam = thrModels.Param(attDynParam)
+		self.rwModelParam = rwModels.Param()
 
 	def computeActTorque(self, simOptions, fswCmdBus, modelsActBus):
 		torqueAct_B = np.array([0, 0, 0])

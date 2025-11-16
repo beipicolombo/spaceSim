@@ -16,7 +16,7 @@ deg2rad = pi/180
 # CLASSES
 # --------------------------------------------------
 # Thrusters model parameters
-class ThrModelParam:
+class Param:
     def __init__(self, attDynParam):
         self.nbThrSet = 0
         self.thrSets = []

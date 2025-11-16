@@ -26,7 +26,7 @@ for key in AOCSMODES.keys():
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-class FswModeMgtParam:
+class Param:
 	def __init__(self):
         # Initial AOCS mode
 		self.aocsModeInit = AOCSMODES["OFF"]

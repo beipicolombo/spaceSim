@@ -6,7 +6,7 @@ import src.models.act.rwModels as rwModels
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-class FswCommandParam:
+class Param:
 	# TBW
 	def __init__(self, scActParam):
 		self.rwCmdParam = scActParam.thrModelParam

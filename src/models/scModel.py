@@ -20,9 +20,9 @@ class Spacecraft:
 		# Mass param
 		self.massParam = scMassModelsDb.getSpaceceraftMassModel(massModelName = self.massModelName)
 		# Sensors
-		self.senParam = senModels.SenModelParam()
+		self.senParam = senModels.Param()
 		# Actuators
-		self.actParam = actModels.ActModelParam(self.massParam)
+		self.actParam = actModels.Param(self.massParam)
 
 # --------------------------------------------------
 # FUNCTIONS

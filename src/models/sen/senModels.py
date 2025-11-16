@@ -18,7 +18,7 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-class SenModelParam:
+class Param:
 	def __init__(self, nbThrSet = 1):
 		self.strModelParam = strModels.StrModelParam()
 		self.imuModelParam = imuModels.ImuModelParam()

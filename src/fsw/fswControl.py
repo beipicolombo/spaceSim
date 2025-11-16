@@ -13,7 +13,7 @@ import src.models.kin.attitudeKinematics as attitudeKinematics
 # CLASSES
 # --------------------------------------------------
 
-class FswControlParam:
+class Param:
     # To be moved as higher level class
     def __init__(self):
         self.rateDampingKd = 10.0*np.eye(3)

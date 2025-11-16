@@ -15,26 +15,26 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-# Thrusters model parameters
+# THR model
 class Thr:
     def __init__(self):
         self.nbSets = 0
         self.sets = {}
 
-    def addThrSet(self, setName, nbUnits):
+    def addSet(self, setName, nbUnits):
         setId = self.nbSets + 1
         self.nbSets += 1
         self.sets.update({setName: ThrSet(name = setName, id = setId, nbUnits = nbUnits)})
 
     def computeTrq(self, fswCmdBus):
         torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdThr_B"].value)
-        torqueThr_B = np.array([0, 0, 0])
+        torque_B = np.array([0, 0, 0])
         if (self.nbSets > 0):
             for thrSet in self.sets:
-                torqueThr_B = torqueThr_B + thrSet.computeTrq(torqueCmd_B)/self.nbSets 
-        return torqueThr_B
+                torque_B = torque_B + thrSet.computeTrq(torqueCmd_B)/self.nbSets 
+        return torque_B
 
-
+# THR set model
 class ThrSet():
     def __init__(self, name = "empty", id = 0, nbUnits = 0):
         self.name = name
@@ -63,7 +63,7 @@ class ThrSet():
         torque_B = torqueCmd_B
         return torque_B
 
-
+# THR unit model
 class ThrUnit():
     def __init__(self, name = "empty", id = 0):
         self.name = name

@@ -18,7 +18,7 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-class ActModelParam:
+class Param:
 	def __init__(self, attDynParam):
 		self.thrModelParam = thrModels.ThrModelParam(attDynParam)
 		self.rwModelParam = rwModels.RwModelParam()

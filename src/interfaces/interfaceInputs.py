@@ -32,7 +32,7 @@ class KeyboardInputsParam:
 		self.trqAmplitude_Y = 0.01 # [N*m]
 
 
-class InterfaceInputsParam:
+class Param:
 	def __init__(self):
 		self.joystickParam = JoystickParam()
 		self.keyboardInputsParam = KeyboardInputsParam()

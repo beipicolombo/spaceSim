@@ -13,20 +13,20 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-class Fsw:
+class Param:
 	def __init__(self, scParam):
 		# Estimation
-		self.estParam = fswEstimation.FswEstimationParam()
+		self.estParam = fswEstimation.Param()
 		# Guidance
-		self.guidParam = fswGuidance.FswGuidanceParam()
+		self.guidParam = fswGuidance.Param()
 		# Control
-		self.ctrParam = fswControl.FswControlParam()
+		self.ctrParam = fswControl.Param()
 		# Command
-		self.cmdParam = fswCommand.FswCommandParam(scParam.actParam)
+		self.cmdParam = fswCommand.Param(scParam.actParam)
 		# Common
 
 		# Mode management
-		self.modeMgtParam = fswModeMgt.FswModeMgtParam()
+		self.modeMgtParam = fswModeMgt.Param()
 
 # --------------------------------------------------
 # FUNCTIONS

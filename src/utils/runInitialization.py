@@ -54,7 +54,7 @@ def runInitialization(scenarioPatchFcnHdl):
     # Interfaces parameters
     # ==================================
     print("   Interfaces")
-    interfaceInputsParam = interfaceInputs.InterfaceInputsParam()
+    interfaceInputsParam = interfaceInputs.Param()
     interfaceInputsParam.keyboardInputsParam = paramTools.patchAttributes(interfaceInputsParam.keyboardInputsParam, patches["ifKeyboardParamPatch"])
     joystickSerialPort = interfaceInputsParam.joystickParam.initializeSerialPort()
 
@@ -66,12 +66,10 @@ def runInitialization(scenarioPatchFcnHdl):
     # Mass
     scParam = scModel.Spacecraft(massModelName = simParam.simOptions.massModelName)
     
-    # Actuators # TBW
-    scParam.actParam = actModels.ActModelParam(scParam.massParam)
+    # Actuators # [TBW]
+    scParam.actParam = actModels.Param(scParam.massParam)
     scParam.actParam.thrModelParam.initThr(1, scParam.massParam);
     scParam.actParam.thrModelParam.thrSets[0].isOn = True # TBW
-    # Sensors
-    scParam.senParam = senModels.SenModelParam()
     
     # [Models] Orbit state
     # ==================================
@@ -103,7 +101,7 @@ def runInitialization(scenarioPatchFcnHdl):
     # ==================================
     print("      [FSW] Functions parameters")
     # Initialize
-    fswParam = fswModel.Fsw(scParam)
+    fswParam = fswModel.Param(scParam)
     
     # [Guidance] Patch simulation-specific parameters
     #fswParam.guidParam.GUIDMODE_ATT_INERT_eulerAngGuid_RI = GUIDMODE_ATT_INERT_eulerAngGuid_RI

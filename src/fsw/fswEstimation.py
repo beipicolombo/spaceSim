@@ -15,7 +15,7 @@ deg2rad = np.pi/180
 # CLASSES
 # --------------------------------------------------
 
-class FswEstimationParam:
+class Param:
     # To be moved as higher level class
     def __init__(self):
         self.Dummy = 0

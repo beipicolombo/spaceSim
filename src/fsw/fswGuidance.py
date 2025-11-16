@@ -16,7 +16,7 @@ deg2rad = pi/180
 # CLASSES
 # --------------------------------------------------
 
-class FswGuidanceParam:
+class Param:
     # To be moved as higher level class
     def __init__(self):
         self.GUIDMODE_ATT_INERT_eulerAngGuid_RI = np.array([0, 0, 0])*deg2rad

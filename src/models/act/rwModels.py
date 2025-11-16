@@ -30,7 +30,7 @@ class Param:
         for ii in range(1, self.nbRwSet+1):
             self.rwSets.append(RwSetParam())
 
-    def computeRwTorque(self):
+    def computeTrq(self):
         torqueRw_B = np.array([0, 0, 0])
         return torqueRw_B
 

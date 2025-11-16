@@ -7,10 +7,11 @@ import src.models.act.rwModels as rwModels
 # CLASSES
 # --------------------------------------------------
 class Param:
-	# TBW
+	# [TBW] For now the commanding function has perfect knowledge of the model parameters
+	# The parameters structure is exactly the same
 	def __init__(self, scActParam):
-		self.rwCmdParam = scActParam.thrModelParam
-		self.thrCmdParam = scActParam.rwModelParam
+		self.rwCmdParam = scActParam.thrModel
+		self.thrCmdParam = scActParam.rwModel
 
 
 # --------------------------------------------------

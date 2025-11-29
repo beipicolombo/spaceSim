@@ -14,7 +14,7 @@ deg2rad = pi/180
 # CLASSES
 # --------------------------------------------------
 class Spacecraft:
-	def __init__(self, massModelName = "Default"):
+	def __init__(self, massModelName, allParam):
 		# Template
 		self.massModelName = massModelName
 		# Mass param
@@ -22,7 +22,7 @@ class Spacecraft:
 		# Sensors
 		self.senParam = senModels.Param()
 		# Actuators
-		self.actParam = actModels.Param(self.massParam)
+		self.actParam = actModels.Param(self.massParam, allParam["act"])
 
 # --------------------------------------------------
 # FUNCTIONS

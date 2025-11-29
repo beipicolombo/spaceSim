@@ -33,7 +33,7 @@ import src.models.spaceEnv.envModel as envModel
 import src.models.spaceEnv.perfModel as perfModel
 import src.models.act.actModels as actModels
 import src.models.sen.senModels as senModels
-
+import src.models.act.thrModels as thrModels # [WIP]
 
 
 PROJECTROOT_PATH = Path(__file__).resolve().parents[2]
@@ -57,9 +57,7 @@ def runInitialization(scenarioPatchFcnHdl):
     patches = scenarioPatchFcnHdl()
 
     # [WIP] Load .yaml data
-    defaultData = load_data(DEFAULTDATA_PATH)
-    
-
+    allParam = load_data(DEFAULTDATA_PATH)
 
     print("Setting parameters...")  
     # [Simulation] Parameters
@@ -87,11 +85,8 @@ def runInitialization(scenarioPatchFcnHdl):
     # ==================================
     print("      [Models] Spacecraft parameters")
     # Mass
-    scParam = scModel.Spacecraft(massModelName = simParam.simOptions.massModelName)
+    scParam = scModel.Spacecraft(simParam.simOptions.massModelName, allParam)
     
-    # Actuators
-    scParam.actParam.thrModel.addSet("RCS_A", 6)
-
     # [Models] Orbit state
     # ==================================
     print("      [Models] Orbit state")

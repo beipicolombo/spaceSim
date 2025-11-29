@@ -7,6 +7,19 @@ import numpy as np
 pi  = np.pi
 deg2rad = pi/180
 
+# --------------------------------------------------
+# DICTIONNARIES
+# --------------------------------------------------
+# Dictionnary from THR unit states to IDs
+THR_UNIT_STATES = {}
+THR_UNIT_STATES["OFF"] = 0
+THR_UNIT_STATES["ON"] = 1
+
+# Dicitonnary from IDs to THR unit states
+THR_UNIT_STATES_ID = {}
+for key in THR_UNIT_STATES.keys():
+    thrUnitStateNb = THR_UNIT_STATES[key]
+    THR_UNIT_STATES_ID[thrUnitStateNb] = key
 
 # --------------------------------------------------
 # DATA CLASSES
@@ -36,60 +49,89 @@ class ThrUnitParam:
 # --------------------------------------------------
 # THR model
 class Thr:
-    def __init__(self):
+    def __init__(self, allThrSetParam):
+        self.param = allThrSetParam
         self.nbSets = 0
         self.sets = {}
+        for key in allThrSetParam.keys():
+            thrSetParam = allThrSetParam[key]
+            thrSetParam = ThrSetParam(**thrSetParam)
+            self.addSet(thrSetParam)
 
-    def addSet(self, setName, nbUnits):
-        setId = self.nbSets + 1
+    def addSet(self, thrSetParam):
         self.nbSets += 1
-        self.sets.update({setName: ThrSet(name = setName, id = setId, nbUnits = nbUnits)})
+        self.sets.update({thrSetParam.name: ThrSet(thrSetParam)})
 
     def computeTrq(self, fswCmdBus):
+        # [TBW]
         torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdThr_B"].value)
-        torque_B = np.array([0, 0, 0])
-        if (self.nbSets > 0):
-            for key in self.sets.keys():
-                torque_B = torque_B + self.sets[key].computeTrq(torqueCmd_B)/self.nbSets 
-        return torque_B
-
-# THR set model
-class ThrSet():
-    def __init__(self, name = "empty", id = 0, nbUnits = 0):
-        self.name = name
-        self.id = id
-        self.nbUnits = nbUnits
-        self.units = {}
-        for kk in range(1, nbUnits+1):
-            unitName = ("unit"+str(kk))
-            self.units.update({unitName: ThrUnit(name = unitName, id = kk)})
-
-    # Compute the thrusters set influence matrix
-    # def getInfluenceMatrix(self, attDynParam):
-    #     matOfInfluence_B = np.zeros([6, self.nbUnits])
-    #     posComSc_G = attDynParam.posComSc_G
-
-    #     for ii in range(self.nbUnits):
-    #         dirUnit_G = self.units[ii].dirUnit_G
-    #         posUnit_B = self.units[ii].posUnit_G - posComSc_G
-    #         forceUnit = self.units[ii].forceUnit
-    #         matOfInfluence_B[0:3, ii] = dirUnit_G*forceUnit
-    #         matOfInfluence_B[3:6, ii] = np.cross(posUnit_B, dirUnit_G*forceUnit)
-
-    #     return matOfInfluence_B
-
-    def computeTrq(self, torqueCmd_B):
         torque_B = torqueCmd_B
         return torque_B
 
+
+# THR set model
+class ThrSet():
+    def __init__(self, thrSetParam):
+        self.param = thrSetParam
+        self.units = {}
+        self.state = THR_UNIT_STATES["ON"]
+        for idUnit in range(1, thrSetParam.nbUnits+1):
+            thrUnitParam = self.getThrUnitParam(idUnit)
+            self.units.update({thrUnitParam.name: ThrUnit(thrUnitParam)})
+
+    def getThrUnitParam(self, idUnit):
+        name = ("unit"+str(idUnit))
+        branch = self.param.name
+        dir_B = self.param.dir_B[idUnit-1]
+        pos_B = self.param.pos_B[idUnit-1]
+        force = self.param.force[idUnit-1]
+        thrUnitParamDict = {"name": name, "branch": branch, "id": idUnit, "dir_B": dir_B, "pos_B": pos_B, "force": force}
+        return ThrUnitParam(**thrUnitParamDict)
+
+    def getUnit(self, idUnit):
+        name = ("unit"+str(idUnit))
+        return self.units[name]
+
+    def switchUnitOn(self, idUnit):
+        name = ("unit"+str(idUnit))
+        self.units[name].switchOn()
+
+    def switchUnitOff(self, idUnit):
+        name = ("unit"+str(idUnit))
+        self.units[name].switchOff()
+
+    def switchOn(self):
+        self.state = THR_UNIT_STATES["ON"]
+        for key in self.units:
+            self.units[key].switchOn()
+
+    def switchOff(self):
+        self.state = THR_UNIT_STATES["OFF"]
+        for key in self.units:
+            self.units[key].switchOff()
+
+    def computeTrq(self, fswCmdBus):
+        torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdThr_B"].value)
+        torque_B = torqueCmd_B
+        return torque_B
+
+
 # THR unit model
 class ThrUnit():
-    def __init__(self, name = "empty", id = 0):
-        self.name = name
-        self.id = id
-        self.posUnit_G = np.array([0, 0, 0]) # [-]
-        self.dirUnit_G = np.array([0, 0, -1]) # [-]
-        self.forceUnit = 10 # [N]
+    def __init__(self, thrUnitParam):
+        self.param = thrUnitParam
+        self.state = THR_UNIT_STATES["ON"]
+
+    def switchOn(self):
+        self.state = THR_UNIT_STATES["ON"]
+
+    def switchOff(self):
+        self.state = THR_UNIT_STATES["OFF"]
+
+    def computeTrq(self, fswCmdBus):
+        torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdThr_B"].value)
+        torque_B = torqueCmd_B
+        return torque_B
 
 # --------------------------------------------------
 # FUNCTIONS

@@ -5,6 +5,10 @@ Created on Fri Jul 19 14:44:02 2024
 @author: Xela
 """
 
+import yaml # [WIP]
+from deepmerge import always_merger # [WIP]
+from pathlib import Path # [WIP]
+
 import src.utils.simParam as simuParam
 import src.utils.paramTools as paramTools
 
@@ -31,11 +35,30 @@ import src.models.act.actModels as actModels
 import src.models.sen.senModels as senModels
 
 
+
+PROJECTROOT_PATH = Path(__file__).resolve().parents[2]
+DEFAULTDATA_PATH = PROJECTROOT_PATH / "data"
+
+# [WIP]
+def load_data(data_directory):    
+    # Initialize doctionnary
+    defaultData = {}
+    # Parse .yaml files recursively in the data directory
+    for file in Path(data_directory).rglob("*.yaml"):
+        data = yaml.safe_load(file.read_text())
+        defaultData = always_merger.merge(defaultData, data)
+    return defaultData
+
+
 def runInitialization(scenarioPatchFcnHdl):
     print("Retrieving scenario-specific patches...")    
     # Applying the patches
     # ==================================
     patches = scenarioPatchFcnHdl()
+
+    # [WIP] Load .yaml data
+    defaultData = load_data(DEFAULTDATA_PATH)
+    
 
 
     print("Setting parameters...")  

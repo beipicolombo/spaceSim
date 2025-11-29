@@ -1,10 +1,35 @@
 
+from dataclasses import dataclass
+
 import numpy as np
 
 # To be moved as common constants
 pi  = np.pi
 deg2rad = pi/180
 
+
+# --------------------------------------------------
+# DATA CLASSES
+# --------------------------------------------------
+# THR set model parameters
+@dataclass
+class ThrSetParam:
+    name: str
+    id: int
+    nbUnits: int
+    dir_B: list
+    pos_B: list
+    force: list
+
+# THR unit model parameters
+@dataclass
+class ThrUnitParam:
+    name: str
+    id: str
+    branch: str
+    dir_B: list
+    pos_B: list
+    force: float
 
 # --------------------------------------------------
 # CLASSES
@@ -65,7 +90,6 @@ class ThrUnit():
         self.posUnit_G = np.array([0, 0, 0]) # [-]
         self.dirUnit_G = np.array([0, 0, -1]) # [-]
         self.forceUnit = 10 # [N]
-
 
 # --------------------------------------------------
 # FUNCTIONS

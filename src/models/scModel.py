@@ -72,7 +72,7 @@ class Spacecraft:
 		rawMassParam = MassParam(**allParam["spacecraft"]["Default"])
 		self.massModel = MassModel(rawMassParam)
 		# Sensors
-		self.sen = senModels.Sensors()
+		self.sen = senModels.Sensors(allParam["sen"])
 		# Actuators
 		self.act = actModels.Actuators(self.massModel, allParam["act"])
 

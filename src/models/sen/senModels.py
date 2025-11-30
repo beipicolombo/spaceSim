@@ -19,9 +19,9 @@ deg2rad = pi/180
 # CLASSES
 # --------------------------------------------------
 class Sensors:
-	def __init__(self, nbThrSet = 1):
-		self.str = strModels.Str()
-		self.imu = imuModels.Imu()
+	def __init__(self, senParam):
+		self.str = strModels.Str(senParam["str"])
+		self.imu = imuModels.Imu(senParam["imu"])
 
 	def computeMeasurements(self, modelsSenBus, modelsBus):
 		angRateMeas_BI_B = self.imu.computeAngRateMeasurement(modelsBus)

@@ -1,0 +1,16 @@
+#imuData.yaml
+sen:
+  imu:
+    branchA:
+      name: "branchA"
+      nbUnits: 3
+      id: 1
+      dir_B: [[1, 0, 0], [1, 0, 0], [1, 0, 0]]
+      pos_B: [[1, 0, 0], [1, 0, 0], [1, 0, 0]]
+
+    branchB:
+      name: "branchB"
+      nbUnits: 3
+      id: 2
+      dir_B: [[1, 0, 0], [1, 0, 0], [1, 0, 0]]
+      pos_B: [[1, 0, 0], [1, 0, 0], [1, 0, 0]]

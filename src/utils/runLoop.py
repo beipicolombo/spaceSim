@@ -49,7 +49,7 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
         qPrevLI = attitudeKinematics.Quaternion(qPrevLI_sca, qPrevLI_vec)
         # 2. Update environment
         modelsBus.subBuses["environment"] = envModel.computeEphemerides(simBus, modelsBus, simParam)
-        modelsBus = envModel.computeExtTorque(simParam, scParam.massParam, modelsBus)
+        modelsBus = envModel.computeExtTorque(simParam, scParam.massModel, modelsBus)
 
         # Actuators
         modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
@@ -63,10 +63,10 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
         qPrevBI_vec = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].value
         qPrevBI = attitudeKinematics.Quaternion(qPrevBI_sca, qPrevBI_vec)
         # 2. Propagate
-        modelsBus = attitudeDynamics.propagateAttitude(scParam.massParam, simParam, modelsBus)
+        modelsBus = attitudeDynamics.propagateAttitude(scParam.massModel, simParam, modelsBus)
 
         # Compute spacecraft angular momentum
-        modelsBus = attitudeDynamics.computeAngMom(scParam.massParam, modelsBus) 
+        modelsBus = attitudeDynamics.computeAngMom(scParam.massModel, modelsBus) 
 
         # Propagate orbit dynamics
         modelsBus = orbitDynamics.propagateOrbit(simParam, modelsBus)

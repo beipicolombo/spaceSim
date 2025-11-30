@@ -124,7 +124,7 @@ def runInitialization(scenarioPatchFcnHdl):
     fswParam.guidParam = paramTools.patchAttributes(fswParam.guidParam, patches["guidParamPatch"])
     
     # [Control] Patch simulation-specific parameters
-    fswParam.ctrParam.inertiaSc_B = scParam.massParam.inertiaSc_B
+    fswParam.ctrParam.inertiaSc_B = scParam.massModel.inertiaSc_B
     fswParam.ctrParam = paramTools.patchAttributes(fswParam.ctrParam, patches["ctrParamPatch"])
     # Tuning => TBW
     attCtrNatFreq =  0.0010919*10 # [rad/s]
@@ -172,7 +172,7 @@ def runInitialization(scenarioPatchFcnHdl):
     modelsBus.subBuses["environment"] = envModel.computeEphemerides(simBus, modelsBus, simParam)
 
     # Disturbance torque
-    modelsBus = envModel.computeExtTorque(simParam, scParam.massParam, modelsBus)
+    modelsBus = envModel.computeExtTorque(simParam, scParam.massModel, modelsBus)
      
     # Spacecraft actuators torque
     modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])

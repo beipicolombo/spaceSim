@@ -52,7 +52,7 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
         modelsBus = envModel.computeExtTorque(simParam, scParam.massModel, modelsBus)
 
         # Actuators
-        modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
+        modelsBus.subBuses["actuators"] = scParam.act.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
 
         # Total total external torque
         modelsBus = attitudeDynamics.computeTotTorque(modelsBus)
@@ -72,7 +72,7 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
         modelsBus = orbitDynamics.propagateOrbit(simParam, modelsBus)
 
         # Sensor
-        modelsBus.subBuses["sensors"] = scParam.senParam.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
+        modelsBus.subBuses["sensors"] = scParam.sen.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
 
         # LVLH frame
         modelsBus = envModel.computeLvlhFrame(modelsBus)

@@ -22,7 +22,7 @@ class Param:
 		# Control
 		self.ctrParam = fswControl.Param()
 		# Command
-		self.cmdParam = fswCommand.Param(scParam.actParam)
+		self.cmdParam = fswCommand.Param(scParam.act)
 		# Common
 
 		# Mode management

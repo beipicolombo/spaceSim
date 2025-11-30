@@ -17,10 +17,9 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-class StrModelParam():
+class Str():
 	def __init__(self):
-		# TBW
-		self.dummy = 0
+		self.param = 0
 
 	def computeAttitudeMeasurement(self, modelsBus):
 		qBI_sca     = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].value

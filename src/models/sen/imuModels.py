@@ -16,10 +16,9 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-class ImuModelParam():
+class Imu():
 	def __init__(self):
-		# TBW
-		self.dummy = 0
+		self.param = 0
 
 	def computeAngRateMeasurement(self, modelsBus):
 		angRate_BI_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].value

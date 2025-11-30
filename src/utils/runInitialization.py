@@ -111,7 +111,7 @@ def runInitialization(scenarioPatchFcnHdl):
     # [Models] Spacecraft sensors states
     # ==================================
     print("      [Models] Spacecraft sensors states")
-    modelsBus.subBuses["sensors"] = scParam.senParam.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
+    modelsBus.subBuses["sensors"] = scParam.sen.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
     
     # [FSW] Functions parameters
     # ==================================
@@ -135,8 +135,8 @@ def runInitialization(scenarioPatchFcnHdl):
     
     # [Command] Patch with context data (from models parameters)
     # FSW has full knowledge of actuator model => TBW to be descoped
-    fswParam.cmdParam.thrCmdParam = scParam.actParam.thrModel
-    fswParam.cmdParam.rwCmdParam = scParam.actParam.rwModel
+    fswParam.cmdParam.thrCmdParam = scParam.act.thrModel
+    fswParam.cmdParam.rwCmdParam = scParam.act.rwModel
     
     # [Mode management] Patch simulation-specific parameters    
     fswParam.modeMgtParam = paramTools.patchAttributes(fswParam.modeMgtParam, patches["modeMgtParamPatch"])
@@ -175,7 +175,7 @@ def runInitialization(scenarioPatchFcnHdl):
     modelsBus = envModel.computeExtTorque(simParam, scParam.massModel, modelsBus)
      
     # Spacecraft actuators torque
-    modelsBus.subBuses["actuators"] = scParam.actParam.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
+    modelsBus.subBuses["actuators"] = scParam.act.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
     
     # Total external torque
     modelsBus = attitudeDynamics.computeTotTorque(modelsBus)

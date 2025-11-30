@@ -27,14 +27,14 @@ class DynamicsState():
         self.angRate_BI_B = angRate_BI_B
         self.qBI = qBI
             
-    def propagateState(self, scMassParam, simParam, torqueTot_B):
+    def propagateState(self, massModel, simParam, torqueTot_B):
         self.qBI.propagateState(self.angRate_BI_B, simParam)
-        self.angRate_BI_B = propagateAngRates(self.angRate_BI_B, torqueTot_B, scMassParam, simParam)
+        self.angRate_BI_B = propagateAngRates(self.angRate_BI_B, torqueTot_B, massModel, simParam)
     
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
-def propagateAttitude(scMassParam, simParam, modelsBus):
+def propagateAttitude(massModel, simParam, modelsBus):
     # Initialize output bus
     modelsBusOut = modelsBus
     # Retrieve inputs
@@ -46,7 +46,7 @@ def propagateAttitude(scMassParam, simParam, modelsBus):
     qBI = attitudeKinematics.Quaternion(qBI_sca, qBI_vec)
     dynState = DynamicsState(qBI, angRate_BI_B)
     # Propagate
-    dynState.propagateState(scMassParam, simParam, torqueTot_B)
+    dynState.propagateState(massModel, simParam, torqueTot_B)
     # Set output bus signals
     modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].update(dynState.qBI.sca)
     modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].update(dynState.qBI.vec)
@@ -96,9 +96,9 @@ def setInitialAttitude(modelsBus, simParam, dynState):
     return modelsBusOut
     
 # Angular acceleration
-def angRatesDot(angRates, externalTorque, attDynParam):   
-    scInertia    = attDynParam.inertiaSc_B
-    scInertiaInv = attDynParam.inertiaScInv_B
+def angRatesDot(angRates, externalTorque, massModel):   
+    scInertia    = massModel.inertiaSc_B
+    scInertiaInv = massModel.inertiaScInv_B
     
     angRatesDot  = np.matmul(scInertiaInv, externalTorque - np.cross(angRates, np.matmul(scInertia, angRates)))
     
@@ -107,17 +107,17 @@ def angRatesDot(angRates, externalTorque, attDynParam):
 # Attitude quaternion propagation
 
 # Angular rates propagation
-def propagateAngRates(angRatesPrev, externalTorquePrev, attDynParam, simParam):
+def propagateAngRates(angRatesPrev, externalTorquePrev, massModel, simParam):
     xPrev = angRatesPrev
     Ts = simParam.Ts
     
-    k1 = angRatesDot(xPrev, externalTorquePrev, attDynParam)
+    k1 = angRatesDot(xPrev, externalTorquePrev, massModel)
     x2 = xPrev + Ts/2 * k1
-    k2 = angRatesDot(x2, externalTorquePrev, attDynParam)
+    k2 = angRatesDot(x2, externalTorquePrev, massModel)
     x3 = xPrev + Ts/2 * k2
-    k3 = angRatesDot(x3, externalTorquePrev, attDynParam)
+    k3 = angRatesDot(x3, externalTorquePrev, massModel)
     x4 = xPrev + Ts * k3
-    k4 = angRatesDot(x4, externalTorquePrev, attDynParam)
+    k4 = angRatesDot(x4, externalTorquePrev, massModel)
         
     angRatesNext = xPrev + Ts/6 * (k1 + 2*k2 + 2*k3 + k4)
      
@@ -141,11 +141,11 @@ def computeTotTorque(modelsBus):
     return modelsBusOut
 
 # Angular momentum
-def computeAngMom(attDynParam, modelsBus):
+def computeAngMom(massModel, modelsBus):
     # Retrieve useful inputs
     # angMomRw_B = np.array([0, 0, 0]) # RW models to be implemented
     angRate_BI_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].value
-    inertiaSc_B = attDynParam.inertiaSc_B
+    inertiaSc_B = massModel.inertiaSc_B
     
     # Initialize output bus
     modelsBusOut = modelsBus

@@ -1,0 +1,16 @@
+#rwData.yaml
+act:
+  rw:
+    branchA:
+      name: "branchA"
+      nbUnits: 5
+      id: 1
+      dir_B: [[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]]
+      inertia: [0, 0, 0, 0, 0]
+
+    branchB:
+      name: "branchB"
+      nbUnits: 5
+      id: 2
+      dir_B: [[1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0], [1, 0, 0]]
+      inertia: [0, 0, 0, 0, 0]

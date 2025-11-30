@@ -23,4 +23,4 @@ out = runSimu(scenarioPatchFcnHdl)
 # nonRegressionOutput = nonRegression.run(scenarioPatchFcnHdl)
 # fswBus/modeMgt/aocsMode
 # print(out["fwsBus"].subBuses["modeMgt"].signals["aocsMode"].timeseries.dataVec)
-print(out["modelsBus"].subBuses["actuators"].signals["torqueAct_B"].timeseries.dataVec)
+# print(out["modelsBus"].subBuses["actuators"].signals["torqueAct_B"].timeseries.dataVec)

@@ -21,7 +21,7 @@ deg2rad = pi/180
 class Actuators:
 	def __init__(self, attDynParam, actParam):
 		self.thrModel = thrModels.Thr(actParam["thr"])
-		self.rwModel = rwModels.Rw()
+		self.rwModel = rwModels.Rw(actParam["rw"])
 
 	def computeActTorque(self, simOptions, fswCmdBus, modelsActBus):
 		torqueAct_B = np.array([0, 0, 0])

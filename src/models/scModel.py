@@ -40,6 +40,12 @@ class Spacecraft:
 		# Actuators
 		self.act = actModels.Actuators(self.massModel, allParam["act"])
 
+	def run(self, simParam, fswBus, modelsBus):
+		# Initialize outputs buses
+		modelsActBusOut = modelsBus.subBuses["actuators"]
+		# Run actuators
+		modelsActBusOut = self.act.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
+		return modelsActBusOut
 
 
 class MassModel:

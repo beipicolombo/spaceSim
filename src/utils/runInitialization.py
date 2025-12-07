@@ -80,10 +80,9 @@ def runInitialization(scenarioPatchFcnHdl):
     joystickSerialPort = interfaceInputsParam.joystickParam.initializeSerialPort()
 
     print("   FSW / models")
-    
-    # [Models] Spacecraft model
+    # [Models] Models
     # ==================================
-    print("      [Models] Spacecraft model")
+    print("      [Models] Models")
     models = mod.Models(simParam.simOptions.massModelName, allParam)
     
     # [Models] Orbit state
@@ -164,20 +163,10 @@ def runInitialization(scenarioPatchFcnHdl):
     # [Command]
     fswBus.subBuses["command"] = fsw.command.run(fswBus)
     
-    # [Models] Environment / actuators states
+    # [Models]
     # ==================================
-    print("      [Models] Environment / actuators states")
-    # Ephemerides
-    modelsBus.subBuses["environment"] = envModel.computeEphemerides(simBus, modelsBus, simParam)
-
-    # Disturbance torque
-    modelsBus = envModel.computeExtTorque(simParam, models.spacecraft.massModel, modelsBus)
-     
-    # Spacecraft actuators torque
-    modelsBus.subBuses["actuators"] = models.spacecraft.act.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
-    
-    # Total external torque
-    modelsBus = attitudeDynamics.computeTotTorque(modelsBus)
+    print("      [Models] Spacecraft and environment states")
+    modelsBus = models.run(simParam, simBus, fswBus, modelsBus)
         
     # [Displays]
     # ==================================

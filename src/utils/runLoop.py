@@ -35,14 +35,7 @@ def runLoop(simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simB
         qPrevLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
         qPrevLI = attKin.Quaternion(qPrevLI_sca, qPrevLI_vec)
         # 2. Update environment
-        modelsBus.subBuses["environment"] = envModel.computeEphemerides(simBus, modelsBus, simParam)
-        modelsBus = envModel.computeExtTorque(simParam, models.spacecraft.massModel, modelsBus)
-
-        # Actuators
-        modelsBus.subBuses["actuators"] = models.spacecraft.act.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
-
-        # Total total external torque
-        modelsBus = attDyn.computeTotTorque(modelsBus)
+        modelsBus = models.run(simParam, simBus, fswBus, modelsBus)
         
         # Propagate attitude dynamics
         # 1. Get the previous quaternion => to be used for animation

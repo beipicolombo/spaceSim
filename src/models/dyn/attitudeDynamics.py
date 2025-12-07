@@ -122,23 +122,7 @@ def propagateAngRates(angRatesPrev, externalTorquePrev, massModel, simParam):
     angRatesNext = xPrev + Ts/6 * (k1 + 2*k2 + 2*k3 + k4)
      
     return angRatesNext
-    
-# Total total external torque
-def computeTotTorque(modelsBus):
-    # Retrieve useful inputs
-    torqueExt_B = modelsBus.subBuses["environment"].signals["torqueExt_B"].value
-    torqueAct_B = modelsBus.subBuses["actuators"].signals["torqueAct_B"].value
 
-    # Initialize output bus
-    modelsBusOut = modelsBus
-
-    # Compute total external torque
-    torqueTot_B = torqueExt_B + torqueAct_B
-    
-    # Update output bus signals
-    modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].update(torqueTot_B)
-
-    return modelsBusOut
 
 # Angular momentum
 def computeAngMom(massModel, modelsBus):

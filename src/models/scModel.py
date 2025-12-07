@@ -13,10 +13,6 @@ import src.data.spacecraftMassModelsDatabase as scMassModelsDb
 pi  = np.pi
 deg2rad = pi/180
 
-# --------------------------------------------------
-# CLASSES
-# --------------------------------------------------
-# ...
 
 # --------------------------------------------------
 # DATA CLASSES
@@ -32,6 +28,20 @@ class MassParam:
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+class Spacecraft:
+	def __init__(self, massModelName, allParam):
+		# Template
+		self.massModelName = massModelName
+		# Mass param [TBW]
+		rawMassParam = MassParam(**allParam["spacecraft"]["Default"])
+		self.massModel = MassModel(rawMassParam)
+		# Sensors
+		self.sen = senModels.Sensors(allParam["sen"])
+		# Actuators
+		self.act = actModels.Actuators(self.massModel, allParam["act"])
+
+
+
 class MassModel:
 	def __init__(self, massParam):
 		self.param = massParam
@@ -64,17 +74,6 @@ class MassModel:
 		self.massCB = massCB
 		self.masssc = massSc	
 
-class Spacecraft:
-	def __init__(self, massModelName, allParam):
-		# Template
-		self.massModelName = massModelName
-		# Mass param [TBW]
-		rawMassParam = MassParam(**allParam["spacecraft"]["Default"])
-		self.massModel = MassModel(rawMassParam)
-		# Sensors
-		self.sen = senModels.Sensors(allParam["sen"])
-		# Actuators
-		self.act = actModels.Actuators(self.massModel, allParam["act"])
 
 # --------------------------------------------------
 # FUNCTIONS

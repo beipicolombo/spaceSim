@@ -25,10 +25,10 @@ import src.interfaces.interfaceInputs as interfaceInputs
 import src.interfaces.display as display
 import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
+import src.models.models as mod
 import src.models.dyn.attitudeDynamics as attitudeDynamics
 import src.models.dyn.orbitDynamics as orbitDynamics
 
-import src.models.scModel as scModel
 import src.models.spaceEnv.envModel as envModel
 import src.models.spaceEnv.perfModel as perfModel
 import src.models.act.actModels as actModels
@@ -81,11 +81,10 @@ def runInitialization(scenarioPatchFcnHdl):
 
     print("   FSW / models")
     
-    # [Models] Spacecraft parameters
+    # [Models] Spacecraft model
     # ==================================
-    print("      [Models] Spacecraft parameters")
-    # Mass
-    scParam = scModel.Spacecraft(simParam.simOptions.massModelName, allParam)
+    print("      [Models] Spacecraft model")
+    models = mod.Models(simParam.simOptions.massModelName, allParam)
     
     # [Models] Orbit state
     # ==================================
@@ -111,7 +110,7 @@ def runInitialization(scenarioPatchFcnHdl):
     # [Models] Spacecraft sensors states
     # ==================================
     print("      [Models] Spacecraft sensors states")
-    modelsBus.subBuses["sensors"] = scParam.sen.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
+    modelsBus.subBuses["sensors"] = models.spacecraft.sen.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
     
     # [FSW] Functions parameters
     # ==================================
@@ -123,7 +122,7 @@ def runInitialization(scenarioPatchFcnHdl):
     fsw.guidance.param = paramTools.patchAttributes(fsw.guidance.param, patches["guidParamPatch"])
     
     # [Control] Patch simulation-specific parameters
-    fsw.control.param.inertiaSc_B = scParam.massModel.inertiaSc_B
+    fsw.control.param.inertiaSc_B = models.spacecraft.massModel.inertiaSc_B
     fsw.control.param = paramTools.patchAttributes(fsw.control.param, patches["ctrParamPatch"])
     # Tuning => TBW
     attCtrNatFreq =  0.0010919*10 # [rad/s]
@@ -172,10 +171,10 @@ def runInitialization(scenarioPatchFcnHdl):
     modelsBus.subBuses["environment"] = envModel.computeEphemerides(simBus, modelsBus, simParam)
 
     # Disturbance torque
-    modelsBus = envModel.computeExtTorque(simParam, scParam.massModel, modelsBus)
+    modelsBus = envModel.computeExtTorque(simParam, models.spacecraft.massModel, modelsBus)
      
     # Spacecraft actuators torque
-    modelsBus.subBuses["actuators"] = scParam.act.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
+    modelsBus.subBuses["actuators"] = models.spacecraft.act.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
     
     # Total external torque
     modelsBus = attitudeDynamics.computeTotTorque(modelsBus)
@@ -187,4 +186,4 @@ def runInitialization(scenarioPatchFcnHdl):
     # displays = display.Displays()
     #displays.initialize(simParam, modelsBus, fswBus, simBus, fswModeMgtState)
         
-    return (simParam, interfaceInputsParam, fsw, scParam, modelsBus, fswBus, simBus, joystickSerialPort, displays)
+    return (simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays)

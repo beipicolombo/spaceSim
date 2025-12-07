@@ -1,25 +1,18 @@
 
 import time
 
-import src.fsw.fswModeMgt as fswModeMgt
-import src.fsw.fswGuidance as fswGuidance
-import src.fsw.fswEstimation as fswEstimation 
-import src.fsw.fswControl as fswControl
-import src.fsw.fswCommand as fswCommand
-import src.fsw.fswCommand as fswCommand
-
 import src.interfaces.interfaceInputs as interfaceInputs
 import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
-import src.models.dyn.attitudeDynamics as attitudeDynamics
-import src.models.dyn.orbitDynamics as orbitDynamics
-import src.models.kin.attitudeKinematics as attitudeKinematics
+import src.models.dyn.attitudeDynamics as attDyn
+import src.models.dyn.orbitDynamics as orbDyn
+import src.models.kin.attitudeKinematics as attKin
 
 import src.models.spaceEnv.envModel as envModel
 import src.models.spaceEnv.perfModel as perfModel
 
 
-def runLoop(simParam, interfaceInputsParam, fsw, scParam, modelsBus, fswBus, simBus, joystickSerialPort, displays):
+def runLoop(simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays):
     
     simuStrTime = time.time()
     tcList = simParam.tcTimeline # list of TC to be received
@@ -40,33 +33,33 @@ def runLoop(simParam, interfaceInputsParam, fsw, scParam, modelsBus, fswBus, sim
         # 1. Get the previous quaternion for nadir frame => to be used for animation
         qPrevLI_sca = modelsBus.subBuses["environment"].signals["qLI_sca"].value
         qPrevLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
-        qPrevLI = attitudeKinematics.Quaternion(qPrevLI_sca, qPrevLI_vec)
+        qPrevLI = attKin.Quaternion(qPrevLI_sca, qPrevLI_vec)
         # 2. Update environment
         modelsBus.subBuses["environment"] = envModel.computeEphemerides(simBus, modelsBus, simParam)
-        modelsBus = envModel.computeExtTorque(simParam, scParam.massModel, modelsBus)
+        modelsBus = envModel.computeExtTorque(simParam, models.spacecraft.massModel, modelsBus)
 
         # Actuators
-        modelsBus.subBuses["actuators"] = scParam.act.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
+        modelsBus.subBuses["actuators"] = models.spacecraft.act.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
 
         # Total total external torque
-        modelsBus = attitudeDynamics.computeTotTorque(modelsBus)
+        modelsBus = attDyn.computeTotTorque(modelsBus)
         
         # Propagate attitude dynamics
         # 1. Get the previous quaternion => to be used for animation
         qPrevBI_sca = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].value
         qPrevBI_vec = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].value
-        qPrevBI = attitudeKinematics.Quaternion(qPrevBI_sca, qPrevBI_vec)
+        qPrevBI = attKin.Quaternion(qPrevBI_sca, qPrevBI_vec)
         # 2. Propagate
-        modelsBus = attitudeDynamics.propagateAttitude(scParam.massModel, simParam, modelsBus)
+        modelsBus = attDyn.propagateAttitude(models.spacecraft.massModel, simParam, modelsBus)
 
         # Compute spacecraft angular momentum
-        modelsBus = attitudeDynamics.computeAngMom(scParam.massModel, modelsBus) 
+        modelsBus = attDyn.computeAngMom(models.spacecraft.massModel, modelsBus) 
 
         # Propagate orbit dynamics
-        modelsBus = orbitDynamics.propagateOrbit(simParam, modelsBus)
+        modelsBus = orbDyn.propagateOrbit(simParam, modelsBus)
 
         # Sensor
-        modelsBus.subBuses["sensors"] = scParam.sen.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
+        modelsBus.subBuses["sensors"] = models.spacecraft.sen.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
 
         # LVLH frame
         modelsBus = envModel.computeLvlhFrame(modelsBus)

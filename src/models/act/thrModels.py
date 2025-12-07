@@ -58,9 +58,24 @@ class Thr:
             thrSetParam = ThrSetParam(**thrSetParam)
             self.addSet(thrSetParam)
 
+
     def addSet(self, thrSetParam):
         self.nbSets += 1
         self.sets.update({thrSetParam.name: ThrSet(thrSetParam)})
+
+
+    def run(self, simOptions, fswCmdBus, modelsActBus):
+        # Initialize outputs bus
+        modelsActBusOut = modelsActBus
+        # Process
+        if simOptions.isThrAct:
+            torqueThr_B = self.computeTrq(fswCmdBus)
+        else:
+            torqueThr_B = np.array([0, 0, 0])
+        # Set outputs bus
+        modelsActBusOut.signals["torqueThr_B"].update(torqueThr_B)
+        return modelsActBusOut
+
 
     def computeTrq(self, fswCmdBus):
         # [TBW]

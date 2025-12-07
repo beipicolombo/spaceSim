@@ -56,9 +56,25 @@ class Rw:
             rwSetParam = RwSetParam(**rwSetParam)
             self.addSet(rwSetParam)
 
+
     def addSet(self, rwSetParam):
         self.nbSets += 1
         self.sets.update({rwSetParam.name: RwSet(rwSetParam)})
+
+
+
+    def run(self, simOptions, fswCmdBus, modelsActBus):
+        # Initialize outputs bus
+        modelsActBusOut = modelsActBus
+        # Process
+        if simOptions.isRwAct:
+            torqueRw_B = self.computeTrq(fswCmdBus)
+        else:
+            torqueRw_B = np.array([0, 0, 0])
+        # Set outputs bus
+        modelsActBusOut.signals["torqueThr_B"].update(torqueRw_B)
+        return modelsActBusOut
+
 
     def computeTrq(self, fswCmdBus):
         # [TBW]

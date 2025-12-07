@@ -23,20 +23,26 @@ class Actuators:
 		self.thrModel = thrModels.Thr(actParam["thr"])
 		self.rwModel = rwModels.Rw(actParam["rw"])
 
-	def computeActTorque(self, simOptions, fswCmdBus, modelsActBus):
-		torqueAct_B = np.array([0, 0, 0])
-		torqueThr_B = np.array([0, 0, 0])
-		torqueRw_B = np.array([0, 0, 0])
-
-		if simOptions.isRwAct:
-			torqueRw_B = self.rwModel.computeTrq()
-		elif simOptions.isThrAct:
-			torqueThr_B = self.thrModel.computeTrq(fswCmdBus)
-		
-		torqueAct_B = torqueThr_B + torqueRw_B
-
-		modelsActBus.signals["torqueRw_B"].update(torqueRw_B)
-		modelsActBus.signals["torqueThr_B"].update(torqueThr_B)
-		modelsActBus.signals["torqueAct_B"].update(torqueAct_B)
-
+	def run(self, simOptions, fswCmdBus, modelsActBus):
+		# Initialize outputs bus
+		modelsActBusOut = modelsActBus
+		# Run RW model
+		modelsActBusOut = self.rwModel.run(simOptions, fswCmdBus, modelsActBusOut)
+		# Run THR model
+		modelsActBusOut = self.thrModel.run(simOptions, fswCmdBus, modelsActBusOut)
+		# Compute total actuators torque
+		modelsActBusOut = self.computeActTorque(modelsActBusOut)
 		return modelsActBus
+
+
+	def computeActTorque(self, modelsActBus):
+		# Retrieve useful inputs
+		torqueRw_B = modelsActBus.signals["torqueRw_B"].value
+		torqueThr_B = modelsActBus.signals["torqueThr_B"].value
+		# Initialize outputs bus
+		modelsActBusOut = modelsActBus
+		# Process
+		torqueAct_B = torqueThr_B + torqueRw_B
+		# Set outputs bus
+		modelsActBusOut.signals["torqueAct_B"].update(torqueAct_B)
+		return modelsActBusOut

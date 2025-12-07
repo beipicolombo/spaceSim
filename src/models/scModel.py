@@ -44,7 +44,9 @@ class Spacecraft:
 		# Initialize outputs buses
 		modelsActBusOut = modelsBus.subBuses["actuators"]
 		# Run actuators
-		modelsActBusOut = self.act.computeActTorque(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
+		modelsActBusOut = self.act.run(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
+		# Run sensors
+		# TBW		
 		return modelsActBusOut
 
 

@@ -161,7 +161,7 @@ def runInitialization(scenarioPatchFcnHdl):
     fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, modelsBus.subBuses["environment"], fswBus)
     
     # [Control]
-    fswBus.subBuses["control"] = fswControl.computeControl(fswParam.ctrParam, fswBus)
+    fswBus.subBuses["control"] = fsw.control.run(fswBus)
        
     # [Command]
     fswBus.subBuses["command"] = fswCommand.computeCommand(fswParam.cmdParam, fswBus)
@@ -192,4 +192,4 @@ def runInitialization(scenarioPatchFcnHdl):
     # displays = display.Displays()
     #displays.initialize(simParam, modelsBus, fswBus, simBus, fswModeMgtState)
         
-    return (simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays)
+    return (simParam, interfaceInputsParam, fsw, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays)

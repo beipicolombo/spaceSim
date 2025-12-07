@@ -25,7 +25,7 @@ import src.models.spaceEnv.envModel as envModel
 import src.models.spaceEnv.perfModel as perfModel
 
 
-def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays):
+def runLoop(simParam, interfaceInputsParam, fsw, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays):
     
     simuStrTime = time.time()
     tcList = simParam.tcTimeline # list of TC to be received
@@ -99,7 +99,7 @@ def runLoop(simParam, interfaceInputsParam, fswParam, scParam, fswModeMgtState, 
         fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, modelsBus.subBuses["environment"], fswBus)
 
         # [Control]
-        fswBus.subBuses["control"] = fswControl.computeControl(fswParam.ctrParam, fswBus)
+        fswBus.subBuses["control"] = fsw.control.run(fswBus)
 
         # [Command]
         fswBus.subBuses["command"] = fswCommand.computeCommand(fswParam.cmdParam, fswBus)

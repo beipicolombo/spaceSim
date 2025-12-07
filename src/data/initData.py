@@ -96,6 +96,7 @@ def initializeBusesAndSignals(simParam):
     fswBus.subBuses["modeMgt"].addSignal("aocsModeElapsedTime", 1, unit = "s")
     fswBus.addSubBus("interfaces")
     fswBus.subBuses["interfaces"].addSignal("trqCmdManual_B", 3, unit = "N*m")
+    fswBus.addSubBus("sensorProc")
 
     # Update the log parameters
     fswBus.setSignalsLog(simParam.runOptions.signalPathsToLog, simParam.timeVec)

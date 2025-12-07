@@ -149,6 +149,9 @@ def runInitialization(scenarioPatchFcnHdl):
     # [Interfaces]
     fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)
 
+    # [Sensor processing]
+    fswBus.subBuses["sensorProc"] = fsw.sensorProc.run(fswBus, modelsBus)
+
     # [Estimation]
     fswBus.subBuses["estimation"] = fsw.estimation.run(fswBus, modelsBus)
     

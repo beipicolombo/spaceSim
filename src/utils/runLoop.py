@@ -78,13 +78,16 @@ def runLoop(simParam, interfaceInputsParam, fsw, scParam, modelsBus, fswBus, sim
         # ==================================
         # Retrieve received TCs
         (receivedTcList, tcList) = eventsAndTmTc.listenTc(simBus, tcList)
-        
+
         # [Mode management]
         (fswBus.subBuses["modeMgt"], modeMgtEvtList) = fsw.modeMgt.run(simParam, fswBus, simBus, receivedTcList)
         allEvtList = allEvtList + modeMgtEvtList
 
         # [Interfaces]
         fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)
+
+        # [Sensor processing]
+        fswBus.subBuses["sensorProc"] = fsw.sensorProc.run(fswBus, modelsBus)
 
         # [Estimation]
         fswBus.subBuses["estimation"] = fsw.estimation.run(fswBus, modelsBus)

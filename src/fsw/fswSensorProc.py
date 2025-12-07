@@ -10,6 +10,13 @@ class SensorProcessing():
         self.param = 0
 
 
+    def run(self, fswBusIn, modelsBus):
+        fswBus = fswBusIn
+        return fswBus
+
+
+
+
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------

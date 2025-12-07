@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Apr 21 01:16:29 2025
-
-@author: Xela
-"""
 
 import time
 
@@ -25,7 +19,7 @@ import src.models.spaceEnv.envModel as envModel
 import src.models.spaceEnv.perfModel as perfModel
 
 
-def runLoop(simParam, interfaceInputsParam, fsw, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays):
+def runLoop(simParam, interfaceInputsParam, fsw, scParam, modelsBus, fswBus, simBus, joystickSerialPort, displays):
     
     simuStrTime = time.time()
     tcList = simParam.tcTimeline # list of TC to be received
@@ -86,23 +80,23 @@ def runLoop(simParam, interfaceInputsParam, fsw, fswParam, scParam, fswModeMgtSt
         (receivedTcList, tcList) = eventsAndTmTc.listenTc(simBus, tcList)
         
         # [Mode management]
-        (fswBus.subBuses["modeMgt"], modeMgtEvtList) = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, receivedTcList)
+        (fswBus.subBuses["modeMgt"], modeMgtEvtList) = fsw.modeMgt.run(simParam, fswBus, simBus, receivedTcList)
         allEvtList = allEvtList + modeMgtEvtList
 
         # [Interfaces]
         fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)
 
         # [Estimation]
-        fswBus.subBuses["estimation"] = fswEstimation.computeEstimation(fswParam.estParam, fswBus, modelsBus)
+        fswBus.subBuses["estimation"] = fsw.estimation.run(fswBus, modelsBus)
 
         # [Guidance]
-        fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, modelsBus.subBuses["environment"], fswBus)
+        fswBus.subBuses["guidance"] = fsw.guidance.run(fswBus)
 
         # [Control]
         fswBus.subBuses["control"] = fsw.control.run(fswBus)
 
         # [Command]
-        fswBus.subBuses["command"] = fswCommand.computeCommand(fswParam.cmdParam, fswBus)
+        fswBus.subBuses["command"] = fsw.command.run(fswBus)
 
         # [Graphics]
         # ==================================    

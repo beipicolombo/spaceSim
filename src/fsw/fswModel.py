@@ -24,21 +24,6 @@ class Fsw:
 		self.control = fswControl.Control()
 		self.command = fswCommand.Command()
 
-class Param:
-	def __init__(self, scParam):
-		# Common
-		# ...
-		# Mode management
-		self.modeMgtParam = fswModeMgt.Param()
-		# Estimation
-		self.estParam = fswEstimation.Param()
-		# Guidance
-		self.guidParam = fswGuidance.Param()
-		# Control
-		self.ctrParam = fswControl.Param()
-		# Command
-		self.cmdParam = fswCommand.Param(scParam.act)
-
 
 # --------------------------------------------------
 # FUNCTIONS

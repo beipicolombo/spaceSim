@@ -118,53 +118,49 @@ def runInitialization(scenarioPatchFcnHdl):
     print("      [FSW] Functions parameters")
     # Initialize
     fsw = fswModel.Fsw()
-    fswParam = fswModel.Param(scParam)
     
     # [Guidance] Patch simulation-specific parameters
-    #fswParam.guidParam.GUIDMODE_ATT_INERT_eulerAngGuid_RI = GUIDMODE_ATT_INERT_eulerAngGuid_RI
-    fswParam.guidParam = paramTools.patchAttributes(fswParam.guidParam, patches["guidParamPatch"])
+    fsw.guidance.param = paramTools.patchAttributes(fsw.guidance.param, patches["guidParamPatch"])
     
     # [Control] Patch simulation-specific parameters
-    fswParam.ctrParam.inertiaSc_B = scParam.massModel.inertiaSc_B
-    fswParam.ctrParam = paramTools.patchAttributes(fswParam.ctrParam, patches["ctrParamPatch"])
+    fsw.control.param.inertiaSc_B = scParam.massModel.inertiaSc_B
+    fsw.control.param = paramTools.patchAttributes(fsw.control.param, patches["ctrParamPatch"])
     # Tuning => TBW
     attCtrNatFreq =  0.0010919*10 # [rad/s]
     attCtrDamping = 0.6 # [-]
     rateCtrTimeResp2pc = 10*60 # [s]
-    fswParam.ctrParam.getAttCtrlTuningFrom_dampingAndNaturalFrequency(attCtrDamping, attCtrNatFreq)
-    fswParam.ctrParam.getRateCtrlTuningFrom_timeResp(rateCtrTimeResp2pc)
+    fsw.control.param.getAttCtrlTuningFrom_dampingAndNaturalFrequency(attCtrDamping, attCtrNatFreq)
+    fsw.control.param.getRateCtrlTuningFrom_timeResp(rateCtrTimeResp2pc)
     
-    # [Command] Patch with context data (from models parameters)
     # FSW has full knowledge of actuator model => TBW to be descoped
-    fswParam.cmdParam.thrCmdParam = scParam.act.thrModel
-    fswParam.cmdParam.rwCmdParam = scParam.act.rwModel
+    # TBW
     
     # [Mode management] Patch simulation-specific parameters    
-    fswParam.modeMgtParam = paramTools.patchAttributes(fswParam.modeMgtParam, patches["modeMgtParamPatch"])
-    fswModeMgtState = fswModeMgt.FswModeMgtState(fswParam.modeMgtParam.aocsModeInit)
+    fsw.modeMgt.param = paramTools.patchAttributes(fsw.modeMgt.param, patches["modeMgtParamPatch"])
+    fsw.modeMgt.state = fswModeMgt.FswModeMgtState(fsw.modeMgt.param.aocsModeInit)
     
     # [FSW] Functions states
     # ==================================
     print("      [FSW] Functions states")
     
     # [Mode management]
-    (fswBus.subBuses["modeMgt"], modeMgtEvtList) = fswModeMgt.computeModeMgt(simParam, fswParam, fswModeMgtState, fswBus, simBus, [])
+    (fswBus.subBuses["modeMgt"], modeMgtEvtList) = fsw.modeMgt.run(simParam, fswBus, simBus, [])
     
     # [Interfaces]
     fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)
 
     # [Estimation]
-    fswBus.subBuses["estimation"] = fswEstimation.computeEstimation(fswParam.estParam, fswBus, modelsBus)
+    fswBus.subBuses["estimation"] = fsw.estimation.run(fswBus, modelsBus)
     
     # [Guidance]
-    fswParam.guidParam.orbitRate = orbitInitObj.orbitContext.orbitPulse
-    fswBus.subBuses["guidance"] = fswGuidance.computeGuidance(fswParam.guidParam, modelsBus.subBuses["environment"], fswBus)
+    fsw.guidance.param.orbitRate = orbitInitObj.orbitContext.orbitPulse
+    fswBus.subBuses["guidance"] = fsw.guidance.run(fswBus)
     
     # [Control]
     fswBus.subBuses["control"] = fsw.control.run(fswBus)
        
     # [Command]
-    fswBus.subBuses["command"] = fswCommand.computeCommand(fswParam.cmdParam, fswBus)
+    fswBus.subBuses["command"] = fsw.command.run(fswBus)
     
     # [Models] Environment / actuators states
     # ==================================
@@ -180,11 +176,7 @@ def runInitialization(scenarioPatchFcnHdl):
     
     # Total external torque
     modelsBus = attitudeDynamics.computeTotTorque(modelsBus)
-    
-    # To be encapsulated:
-    # fswModeMgtState
-    
-    
+        
     # [Displays]
     # ==================================
     print("      [Displays]")
@@ -192,4 +184,4 @@ def runInitialization(scenarioPatchFcnHdl):
     # displays = display.Displays()
     #displays.initialize(simParam, modelsBus, fswBus, simBus, fswModeMgtState)
         
-    return (simParam, interfaceInputsParam, fsw, fswParam, scParam, fswModeMgtState, modelsBus, fswBus, simBus, joystickSerialPort, displays)
+    return (simParam, interfaceInputsParam, fsw, scParam, modelsBus, fswBus, simBus, joystickSerialPort, displays)

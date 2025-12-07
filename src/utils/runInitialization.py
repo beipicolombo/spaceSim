@@ -117,6 +117,7 @@ def runInitialization(scenarioPatchFcnHdl):
     # ==================================
     print("      [FSW] Functions parameters")
     # Initialize
+    fsw = fswModel.Fsw()
     fswParam = fswModel.Param(scParam)
     
     # [Guidance] Patch simulation-specific parameters

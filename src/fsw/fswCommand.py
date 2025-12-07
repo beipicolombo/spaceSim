@@ -6,6 +6,10 @@ import src.models.act.rwModels as rwModels
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+class Command():
+	def __init__(self):
+		self.param = 0
+
 class Param:
 	# [TBW] For now the commanding function has perfect knowledge of the model parameters
 	# The parameters structure is exactly the same

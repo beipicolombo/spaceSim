@@ -14,6 +14,9 @@ deg2rad = np.pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+class Estimation():
+    def __init__(self):
+        self.param = 0
 
 class Param:
     # To be moved as higher level class

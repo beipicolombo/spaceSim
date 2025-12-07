@@ -15,6 +15,9 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+class Guidance():
+    def __init__(self):
+        self.param = 0
 
 class Param:
     # To be moved as higher level class

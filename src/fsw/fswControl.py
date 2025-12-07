@@ -12,6 +12,9 @@ import src.models.kin.attitudeKinematics as attitudeKinematics
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+class Control():
+    def __init__(self):
+        self.param = 0
 
 class Param:
     # To be moved as higher level class

@@ -26,6 +26,10 @@ for key in AOCSMODES.keys():
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+class ModeMgt():
+	def __init__(self):
+		self.param = 0
+
 class Param:
 	def __init__(self):
         # Initial AOCS mode

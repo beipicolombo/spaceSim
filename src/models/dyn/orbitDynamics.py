@@ -1,28 +1,92 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Mar 27 13:15:55 2022
 
-@author: Xela
-"""
-
-import src.utils.constants as const
 import numpy as np
 import math as m
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
+import time as ti
 # import cartopy.crs as ccrs
 # import cartopy
-import time as ti
+import src.utils.constants as const
 
 
-# Retrieve useful constants
+# To be moved as common constants
 pi  = np.pi
-deg2rad = pi/180 # TBW: use constants module
+deg2rad = pi/180
+
+
+# --------------------------------------------------
+# DATA CLASSES
+# --------------------------------------------------
+# ...
 
 
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# WIP
+class Orbit():
+    def __init__(self):
+        self.state = State(const.earthMu)
+        self.config = Config()
+
+    def set(self, modelsBus):
+        # Initialize outputs bus
+        modelsBusOut = modelsBus
+        # Retrieve configuration
+        perAltitudeInit = self.config.perAltitudeInit
+        ecc = self.config.ecc
+        inc = self.config.inc
+        raan = self.config.raan
+        argPer = self.config.argPer
+        ta = self.config.ta
+        # Compute initial orbit
+        perRadiusInit = perAltitudeInit + const.earthRadius
+        sma = perRadiusInit / (1-ecc)
+        (pos_I, vel_I) = elementsToPosVelInertial(sma, ecc, inc, raan, argPer, ta, const.earthMu)
+        self.state = State(const.earthMu, pos_I = pos_I, vel_I = vel_I)
+        # Update outputs bus
+        modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(self.state.pos_I)
+        modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(self.state.vel_I)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].update(self.state.keplerElem.sma)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ecc"].update(self.state.keplerElem.ecc)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].update(self.state.keplerElem.inc)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].update(self.state.keplerElem.raan)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(self.state.keplerElem.argPer)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(self.state.keplerElem.ta)
+
+        return modelsBusOut
+
+
+    def run(self, simParam, modelsBus):
+        # Initialize ouputs bus
+        modelsBusOut = modelsBus
+        # Process
+        self.state.propagate(simParam, const.earthMu)
+        # Update outputs bus
+        modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(self.state.pos_I)
+        modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(self.state.vel_I)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].update(self.state.keplerElem.sma)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ecc"].update(self.state.keplerElem.ecc)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].update(self.state.keplerElem.inc)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].update(self.state.keplerElem.raan)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(self.state.keplerElem.argPer)
+        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(self.state.keplerElem.ta)
+
+        return modelsBusOut        
+
+
+# To be implemented as dataclass
+class Config():
+    def __init__(self):
+        self.perAltitudeInit = 500 * 1e3 # [m]
+        self.ecc = 0.01
+        self.inc = 10 * deg2rad # [rad]
+        self.raan = 10 * deg2rad # [rad]
+        self.argPer = 90 * deg2rad # [rad]
+        self.ta = 0 * deg2rad # [rad]
+
+
+# To be implemented as dataclass
 class OrbitInitParam():
     def __init__(self):
         self.perAltitudeInit = 500 * 1e3 # [m]
@@ -33,6 +97,7 @@ class OrbitInitParam():
         self.ta = 0 * deg2rad # [rad]
 
 
+# To be implemented as dataclass
 class OrbitContext():
     def __init__(self):
         self.longPer = 0
@@ -47,6 +112,7 @@ class OrbitContext():
         self.orbitPeriod = 2*pi / self.orbitPulse 
 
 
+# To be implemented as dataclass
 class Kepler:
     def __init__(self):
         self.sma = 0
@@ -73,7 +139,9 @@ class Kepler:
         self.apoRad = apoRad
         self.angMom_I = angMomVec
 
-class Orbit:
+
+# To be implemented as attribute of Orbit object
+class State:
     def __init__(self, mu, pos_I = np.array([6870.993129, 0, 0]), vel_I = np.array([0, 7500.85563415, 1322.6032267])):
         self.pos_I = pos_I
         self.vel_I = vel_I
@@ -110,61 +178,10 @@ class Orbit:
         self.keplerElem.set(self.pos_I, self.vel_I, mu)
         self.orbitContext.set(self.keplerElem, mu)
 
+
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
-def propagateOrbit(simParam, modelsBus):
-    # Initialize ouput bus
-    modelsBusOut = modelsBus
-    pos_I = modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].value
-    vel_I = modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].value
-    mu = const.earthMu # TBW => use single common parameter for gravity model config
-    # Get orbit object
-    orbitObj = Orbit(mu, pos_I = pos_I, vel_I = vel_I)
-    # Propagate
-    orbitObj.propagate(simParam, mu)
-    # Update output bus signals
-    modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(orbitObj.pos_I)
-    modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(orbitObj.vel_I)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].update(orbitObj.keplerElem.sma)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ecc"].update(orbitObj.keplerElem.ecc)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].update(orbitObj.keplerElem.inc)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].update(orbitObj.keplerElem.raan)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(orbitObj.keplerElem.argPer)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(orbitObj.keplerElem.ta)
-
-    return modelsBusOut
-
-
-def setInitialOrbit(modelsBus, orbitInitParam):
-    # Initialize outputs bus
-    modelsBusOut = modelsBus
-    perAltitudeInit = orbitInitParam.perAltitudeInit
-    ecc = orbitInitParam.ecc
-    inc = orbitInitParam.inc
-    raan = orbitInitParam.raan
-    argPer = orbitInitParam.argPer
-    ta = orbitInitParam.ta
-
-    # Compute initial orbit
-    perRadiusInit = perAltitudeInit + const.earthRadius
-    sma = perRadiusInit / (1-ecc)
-    (pos_I, vel_I) = elementsToPosVelInertial(sma, ecc, inc, raan, argPer, ta, const.earthMu)
-    orbit = Orbit(const.earthMu, pos_I, vel_I)
-
-    # Set output bus signals
-    modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(orbit.pos_I)
-    modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(orbit.vel_I)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].update(orbit.keplerElem.sma)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ecc"].update(orbit.keplerElem.ecc)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].update(orbit.keplerElem.inc)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].update(orbit.keplerElem.raan)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(orbit.keplerElem.argPer)
-    modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(orbit.keplerElem.ta)
-
-    return (modelsBusOut, orbit)
-
-
 # Intertial position/velocity to orbit elements
 def posVelInertialToElements(posVec, velVec, mu):
     # Pre-processing
@@ -348,6 +365,13 @@ def vecToPosVel(vec):
     vel = vec[3:6]
     return (pos, vel)
 
+
+# --------------------------------------------------
+# TEMP
+# --------------------------------------------------
+# ...
+
+
 # --------------------------------------------------
 # SIMULATION RUN FUNCTIONS
 # --------------------------------------------------
@@ -434,7 +458,8 @@ def runOrbitDynamicsSim(posStart,velStart,Ts,Tend,mu):
 # POST PROCESSING FUNCTIONS
 # --------------------------------------------------
 
-# compute norm of vector time data
+# To be included as utility, if necessary
+# Compute norm of vector time data
 def computeNorm(timeData):
     nPoints = len(timeData)
     timeDataNorm = np.zeros((nPoints,1))
@@ -444,7 +469,8 @@ def computeNorm(timeData):
     return timeDataNorm
 
 
-# display latitude/longitude
+# To be reworked with GUI integration
+# Display latitude/longitude
 def plotLatLon(time,timeLat,timeLon):
     figLatLonTime = plt.figure("LatLonTime")
     plt.plot(time,timeLat/deg2rad, label="lat", color="blue")
@@ -468,7 +494,8 @@ def plotLatLon(time,timeLat,timeLon):
     return(figLatLonTime,figLatLonProj)
     
 
-# display position coordinates
+# To be reworked with GUI integration
+# Display position coordinates
 def plotPosition(time,timePos,timePos_e):
     # inertial position
     figPosCoord, axs = plt.subplots(1,2)
@@ -492,7 +519,8 @@ def plotPosition(time,timePos,timePos_e):
     return(figPosCoord)
 
 
-# display elements
+# To be reworked with GUI integration
+# Display elements
 def plotElements(time,timeSma,timeEcc, timeInc, timeRaan, timeArgPer, timeApoRad, timePerRad, timeAngMom):
     # inertial position
     figSmaEcc, axs = plt.subplots(1,2)

@@ -26,8 +26,8 @@ import src.interfaces.display as display
 import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
 import src.models.models as mod
-import src.models.dyn.attitudeDynamics as attitudeDynamics
-import src.models.dyn.orbitDynamics as orbitDynamics
+import src.models.dyn.attitudeDynamics as attDyn
+import src.models.dyn.orbitDynamics as orbDyn
 
 import src.models.spaceEnv.envModel as envModel
 import src.models.spaceEnv.perfModel as perfModel
@@ -85,31 +85,37 @@ def runInitialization(scenarioPatchFcnHdl):
     print("      [Models] Models")
     models = mod.Models(simParam.simOptions.massModelName, allParam)
     
-    # [Models] Orbit state
+    # [Models] Orbit
     # ==================================
     print("      [Models] Orbit state")
-    orbitInitParam = orbitDynamics.OrbitInitParam()
-    orbitInitParam = paramTools.patchAttributes(orbitInitParam, patches["orbitInitParamPatch"])
-    (modelsBus, orbitInitObj) = orbitDynamics.setInitialOrbit(modelsBus, orbitInitParam)
-    
+    orbit = orbDyn.Orbit()
+    orbit.config = paramTools.patchAttributes(orbit.config, patches["orbitInitParamPatch"])
+    modelsBus = orbit.set(modelsBus)
+
     # LVLH frame => initialized here because it is needed for the attitude initalization
     # the initial attitude can be defined wrt the LVLH frame
+    # TBW: move the computation of LVLH frame
+    # TBW: implement run() method
     modelsBus = envModel.computeLvlhFrame(modelsBus)
     
-    # [Models] Attitude state
+    # [Models] Attitude
     # ==================================
     print("      [Models] Attitude state")
-    initDynState = attitudeDynamics.DynamicsState()
-    initDynState = paramTools.patchAttributes(initDynState, patches["initDynStatePatch"])
-    modelsBus = attitudeDynamics.setInitialAttitude(modelsBus, simParam, initDynState)
-            
-    # Performance (additional models signals)
-    modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
+    attitude = attDyn.Attitude()
+    attitude.config = paramTools.patchAttributes(attitude.config, patches["initDynStatePatch"]) 
+    modelsBus = attitude.set(simParam, models.spacecraft, modelsBus)
     
     # [Models] Spacecraft sensors states
     # ==================================
     print("      [Models] Spacecraft sensors states")
+    # TBW: move computation of sensor measurements
+    # TBW: implement run() method
     modelsBus.subBuses["sensors"] = models.spacecraft.sen.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
+
+    # [Models] Performance (additional models signals)
+    # ==================================
+    # TBW: Implement performance model as class Performance
+    modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
     
     # [FSW] Functions parameters
     # ==================================
@@ -154,7 +160,7 @@ def runInitialization(scenarioPatchFcnHdl):
     fswBus.subBuses["estimation"] = fsw.estimation.run(fswBus, modelsBus)
     
     # [Guidance]
-    fsw.guidance.param.orbitRate = orbitInitObj.orbitContext.orbitPulse
+    fsw.guidance.param.orbitRate = orbit.state.orbitContext.orbitPulse
     fswBus.subBuses["guidance"] = fsw.guidance.run(fswBus)
     
     # [Control]
@@ -175,4 +181,4 @@ def runInitialization(scenarioPatchFcnHdl):
     # displays = display.Displays()
     #displays.initialize(simParam, modelsBus, fswBus, simBus, fswModeMgtState)
         
-    return (simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays)
+    return (simParam, interfaceInputsParam, fsw, models, attitude, orbit, modelsBus, fswBus, simBus, joystickSerialPort, displays)

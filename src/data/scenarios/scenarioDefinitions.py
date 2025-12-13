@@ -108,7 +108,7 @@ def scenarioDefinition_manualModeDev(swSetReferenceData = False):
     
     # Initial attitude
     initDynStatePatch = {}
-    initDynStatePatch["qInitVec"] = attitudeKinematics.trans_EulerAngToQuat(np.array([0, 0, 0]) * deg2rad).toVec()
+    initDynStatePatch["qInit"] = attitudeKinematics.trans_EulerAngToQuat(np.array([0, 0, 0]) * deg2rad)
     patches.update({"initDynStatePatch": initDynStatePatch})
     
     # Initial orbit
@@ -189,7 +189,7 @@ def scenarioDefinition_nominalScenario(swSetReferenceData = False):
     
     # Initial attitude
     initDynStatePatch = {}
-    initDynStatePatch["qInitVec"] = attitudeKinematics.trans_EulerAngToQuat(np.array([0, 0, 0]) * deg2rad).toVec()
+    initDynStatePatch["qInit"] = attitudeKinematics.trans_EulerAngToQuat(np.array([0, 0, 0]) * deg2rad)
     initDynStatePatch["angRateInit_B"] = np.array([2.0, 0.5, 0.9])*deg2rad
     patches.update({"initDynStatePatch": initDynStatePatch})
     
@@ -269,7 +269,7 @@ def scenarioDefinition_testDevelopment(swSetReferenceData = False):
     
     # Initial attitude
     initDynStatePatch = {}
-    initDynStatePatch["qInitVec"] = attitudeKinematics.trans_EulerAngToQuat(np.array([0, 0, 0]) * deg2rad).toVec()
+    initDynStatePatch["qInit"] = attitudeKinematics.trans_EulerAngToQuat(np.array([0, 0, 0]) * deg2rad)
     initDynStatePatch["angRateInit_B"] = np.array([2.0, 0.5, 0.9])*deg2rad
     patches.update({"initDynStatePatch": initDynStatePatch})
     

@@ -13,7 +13,7 @@ def runSimu(scenarioPatchFcnHdl):
     # --------------------------------------------------
     print("==================================")
     print("Initialization")
-    (simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays) = runInitialization(scenarioPatchFcnHdl)
+    (simParam, interfaceInputsParam, fsw, models, attitude, orbit, modelsBus, fswBus, simBus, joystickSerialPort, displays) = runInitialization(scenarioPatchFcnHdl)
 
 
     # --------------------------------------------------
@@ -21,7 +21,7 @@ def runSimu(scenarioPatchFcnHdl):
     # --------------------------------------------------
     print("==================================")
     print("Simulation")
-    (modelsBus, fswBus, simBus, allEvtDataframe) = runLoop(simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays)
+    (modelsBus, fswBus, simBus, allEvtDataframe) = runLoop(simParam, interfaceInputsParam, fsw, models, attitude, orbit, modelsBus, fswBus, simBus, joystickSerialPort, displays)
 
 
     # --------------------------------------------------

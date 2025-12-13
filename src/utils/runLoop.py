@@ -30,26 +30,16 @@ def runLoop(simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simB
         # [Models]
         # ==================================    
         # Environment
-        # 1. Get the previous quaternion for nadir frame => to be used for animation
-        qPrevLI_sca = modelsBus.subBuses["environment"].signals["qLI_sca"].value
-        qPrevLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
-        qPrevLI = attKin.Quaternion(qPrevLI_sca, qPrevLI_vec)
-        # 2. Update environment
         modelsBus = models.run(simParam, simBus, fswBus, modelsBus)
         
-        # Propagate attitude dynamics
-        # 1. Get the previous quaternion => to be used for animation
-        qPrevBI_sca = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].value
-        qPrevBI_vec = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].value
-        qPrevBI = attKin.Quaternion(qPrevBI_sca, qPrevBI_vec)
-        # 2. Propagate
+        # Dynamics
         modelsBus = attDyn.propagateAttitude(models.spacecraft.massModel, simParam, modelsBus)
-
-        # Compute spacecraft angular momentum
-        modelsBus = attDyn.computeAngMom(models.spacecraft.massModel, modelsBus) 
 
         # Propagate orbit dynamics
         modelsBus = orbDyn.propagateOrbit(simParam, modelsBus)
+
+        # Compute spacecraft angular momentum
+        modelsBus = attDyn.computeAngMom(models.spacecraft.massModel, modelsBus) 
 
         # Sensor
         modelsBus.subBuses["sensors"] = models.spacecraft.sen.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)

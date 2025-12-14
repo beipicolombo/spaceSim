@@ -60,15 +60,18 @@ class Str():
 		self.nbSets += 1
 		self.sets.update({strSetParam.name: StrSet(strSetParam)})        
 
-	def computeAttitudeMeasurement(self, modelsBus):
+	def run(self, modelsBus):
+        # Retrieve inputs
 		qBI_sca     = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].value
 		qBI_vec     = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].value
 		eulerAng_BI = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].value
+        # Process
 		eulerAngMeas_BI = eulerAng_BI
 		qBImeas_sca = qBI_sca
 		qBImeas_vec = qBI_vec
 		qBImeas = attitudeKinematics.Quaternion(qBImeas_sca, qBImeas_vec).normalize()
 		return (qBImeas, eulerAngMeas_BI)
+
 
 # STR set model
 class StrSet():
@@ -109,6 +112,7 @@ class StrSet():
         self.state = STR_UNIT_STATES["OFF"]
         for key in self.units:
             self.units[key].switchOff()
+
 
 # STR unit model
 class StrUnit():

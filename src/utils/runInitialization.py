@@ -108,9 +108,7 @@ def runInitialization(scenarioPatchFcnHdl):
     # [Models] Spacecraft sensors states
     # ==================================
     print("      [Models] Spacecraft sensors states")
-    # TBW: move computation of sensor measurements
-    # TBW: implement run() method
-    modelsBus.subBuses["sensors"] = models.spacecraft.sen.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
+    modelsBus = models.spacecraft.sen.run(modelsBus)
 
     # [Models] Performance (additional models signals)
     # ==================================

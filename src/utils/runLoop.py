@@ -38,8 +38,8 @@ def runLoop(simParam, interfaceInputsParam, fsw, models, attitude, orbit, models
         # Run orbit model
         modelsBus = orbit.run(simParam, modelsBus)
 
-        # Sensor
-        modelsBus.subBuses["sensors"] = models.spacecraft.sen.computeMeasurements(modelsBus.subBuses["sensors"], modelsBus)
+        # Run sensors model
+        modelsBus = models.spacecraft.sen.run(modelsBus)
 
         # LVLH frame
         modelsBus = envModel.computeLvlhFrame(modelsBus)

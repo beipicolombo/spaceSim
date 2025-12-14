@@ -23,14 +23,17 @@ class Sensors:
 		self.str = strModels.Str(senParam["str"])
 		self.imu = imuModels.Imu(senParam["imu"])
 
-	def computeMeasurements(self, modelsSenBus, modelsBus):
-		angRateMeas_BI_B = self.imu.computeAngRateMeasurement(modelsBus)
-		(qBImeas, eulerAngMeas_BI) = self.str.computeAttitudeMeasurement(modelsBus)
+	def run(self, modelsBus):
+		# Initialize outputs bus
+		modelsBusOut = modelsBus
+		# Process
+		angRateMeas_BI_B = self.imu.run(modelsBus)
+		(qBImeas, eulerAngMeas_BI) = self.str.run(modelsBus)
+		# Update outputs bus
+		modelsBusOut.subBuses["sensors"].signals["angRateMeas_BI_B"].update(angRateMeas_BI_B)
+		modelsBusOut.subBuses["sensors"].signals["eulerAngMeas_BI"].update(eulerAngMeas_BI)
+		modelsBusOut.subBuses["sensors"].signals["qBImeas_sca"].update(qBImeas.sca)
+		modelsBusOut.subBuses["sensors"].signals["qBImeas_vec"].update(qBImeas.vec)
 
-		modelsSenBus.signals["angRateMeas_BI_B"].update(angRateMeas_BI_B)
-		modelsSenBus.signals["eulerAngMeas_BI"].update(eulerAngMeas_BI)
-		modelsSenBus.signals["qBImeas_sca"].update(qBImeas.sca)
-		modelsSenBus.signals["qBImeas_vec"].update(qBImeas.vec)
-
-		return modelsSenBus
+		return modelsBusOut
 

@@ -59,11 +59,13 @@ class Imu():
         self.nbSets += 1
         self.sets.update({imuSetParam.name: ImuSet(imuSetParam)})
 
-
-    def computeAngRateMeasurement(self, modelsBus):
+    def run(self, modelsBus):
+        # Retrieve inputs
         angRate_BI_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].value
+        # Process
         angRateMeas_B = angRate_BI_B
         return (angRateMeas_B)
+
 
 # IMU set model
 class ImuSet():
@@ -104,6 +106,7 @@ class ImuSet():
         self.state = IMU_UNIT_STATES["OFF"]
         for key in self.units:
             self.units[key].switchOff()
+
 
 # IMU unit model
 class ImuUnit():

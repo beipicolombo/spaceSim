@@ -23,6 +23,7 @@ deg2rad = pi/180
 # --------------------------------------------------
 # DATA CLASSES
 # --------------------------------------------------
+# ...
 
 
 # --------------------------------------------------
@@ -33,47 +34,80 @@ class Environment():
         self.ephemerides = Ephemerides()
         self.aerodynamics = Aerodynamics()
         self.gravity = Gravity()
+        # Interface
+        self.interface = {}
+        self.interface.update({"torqueEnv_B": np.array([0, 0, 0])})
+        self.interface.update({"qLI": attKin.Quaternion()})
+        self.interface.update({"angRate_LI_L": np.array([0, 0, 0])})
+        self.interface.update({"gravity": self.gravity.interface})
+        self.interface.update({"ephemerides": self.ephemerides.interface})
+        self.interface.update({"aerodynamics": self.aerodynamics.interface})
 
 
-    def run(self, simParam, attDynParam, simBus, modelsBus):
-        # Initialize output bus
-        modelsEnvBus = modelsBus.subBuses["environment"]
-        modelsEnvBusOut = modelsEnvBus
+    def run(self, simParam, spacecraft, simIf, dynIf):
+        # Compute LVLH frame
+        self.computeLvlhFrame(dynIf)
+
         # Run ephemerides model
-        modelsEnvBusOut = self.ephemerides.run(simParam, simBus, modelsEnvBus)
+        self.ephemerides.run(simParam, simIf)
+
         # Run gravity model
-        modelsEnvBusOut = self.gravity.run(simParam, attDynParam, modelsBus)
+        self.gravity.run(simParam, spacecraft, dynIf, self.interface)
         # Run aerodynamics model
-        modelsEnvBusOut = self.aerodynamics.run(simParam, attDynParam, modelsEnvBus)
+        self.aerodynamics.run(simParam, spacecraft, dynIf, self.interface)
+        
         # Compute external torque
-        modelsEnvBusOut = self.computeTotExtTorque(modelsEnvBusOut)
-        return modelsEnvBusOut
+        self.computeTotExtTorque()
 
 
     # Total total external torque
-    def computeTotExtTorque(self, modelsEnvBus):
-        # Retrieve useful inputs
-        torqueAero_B = modelsEnvBus.signals["torqueAero_B"].value
-        torqueGG_B = modelsEnvBus.signals["torqueGG_B"].value
-        # Initialize output bus
-        modelsEnvBusOut = modelsEnvBus
+    def computeTotExtTorque(self):
+        # Fetch gravity and aerodynamics interface
+        torqueAero_B = self.aerodynamics.interface["torque_B"]
+        torqueGG_B = self.gravity.interface["torque_B"]
         # Compute total external torque
         torqueExt_B = torqueAero_B + torqueGG_B
-        # Update output bus signals
-        modelsEnvBusOut.signals["torqueExt_B"].update(torqueExt_B)
-        return modelsEnvBusOut
+        # Update interface
+        self.interface["torqueEnv_B"] = torqueExt_B
+
+
+    # LVLH frame
+    def computeLvlhFrame(self, dynIf):
+        # Fetch dynamics interface
+        inc  = dynIf["orbit"]["keplerElem"].inc
+        raan = dynIf["orbit"]["keplerElem"].raan
+        argPer = dynIf["orbit"]["keplerElem"].argPer
+        ta = dynIf["orbit"]["keplerElem"].ta
+        sma = dynIf["orbit"]["keplerElem"].sma
+        # Retrieve parameter
+        # TBW => use single common parameter for gravity model config
+        mu = const.earthMu
+        # Compute attitude
+        mat = np.matmul(Rx(inc), Rz(raan))
+        mat = np.matmul(Rz(argPer+ta), mat)
+        mat = np.matmul(Ry(-np.pi/2), mat)
+        dcmLI = np.matmul(Rz(np.pi/2), mat)
+        qLI = attKin.trans_DcmToQuat(dcmLI).normalize()
+        eulerAng_LI = qLI.toEuler()
+        # Compute angular rates
+        angRate_LI_L = np.array([0, -orbDyn.getOrbitRate(mu, sma), 0])
+        # Update intercace
+        self.interface["qLI"] = qLI
+        self.interface["angRate_LI_L"] = angRate_LI_L
 
 
 class Ephemerides():
     def __init__ (self):
+        # TBW
         self.param = 0
+        # Interface
+        self.interface = {}
+        self.interface.update({"sunToMarsDir_I": np.array([0, 0, 0])})
 
-
-    def run(self, simParam, simBus, modelsEnvBus):
-        # Initialize outputs bus
-        modelsEnvBusOut = modelsEnvBus
-        # Retrieve inputs / parameters
-        elapsedTime = simBus.signals["elapsedTime"].value
+    def run(self, simParam, simIf):
+        # Fetch simulation interface
+        elapsedTime = simIf["elapsedTime"]
+        # Compute epoch
         dateTimeStart = simParam.dateTimeStart
         ephemEpoch = simParam.ephemEpoch
         # Compute ephemerides
@@ -82,88 +116,62 @@ class Ephemerides():
         marsEphem.compute(currDateTime, epoch = ephemEpoch)
         # Compute directions
         sunToMarsDir_I = conversions.latLonToCartesian(marsEphem.hlat/deg2rad, marsEphem.hlon/deg2rad, 1)
-        # Update output bus signals
-        modelsEnvBusOut.signals["sunToMarsDir_I"].update(sunToMarsDir_I)
-        return modelsEnvBusOut        
+        # Update interface
+        self.interface["sunToMarsDir_I"] = sunToMarsDir_I
 
 
 class Aerodynamics():
     def __init__ (self):
+        # TBW
         self.param = 0
+        # Interface
+        self.interface = {"torque_B": np.array([0, 0, 0])}
 
-
-    def run(self, simParam, attDynParam, modelsEnvBus):
-        # Initialize outputs bus
-        modelsEnvBusOut = modelsEnvBus
+    def run(self, simParam, spacecraft, dynIf, envIf):
         # Compute aerodynamic storque
         torqueAero_B = computeAeroTorque()
-        # Update output bus signals
-        modelsEnvBusOut.signals["torqueAero_B"].update(torqueAero_B)
-        return modelsEnvBusOut
-
+        # Update interface
+        self.interface["torque_B"] = torqueAero_B
 
 
 class Gravity():
     def __init__ (self):
+        # TBW
         self.param = 0
+        # Interface
+        self.interface = {"torqueGG_B": np.array([0, 0, 0])}
 
-    def run(self, simParam, attDynParam, modelsBus):
-        # Initialize outputs bus
-        modelsEnvBusOut = modelsBus.subBuses["environment"]
-        # Retrieve signals / parameters of interest
-        qLI_sca = modelsBus.subBuses["environment"].signals["qLI_sca"].value
-        qLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
-        qBI_sca = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].value
-        qBI_vec = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].value
-        angRate_BI_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].value
-        sma = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].value
-        mu = const.earthMu # TBW => use single common parameter for gravity model config
+    def run(self, simParam, spacecraft, dynIf, envIf):
+        # Fetch environment and dynamics interface
+        qLI = envIf["qLI"]
+        angRate_LI_L = envIf["angRate_LI_L"]
+        
+        qBI = dynIf["attitude"]["qBI"]
+        angRate_BI_B = dynIf["attitude"]["angRate_BI_B"]
+
+        sma = dynIf["orbit"]["keplerElem"].sma
+
+        # Gravity parameter
+        # TBW => use single common parameter for gravity model config
+        mu = const.earthMu 
+
+        # Compute orbit pulse
         orbitPulse = orbDyn.getOrbitRate(mu, sma)
-        # Reconstruct the dynamic state and LVLH frame quaternion
-        qLI = attKin.Quaternion(qLI_sca, qLI_vec)
-        qBI = attKin.Quaternion(qBI_sca, qBI_vec)
+
         # Compute gravity gradient disturbance torque in body frame
-        inertiaSc_B = attDynParam.inertiaSc_B
+        inertiaSc_B = spacecraft.massModel.inertiaSc_B
         if simParam.simOptions.isGGTorqueEnabled:
             torqueGG_B = computeGGTorque(inertiaSc_B, orbitPulse, qBI, qLI)
         else:
             torqueGG_B = np.array([0, 0, 0])
-        # Update output bus signals
-        modelsEnvBusOut.signals["torqueGG_B"].update(torqueGG_B)
-        return modelsEnvBusOut
+        # Update interface
+        self.interface["torque_B"] = torqueGG_B
  
 
 
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
-def computeLvlhFrame(modelsBus):
-    # Initialize output
-    modelsBusOut = modelsBus
-    # Retrieve signals / parameters of interest
-    inc  = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].value
-    raan = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].value
-    argPer = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].value
-    ta = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].value
-    sma = modelsBus.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].value
-    mu = const.earthMu # TBW => use single common parameter for gravity model config
-    # Compute attitude
-    mat = np.matmul(Rx(inc), Rz(raan))
-    mat = np.matmul(Rz(argPer+ta), mat)
-    mat = np.matmul(Ry(-np.pi/2), mat)
-    dcmLI = np.matmul(Rz(np.pi/2), mat)
-    qLI = attKin.trans_DcmToQuat(dcmLI).normalize()
-    eulerAng_LI = qLI.toEuler()
-    # Compute angular rates
-    angRate_LI_L = np.array([0, -orbDyn.getOrbitRate(mu, sma), 0])
-    # Update output bus signals
-    modelsBusOut.subBuses["environment"].signals["eulerAng_LI"].update(eulerAng_LI)
-    modelsBusOut.subBuses["environment"].signals["qLI_sca"].update(qLI.sca)
-    modelsBusOut.subBuses["environment"].signals["qLI_vec"].update(qLI.vec)
-    modelsBusOut.subBuses["environment"].signals["angRate_LI_L"].update(angRate_LI_L)
-    return modelsBusOut
-
-
 def computeGGTorque(inertiaSc_B, orbitPulse, qBI, qLI):
     dcmLI = qLI.toDcm()
     # Compute the Z axis of the LVLH frame in body frame

@@ -22,18 +22,13 @@ class Sensors:
 	def __init__(self, senParam):
 		self.str = strModels.Str(senParam["str"])
 		self.imu = imuModels.Imu(senParam["imu"])
+		# Interface
+		self.interface = {}
+		self.interface.update({"imu": self.imu.interface})
+		self.interface.update({"str": self.str.interface})
 
-	def run(self, modelsBus):
-		# Initialize outputs bus
-		modelsBusOut = modelsBus
+	def run(self, fswIf, dynIf, envIf):
 		# Process
-		angRateMeas_BI_B = self.imu.run(modelsBus)
-		(qBImeas, eulerAngMeas_BI) = self.str.run(modelsBus)
-		# Update outputs bus
-		modelsBusOut.subBuses["sensors"].signals["angRateMeas_BI_B"].update(angRateMeas_BI_B)
-		modelsBusOut.subBuses["sensors"].signals["eulerAngMeas_BI"].update(eulerAngMeas_BI)
-		modelsBusOut.subBuses["sensors"].signals["qBImeas_sca"].update(qBImeas.sca)
-		modelsBusOut.subBuses["sensors"].signals["qBImeas_vec"].update(qBImeas.vec)
-
-		return modelsBusOut
+		self.imu.run(dynIf, envIf)
+		self.str.run(dynIf, envIf)
 

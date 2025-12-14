@@ -28,10 +28,15 @@ class Orbit():
     def __init__(self):
         self.state = State(const.earthMu)
         self.config = Config()
+        # Interface
+        self.interface = {}
+        self.interface.update({"pos_I": self.state.pos_I})
+        self.interface.update({"vel_I": self.state.vel_I})
+        self.interface.update({"keplerElem": self.state.keplerElem})
+        self.interface.update({"orbitContext": self.state.orbitContext})
 
-    def set(self, modelsBus):
-        # Initialize outputs bus
-        modelsBusOut = modelsBus
+
+    def set(self):
         # Retrieve configuration
         perAltitudeInit = self.config.perAltitudeInit
         ecc = self.config.ecc
@@ -44,35 +49,11 @@ class Orbit():
         sma = perRadiusInit / (1-ecc)
         (pos_I, vel_I) = elementsToPosVelInertial(sma, ecc, inc, raan, argPer, ta, const.earthMu)
         self.state = State(const.earthMu, pos_I = pos_I, vel_I = vel_I)
-        # Update outputs bus
-        modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(self.state.pos_I)
-        modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(self.state.vel_I)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].update(self.state.keplerElem.sma)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ecc"].update(self.state.keplerElem.ecc)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].update(self.state.keplerElem.inc)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].update(self.state.keplerElem.raan)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(self.state.keplerElem.argPer)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(self.state.keplerElem.ta)
-
-        return modelsBusOut
 
 
-    def run(self, simParam, modelsBus):
-        # Initialize ouputs bus
-        modelsBusOut = modelsBus
+    def run(self, simParam):
         # Process
         self.state.propagate(simParam, const.earthMu)
-        # Update outputs bus
-        modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].update(self.state.pos_I)
-        modelsBusOut.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].update(self.state.vel_I)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["sma"].update(self.state.keplerElem.sma)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ecc"].update(self.state.keplerElem.ecc)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["inc"].update(self.state.keplerElem.inc)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["raan"].update(self.state.keplerElem.raan)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["argPer"].update(self.state.keplerElem.argPer)
-        modelsBusOut.subBuses["dynamics"].subBuses["orbitElem"].signals["ta"].update(self.state.keplerElem.ta)
-
-        return modelsBusOut        
 
 
 # To be implemented as dataclass

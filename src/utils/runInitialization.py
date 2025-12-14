@@ -9,7 +9,7 @@ import yaml # [WIP]
 from deepmerge import always_merger # [WIP]
 from pathlib import Path # [WIP]
 
-import src.utils.simParam as simuParam
+import src.utils.simulation as sim
 import src.utils.paramTools as paramTools
 
 import src.data.initData as initData
@@ -52,25 +52,29 @@ def load_data(data_directory):
 
 def runInitialization(scenarioPatchFcnHdl):
     print("Retrieving scenario-specific patches...")    
-    # Applying the patches
-    # ==================================
+    # Get patches
     patches = scenarioPatchFcnHdl()
 
-    # [WIP] Load .yaml data
+    # Load external data
     allParam = load_data(DEFAULTDATA_PATH)
+
+
+    print("Creating simulation object...")    
+    simulation = sim.Simulation()
 
     print("Setting parameters...")  
     # [Simulation] Parameters
     # ==================================
     print("   Simulation parameters")
-    simParam = simuParam.SimParam()
-    simParam = paramTools.patchAttributes(simParam, patches["simParamPatch"])
-    simParam.updateTimeVec()
-    simParam.runOptions = paramTools.patchAttributes(simParam.runOptions, patches["runOptionsPatch"])
-    simParam.simOptions = paramTools.patchAttributes(simParam.simOptions, patches["simOptionsPatch"])
-    
+    simulation.param = paramTools.patchAttributes(simulation.param, patches["simParamPatch"])
+    simulation.param.updateTimeVec()
+    simulation.param.runOptions = paramTools.patchAttributes(simulation.param.runOptions, patches["runOptionsPatch"])
+    simulation.param.simOptions = paramTools.patchAttributes(simulation.param.simOptions, patches["simOptionsPatch"])
+    # Create simulation object
+    simulation = sim.Simulation()
+
     # Data buses and signals
-    (modelsBus, fswBus, simBus) = initData.initializeBusesAndSignals(simParam)
+    (modelsBus, fswBus, simBus) = initData.initializeBusesAndSignals(simulation.param)
     
     # Interfaces parameters
     # ==================================
@@ -83,28 +87,13 @@ def runInitialization(scenarioPatchFcnHdl):
     # [Models] Models
     # ==================================
     print("      [Models] Models")
-    models = mod.Models(simParam.simOptions.massModelName, allParam)
-    
-    # Orbit
-    models.orbit.config = paramTools.patchAttributes(models.orbit.config, patches["orbitInitParamPatch"])
-    modelsBus = models.orbit.set(modelsBus)
-
-    # LVLH frame => initialized here because it is needed for the attitude initalization
-    # the initial attitude can be defined wrt the LVLH frame
-    # TBW: move the computation of LVLH frame
-    # TBW: implement run() method
-    modelsBus = envModel.computeLvlhFrame(modelsBus)
-    
-    # Attitude
-    models.attitude.config = paramTools.patchAttributes(models.attitude.config, patches["initDynStatePatch"]) 
-    modelsBus = models.attitude.set(simParam, models.spacecraft, modelsBus)
-    
-    # Sensors
-    modelsBus = models.spacecraft.sen.run(modelsBus)
+    models = mod.Models(simulation.param.simOptions.massModelName, allParam)
+    models.dynamics.orbit.config = paramTools.patchAttributes(models.dynamics.orbit.config, patches["orbitInitParamPatch"])
+    models.dynamics.orbit.set()
 
     # Performance
     # TBW: Implement performance model as class Performance
-    modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
+    # modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
     
     # [FSW] Functions parameters
     # ==================================
@@ -130,44 +119,23 @@ def runInitialization(scenarioPatchFcnHdl):
     
     # [Mode management] Patch simulation-specific parameters    
     fsw.modeMgt.param = paramTools.patchAttributes(fsw.modeMgt.param, patches["modeMgtParamPatch"])
-    fsw.modeMgt.state = fswModeMgt.FswModeMgtState(fsw.modeMgt.param.aocsModeInit)
+    fsw.modeMgt.state = fswModeMgt.State(fsw.modeMgt.param.aocsModeInit)
     
     # [FSW] Functions states
     # ==================================
-    print("      [FSW] Functions states")
-    
-    # [Mode management]
-    (fswBus.subBuses["modeMgt"], modeMgtEvtList) = fsw.modeMgt.run(simParam, fswBus, simBus, [])
-    
-    # [Interfaces]
-    fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)
-
-    # [Sensor processing]
-    fswBus.subBuses["sensorProc"] = fsw.sensorProc.run(fswBus, modelsBus)
-
-    # [Estimation]
-    fswBus.subBuses["estimation"] = fsw.estimation.run(fswBus, modelsBus)
-    
-    # [Guidance]
-    fsw.guidance.param.orbitRate = models.orbit.state.orbitContext.orbitPulse
-    fswBus.subBuses["guidance"] = fsw.guidance.run(fswBus)
-    
-    # [Control]
-    fswBus.subBuses["control"] = fsw.control.run(fswBus)
-       
-    # [Command]
-    fswBus.subBuses["command"] = fsw.command.run(fswBus)
+    receivedTcList = []
+    fsw.run(simulation, models.interface, receivedTcList)
     
     # [Models]
     # ==================================
-    print("      [Models] Spacecraft and environment states")
-    modelsBus = models.run(simParam, simBus, fswBus, modelsBus)
+    # print("      [Models] Spacecraft and environment states")
+    # modelsBus = models.run(simulation.param, simBus, fswBus, modelsBus)
         
     # [Displays]
     # ==================================
     print("      [Displays]")
     displays = 0
     # displays = display.Displays()
-    #displays.initialize(simParam, modelsBus, fswBus, simBus, fswModeMgtState)
+    #displays.initialize(simulation.param, modelsBus, fswBus, simBus, fswModeMgtState)
         
-    return (simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays)
+    return (simulation, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays)

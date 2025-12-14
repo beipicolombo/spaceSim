@@ -1,6 +1,6 @@
 
 import numpy as np
-import src.models.kin.attitudeKinematics as attitudeKinematics
+import src.models.kin.attitudeKinematics as attKin
 
 # To be moved as common constants
 pi  = np.pi
@@ -22,10 +22,18 @@ class Attitude():
     def __init__(self):
         self.state = State()
         self.config = Config()
+        # Interface
+        self.interface = {}
+        self.interface.update({"qBI": attKin.Quaternion()})
+        self.interface.update({"angRate_BI_B": np.array([0, 0, 0])})
+        self.interface.update({"angMomSc_B": np.array([0, 0, 0])})
 
-    def set(self, simParam, spacecraft, modelsBus):
-        # Initialize outputs bus
-        modelsBusOut = modelsBus
+
+    def set(self, simParam, spacecraft, envIf):
+        # Fetch environment interface
+        # LVLH frame: temp
+        qLI = envIf["qLI"]
+        angRate_LI_L = envIf["angRate_LI_L"]
 
         # Retrieve inputs
         qInit = self.config.qInit
@@ -35,15 +43,12 @@ class Attitude():
 
         if (swInitAttitudeFrame == "L"):
             # Initial attitude is initialized wrt nadir reference frame
-            qLI_sca = modelsBus.subBuses["environment"].signals["qLI_sca"].value 
-            qLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
-            qLI = attitudeKinematics.Quaternion(qLI_sca, qLI_vec)
-            angRate_LI_L = modelsBus.subBuses["environment"].signals["angRate_LI_L"].value
+            qLI = attKin.Quaternion(qLI_sca, qLI_vec)
             angRate_BL_B = angRateInit_B
             qBL = qInit
             # Initialize attitude and angular rates
             angRate_BI_B = angRate_BL_B + np.matmul(qBL.toDcm(), angRate_LI_L)
-            qBI = attitudeKinematics.multiplyQuat(qLI, qBL)
+            qBI = attKin.multiplyQuat(qLI, qBL)
         elif (swInitAttitudeFrame == "J"):
             # Initial attitude is initialized wrt inertial reference frame
             angRate_BI_B = angRateInit_B
@@ -51,7 +56,7 @@ class Attitude():
         else:
             # Initial attitude is initialized wrt inertial reference frame by default
             angRate_BI_B = np.zeros(3)
-            qBI = attitudeKinematics.Quaternion()
+            qBI = attKin.Quaternion()
         qBI = qBI.normalize()   
 
         # Compute initial angular momentum
@@ -61,48 +66,40 @@ class Attitude():
         self.state.qBI = qBI
         self.state.angRate_BI_B = angRate_BI_B
 
-        # Update outputs bus
-        modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].update(qBI.sca)
-        modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].update(qBI.vec)
-        modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(angRate_BI_B)
-        modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(qBI.toEuler())
-        modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].update(angMomSc_B)
+        # Update interface
+        self.interface["qBI"] = qBI
+        self.interface["angRate_BI_B"] = angRate_BI_B
+        self.interface["angMomSc_B"] = angMomSc_B
 
-        return modelsBusOut
-
-    def run(self, simParam, spacecraft, modelsBus):
-        # Initialize outputs bus
-        modelsBusOut = modelsBus
-        # Retrieve useful inputs
+    def run(self, simParam, spacecraft, modelsIf):
+        # Retrieve inputs
         massModel = spacecraft.massModel
         inertiaSc_B = massModel.inertiaSc_B
-        # TBW: To be retrieved from models state
-        torqueTot_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].value
+
+        # Fecth models interface
+        torqueTot_B = modelsIf["torqueTot_B"]
+
         # Process
         # 1. Propagate attitude state
         self.state.propagate(massModel, simParam, torqueTot_B)
         # 2. Compute spacecraft angular momentum
         # angMomRw_B = np.array([0, 0, 0]) # RW models to be implemented
         angMomSc_B = computeAngMom(self.state.angRate_BI_B, inertiaSc_B)
-        # Update outputs bus
-        modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].update(self.state.qBI.sca)
-        modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].update(self.state.qBI.vec)
-        modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].update(self.state.angRate_BI_B)
-        modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].update(self.state.qBI.toEuler())
-        modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["angMomSc_B"].update(angMomSc_B)
-
-        return modelsBusOut
+        # Update interface
+        self.interface["qBI"] = self.state.qBI
+        self.interface["angRate_BI_B"] = self.state.angRate_BI_B
+        self.interface["angMomSc_B"] = angMomSc_B
 
 
 # To be implemented as dataclass
 class Config():
     def __init__(self):
-        self.qInit = attitudeKinematics.Quaternion()
+        self.qInit = attKin.Quaternion()
         self.angRateInit_B = np.array([0, 0, 0])
 
 
 class State():
-    def __init__(self, qBI = attitudeKinematics.Quaternion(), angRate_BI_B = np.array([0, 0, 0])):
+    def __init__(self, qBI = attKin.Quaternion(), angRate_BI_B = np.array([0, 0, 0])):
         self.qBI = qBI
         self.angRate_BI_B = angRate_BI_B
             

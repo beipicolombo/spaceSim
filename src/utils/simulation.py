@@ -17,11 +17,40 @@ from src.interfaces.eventsAndTmTcDatabase import EVT_DATABASE
 pi  = np.pi
 deg2rad = pi/180
 
+
 # --------------------------------------------------
-# Simulation parameters and options
+# DATA CLASSES
 # --------------------------------------------------
-# Simulation parameters
-class SimParam:
+# ...
+
+
+# --------------------------------------------------
+# CLASSES
+# --------------------------------------------------
+class Simulation():
+    def __init__(self):
+        # TBW: add simParam as parameter
+        self.param = Param()
+        self.state  = State()
+        # Interface
+        self.interface = {}
+        self.interface.update({"elapsedTime": self.state.elapsedTime})
+        
+    def run(self):
+        # Compute elapsed time
+        Ts = self.param.Ts
+        self.state.elapsedTime = self.state.elapsedTime + Ts
+        # Update interface
+        self.interface["elapsedTime"] = self.state.elapsedTime
+        
+        
+class State():
+    def __init__(self):
+        self.elapsedTime = 0
+
+
+# To be implemented with dataclass
+class Param:
     # To be moved as higher level class
     def __init__(self):
         self.caseName = "Default"
@@ -44,7 +73,8 @@ class SimParam:
         self.timeVec = np.arange(0, self.Tend+self.Ts, self.Ts)
         self.nbPts = len(self.timeVec)
 
-# Simulation options
+
+# Simulation options => to be verified if still needed
 class SimOptions:
     def __init__(self):
         self.isGGTorqueEnabled = True
@@ -54,6 +84,7 @@ class SimOptions:
         self.swInitAttitudeFrame = "J"
         self.massModelName = "Default"
                 
+
 # Run options       
 class RunOptions:
     def __init__(self):

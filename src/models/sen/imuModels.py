@@ -54,18 +54,22 @@ class Imu():
         for key in allImuSetParam.keys():
             imuSetParam = ImuSetParam(**allImuSetParam[key])
             self.addSet(imuSetParam)
+        # Interface
+        self.interface = {}
+        self.interface.update({"angRateMeas_B": np.array([0, 0, 0])})
 
     def addSet(self, imuSetParam):
         self.nbSets += 1
         self.sets.update({imuSetParam.name: ImuSet(imuSetParam)})
 
-    def run(self, modelsBus):
-        # Retrieve inputs
-        angRate_BI_B = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["angRate_BI_B"].value
+    def run(self, dynIf, envIf):
+        # Fetch dynamics and environment interfaces
+        angRate_BI_B = dynIf["attitude"]["angRate_BI_B"]
         # Process
         angRateMeas_B = angRate_BI_B
-        return (angRateMeas_B)
-
+        # Update interface
+        self.interface["angRateMeas_B"] = angRateMeas_B
+        
 
 # IMU set model
 class ImuSet():

@@ -12,71 +12,42 @@ import src.models.spaceEnv.envModel as envModel
 import src.models.spaceEnv.perfModel as perfModel
 
 
-def runLoop(simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays):
+def runLoop(simulation, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays):
     
     simuStrTime = time.time()
-    tcList = simParam.tcTimeline # list of TC to be received
+    tcList = simulation.param.tcTimeline # list of TC to be received
     allEvtList = []
 
-    for ii in range(1, simParam.nbPts):    
-        # time.sleep(simParam.Ts)
+    for ii in range(1, simulation.param.nbPts):    
+        # time.sleep(simulation.param.Ts)
         
         # [Simulation]
         # ==================================
         # Update time
-        elapsedTimePrev = simBus.signals["elapsedTime"].value
-        simBus.signals["elapsedTime"].update(elapsedTimePrev + simParam.Ts)
+        simulation.run()
 
         # [Models]
-        # ==================================    
-        # Environment
-        modelsBus = models.run(simParam, simBus, fswBus, modelsBus)
-        
-        # Run attitude model
-        modelsBus = models.attitude.run(simParam, models.spacecraft, modelsBus)
-
-        # Run orbit model
-        modelsBus = models.orbit.run(simParam, modelsBus)
-
-        # Run sensors model
-        modelsBus = models.spacecraft.sen.run(modelsBus)
-
-        # LVLH frame
-        modelsBus = envModel.computeLvlhFrame(modelsBus)
+        # ==================================
+        models.run(simulation, fsw.interface)
 
         # Performance (additional models signals)
-        modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
+        # TBW
+        # modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
 
         # [FSW]
         # ==================================
         # Retrieve received TCs
         (receivedTcList, tcList) = eventsAndTmTc.listenTc(simBus, tcList)
 
-        # [Mode management]
-        (fswBus.subBuses["modeMgt"], modeMgtEvtList) = fsw.modeMgt.run(simParam, fswBus, simBus, receivedTcList)
-        allEvtList = allEvtList + modeMgtEvtList
+        fsw.run(simulation, models.interface, receivedTcList)
 
-        # [Interfaces]
-        fswBus.subBuses["interfaces"] = interfaceInputs.getInterfaceInputs(fswBus, simBus, joystickSerialPort, interfaceInputsParam)
-
-        # [Sensor processing]
-        fswBus.subBuses["sensorProc"] = fsw.sensorProc.run(fswBus, modelsBus)
-
-        # [Estimation]
-        fswBus.subBuses["estimation"] = fsw.estimation.run(fswBus, modelsBus)
-
-        # [Guidance]
-        fswBus.subBuses["guidance"] = fsw.guidance.run(fswBus)
-
-        # [Control]
-        fswBus.subBuses["control"] = fsw.control.run(fswBus)
-
-        # [Command]
-        fswBus.subBuses["command"] = fsw.command.run(fswBus)
+        # Update event management
+        allEvtList = receivedTcList
+        # allEvtList = allEvtList + modeMgtEvtList
 
         # [Graphics]
         # ==================================    
-        # displays.update(simParam, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI)
+        # displays.update(simulation.param, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI)
 
     # Convert the events list into a dataframe
     allEvtDataframe = eventsAndTmTc.eventListToDataFrame(allEvtList)

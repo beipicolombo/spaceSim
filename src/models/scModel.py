@@ -39,14 +39,16 @@ class Spacecraft:
 		self.sen = senModels.Sensors(allParam["sen"])
 		# Actuators
 		self.act = actModels.Actuators(self.massModel, allParam["act"])
+		# Interface
+		self.interface = {}
+		self.interface.update({"actuators": self.act.interface})
+		self.interface.update({"sensors": self.sen.interface})
 
-	def run(self, simParam, fswBus, modelsBus):
-		# Initialize outputs bus
-		modelsActBusOut = modelsBus.subBuses["actuators"]
+	def run(self, simParam, fswIf):
 		# Run actuators
-		modelsActBusOut = self.act.run(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
+		self.act.run(simParam.simOptions, fswIf)
 		# Run sensors
-		# TBW
+		# self.sen.run.()
 		return modelsActBusOut
 
 

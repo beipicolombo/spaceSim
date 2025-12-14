@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 import numpy as np
-import src.models.kin.attitudeKinematics as attitudeKinematics
+import src.models.kin.attitudeKinematics as attKin
 
 
 # To be moved as common constants
@@ -48,29 +48,28 @@ class StrUnitParam:
 # CLASSES
 # --------------------------------------------------
 class Str():
-	def __init__(self, allStrSetParam):
-		self.param = allStrSetParam
-		self.nbSets = 0
-		self.sets = {}
-		for key in allStrSetParam.keys():
-			strSetParam = StrSetParam(**allStrSetParam[key])
-			self.addSet(strSetParam)
+    def __init__(self, allStrSetParam):
+        self.param = allStrSetParam
+        self.nbSets = 0
+        self.sets = {}
+        for key in allStrSetParam.keys():
+            strSetParam = StrSetParam(**allStrSetParam[key])
+            self.addSet(strSetParam)
+        # Interfaces
+        self.interface = {}
+        self.interface.update({"qBImeas": attKin.Quaternion()})
 
-	def addSet(self, strSetParam):
-		self.nbSets += 1
-		self.sets.update({strSetParam.name: StrSet(strSetParam)})        
+    def addSet(self, strSetParam):
+        self.nbSets += 1
+        self.sets.update({strSetParam.name: StrSet(strSetParam)})        
 
-	def run(self, modelsBus):
-        # Retrieve inputs
-		qBI_sca     = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_sca"].value
-		qBI_vec     = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["qBI_vec"].value
-		eulerAng_BI = modelsBus.subBuses["dynamics"].subBuses["attitude"].signals["eulerAng_BI"].value
+    def run(self, dynIf, envIf):
+        # Fetch dynamics and environment interface
+        qBI = dynIf["attitude"]["qBI"]
         # Process
-		eulerAngMeas_BI = eulerAng_BI
-		qBImeas_sca = qBI_sca
-		qBImeas_vec = qBI_vec
-		qBImeas = attitudeKinematics.Quaternion(qBImeas_sca, qBImeas_vec).normalize()
-		return (qBImeas, eulerAngMeas_BI)
+        qBImeas = qBI
+        # Update interface
+        self.interface["qBImeas"] = qBImeas
 
 
 # STR set model

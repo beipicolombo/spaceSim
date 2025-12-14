@@ -17,63 +17,54 @@ deg2rad = np.pi/180
 class Estimation():
     def __init__(self):
         self.param = 0
+        # Interface
+        self.interface = {}
+        self.interface.update({"posEst_J": np.array([0, 0, 0])})
+        self.interface.update({"velEst_J": np.array([0, 0, 0])})
+        self.interface.update({"qLIest": attitudeKinematics.Quaternion()})
+        self.interface.update({"angRateEst_LI_L": np.array([0, 0, 0])})
+        self.interface.update({"angRateEst_BI_B": np.array([0, 0, 0])})
+        self.interface.update({"eulerAngEst_BI": np.array([0, 0, 0])})
+        self.interface.update({"qBIest": attitudeKinematics.Quaternion()})
 
-
-    def run(self, fswBusIn, modelsBus):
-        # Initialize output bus
-        fswEstBusOut = fswBusIn.subBuses["estimation"]
+    def run(self, fswModeMgtIf, fswSensorProcIf, modelsIf):
         # Position and velocity estimation
-        (posEst_J, velEst_J, qLIest, angRateEst_LI_L) = self.positionVelocityEstimation(fswBusIn, modelsBus)
+        self.positionVelocityEstimation(fswModeMgtIf, fswSensorProcIf, modelsIf)
         # Attitude estimation
-        (angRateEst_BI_B, eulerAngEst_BI, qBIest) = self.attitudeEstimation(fswBusIn, modelsBus)
-        # Update output bus signals
-        fswEstBusOut.signals["posEst_J"].update(posEst_J)
-        fswEstBusOut.signals["velEst_J"].update(velEst_J)
-        fswEstBusOut.signals["qLIest_sca"].update(qLIest.sca)
-        fswEstBusOut.signals["qLIest_vec"].update(qLIest.vec)
-        fswEstBusOut.signals["angRateEst_LI_L"].update(angRateEst_LI_L)
-        fswEstBusOut.signals["angRateEst_BI_B"].update(angRateEst_BI_B)
-        fswEstBusOut.signals["eulerAngEst_BI"].update(eulerAngEst_BI)
-        fswEstBusOut.signals["qBIest_sca"].update(qBIest.sca)
-        fswEstBusOut.signals["qBIest_vec"].update(qBIest.vec)
-        return fswEstBusOut
+        self.attitudeEstimation(fswModeMgtIf, fswSensorProcIf, modelsIf)
 
 
-    def positionVelocityEstimation(self, fswBus, modelsBus):
-        # Retrieve useful inputs
-        pos_J = modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["pos_I"].value
-        vel_J = modelsBus.subBuses["dynamics"].subBuses["posVel"].signals["vel_I"].value
-        qLI_sca = modelsBus.subBuses["environment"].signals["qLI_sca"].value
-        qLI_vec = modelsBus.subBuses["environment"].signals["qLI_vec"].value
-        angRate_LI_L = modelsBus.subBuses["environment"].signals["angRate_LI_L"].value
-        # Initialize output bus
-        fswEstBusOut = fswBus.subBuses["estimation"]
+    def positionVelocityEstimation(self, fswModeMgtIf, fswSensorProcIf, modelsIf):
+        # Fetch models interface
+        pos_J = modelsIf["dynamics"]["orbit"]["pos_I"]
+        vel_J = modelsIf["dynamics"]["orbit"]["vel_I"]
+        qLI = modelsIf["environment"]["qLI"]
+        angRate_LI_L = modelsIf["environment"]["angRate_LI_L"]
         # Position estimation
         posEst_J = pos_J
         # Velocity estimation
         velEst_J = vel_J
         # Nadir frame estimation
-        qLIest_sca = qLI_sca 
-        qLIest_vec = qLI_vec
-        qLIest = attitudeKinematics.Quaternion(qLIest_sca, qLIest_vec)
+        qLIest = qLI
         angRateEst_LI_L = angRate_LI_L
-        return (posEst_J, velEst_J, qLIest, angRateEst_LI_L)
+        # Update interface
+        self.interface["posEst_J"] = posEst_J
+        self.interface["velEst_J"] = velEst_J
+        self.interface["qLIest"] = qLIest
+        self.interface["angRateEst_LI_L"] = angRateEst_LI_L
 
 
-    def attitudeEstimation(self, fswBus, modelsBus):
-        # Retrieve useful inputs
-        angRateMeas_BI_B = modelsBus.subBuses["sensors"].signals["angRateMeas_BI_B"].value
-        eulerAngMeas_BI = modelsBus.subBuses["sensors"].signals["eulerAngMeas_BI"].value
-        qBImeas_sca = modelsBus.subBuses["sensors"].signals["qBImeas_sca"].value
-        qBImeas_vec = modelsBus.subBuses["sensors"].signals["qBImeas_vec"].value
-        # Initialize output bus
-        fswEstBusOut = fswBus.subBuses["estimation"]
+    def attitudeEstimation(self, fswModeMgtIf, fswSensorProcIf, modelsIf):
+        # Fetch models interface
+        angRateMeas_BI_B = modelsIf["spacecraft"]["sensors"]["imu"]["angRateMeas_B"]
+        qBImeas = modelsIf["spacecraft"]["sensors"]["str"]["qBImeas"]
         # Angular rates estimation
         angRateEst_BI_B = angRateMeas_BI_B
         # Attitude estimation
-        eulerAngEst_BI = eulerAngMeas_BI
-        qBIest = attitudeKinematics.Quaternion(qBImeas_sca, qBImeas_vec).normalize()
-        return (angRateEst_BI_B, eulerAngEst_BI, qBIest)
+        qBIest = qBImeas
+        # Update interface        
+        self.interface["qBIest"] = qBIest
+        self.interface["angRateEst_BI_B"] = angRateEst_BI_B
 
 
 # --------------------------------------------------

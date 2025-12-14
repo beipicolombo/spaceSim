@@ -7,14 +7,14 @@ import numpy as np
 # --------------------------------------------------
 class SensorProcessing():
     def __init__(self):
-        self.param = 0
+        # TBW
+        self.state = 0
+        # Interface
+        self.interface = {}
 
 
-    def run(self, fswBusIn, modelsBus):
-        fswBus = fswBusIn
-        return fswBus
-
-
+    def run(self, modeMgtIf):
+        self.state = 0
 
 
 # --------------------------------------------------

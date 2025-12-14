@@ -7,6 +7,7 @@ import numpy as np
 pi  = np.pi
 deg2rad = pi/180
 
+
 # --------------------------------------------------
 # DICTIONNARIES
 # --------------------------------------------------
@@ -20,6 +21,7 @@ RW_UNIT_STATES_ID = {}
 for key in RW_UNIT_STATES.keys():
     rwUnitStateNb = RW_UNIT_STATES[key]
     RW_UNIT_STATES_ID[rwUnitStateNb] = key
+
 
 # --------------------------------------------------
 # DATA CLASSES
@@ -42,6 +44,7 @@ class RwUnitParam:
     dir_B: list
     inertia: float
 
+
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
@@ -55,32 +58,31 @@ class Rw:
             rwSetParam = allRwSetParam[key]
             rwSetParam = RwSetParam(**rwSetParam)
             self.addSet(rwSetParam)
-
+        # Interface
+        self.interface = {"torque_B": np.array([0, 0, 0])}
 
     def addSet(self, rwSetParam):
         self.nbSets += 1
         self.sets.update({rwSetParam.name: RwSet(rwSetParam)})
 
-
-
-    def run(self, simOptions, fswCmdBus, modelsActBus):
-        # Initialize outputs bus
-        modelsActBusOut = modelsActBus
+    def run(self, simOptions, fswIf):
+        # Fetch interface
+        fswCmdIf = fswIf["command"]
         # Process
         if simOptions.isRwAct:
-            torqueRw_B = self.computeTrq(fswCmdBus)
+            torqueRw_B = self.computeTrq(fswCommands)
         else:
             torqueRw_B = np.array([0, 0, 0])
-        # Set outputs bus
-        modelsActBusOut.signals["torqueThr_B"].update(torqueRw_B)
-        return modelsActBusOut
+        # Update interface
+        self.interface["torque_B"] = torqueRw_B
 
-
-    def computeTrq(self, fswCmdBus):
-        # [TBW]
-        torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdRw_B"].value)
+    def computeTrq(self, fswCmdIf):
+        # Fetch interface
+        torqueCmd_B = np.array(fswCmdIf["torqueCmdRw_B"])
+        # Process
         torque_B = torqueCmd_B
         return torque_B
+
 
 # RW set model
 class RwSet():
@@ -91,6 +93,8 @@ class RwSet():
         for idUnit in range(1, rwSetParam.nbUnits+1):
             rwUnitParam = self.getRwUnitParam(idUnit)
             self.units.update({rwUnitParam.name: RwUnit(rwUnitParam)})
+        # Interface
+        self.interface = {}
 
     def getRwUnitParam(self, idUnit):
         name = ("unit"+str(idUnit))
@@ -122,16 +126,22 @@ class RwSet():
         for key in self.units:
             self.units[key].switchOff()
 
-    def computeTrq(self, fswCmdBus):
-        torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdRw_B"].value)
+    # Not used for now
+    def computeTrq(self, fswCmdIf):
+        # # Fetch interface
+        torqueCmd_B = fswCmdIf["torqueCmdRw_B"]
+        # Process
         torque_B = torqueCmd_B
         return torque_B
+
 
 # RW unit model
 class RwUnit():
     def __init__(self, rwUnitParam):
         self.param = rwUnitParam
         self.state = RW_UNIT_STATES["ON"]
+        # Interface
+        self.interface = {}
 
     def switchOn(self):
         self.state = RW_UNIT_STATES["ON"]
@@ -143,3 +153,22 @@ class RwUnit():
         torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdRw_B"].value)
         torque_B = torqueCmd_B
         return torque_B
+
+    # Not used for now
+    def computeTrq(self, fswCmdIf):
+        # Fetch interface
+        torqueCmd_B = fswCmdIf["torqueCmdThr_B"]
+        # Compute torque
+        torque_B = torqueCmd_B
+        return torque_B
+
+
+# --------------------------------------------------
+# FUNCTIONS
+# --------------------------------------------------
+# [TBW] Consumption model
+
+
+# --------------------------------------------------
+# SIMULATION / TEST
+# --------------------------------------------------

@@ -29,33 +29,39 @@ for key in AOCSMODES.keys():
 class ModeMgt():
 	def __init__(self):
 		self.param = Param()
-		self.state = FswModeMgtState(self.param.aocsModeInit)
+		self.state = State(self.param.aocsModeInit)
+		# Interface
+		self.interface = {}
+		self.interface.update({"aocsMode": self.state.aocsMode})
+		self.interface.update({"aocsGuidMode": self.state.aocsGuidMode})
+		self.interface.update({"aocsCtrMode": self.state.aocsCtrMode})
+		self.interface.update({"aocsCtrActMode": self.state.aocsCtrActMode})
+		self.interface.update({"aocsModeElapsedTime": self.state.aocsModeElapsedTime})
 
 
-	def run(self, simParam, fswBus, simBus, receivedTcList):
-		# Initialize output bus
-		fswModeMgtBusOut = fswBus.subBuses["modeMgt"]
-		elapsedTime = simBus.signals["elapsedTime"].value
+	def run(self, simParam, simIf, fswEstIf, receivedTcList):
+		# Fetch simulation interface
+		elapsedTime = simIf["elapsedTime"]
+		# Initalize
 		allEvents = []
 		# Manage received TC
 		for receivedTc in receivedTcList:
 			allEvents.append(eventsAndTmTc.Event(name = "EVT_TC_RECEIVED", id = 2, time = receivedTc.time))
 		# Update mode management states
-		(eventsList, isAocsModeTrans) = self.state.update(simParam, self.param, fswBus.subBuses["estimation"], simBus, receivedTcList)
+		(eventsList, isAocsModeTrans) = self.state.update(simParam, self.param, fswEstIf, simIf, receivedTcList)
 		allEvents = allEvents + eventsList 
-		# Update signals
-		fswBusOut = fswBus
-		fswModeMgtBusOut.signals["aocsMode"].update(self.state.aocsMode)
-		fswModeMgtBusOut.signals["aocsGuidMode"].update(self.state.aocsGuidMode)
-		fswModeMgtBusOut.signals["aocsCtrMode"].update(self.state.aocsCtrMode)
-		fswModeMgtBusOut.signals["aocsCtrActMode"].update(self.state.aocsCtrActMode)
-		fswModeMgtBusOut.signals["aocsModeElapsedTime"].update(self.state.aocsModeElapsedTime)
-		fswModeMgtBusOut.signals["isAocsModeTrans"].update(isAocsModeTrans)
+		# Update interface
+		self.interface["aocsMode"] = self.state.aocsMode
+		self.interface["aocsGuidMode"] = self.state.aocsGuidMode
+		self.interface["aocsCtrMode"] = self.state.aocsCtrMode
+		self.interface["aocsCtrActMode"] = self.state.aocsCtrActMode
+		self.interface["aocsModeElapsedTime"] = self.state.aocsModeElapsedTime
+		self.interface["isAocsModeTrans"] = isAocsModeTrans
 		# Manage events
 		for event in allEvents:
 			event.display()
 
-		return (fswModeMgtBusOut, allEvents)
+		return allEvents
 
 
 class Param:
@@ -79,7 +85,7 @@ class Param:
 		self.aocsNomModeAngRateThdDur = 10*60 # [s]
 
 
-class FswModeMgtState:
+class State:
 	def __init__(self, aocsMode):
 		aocsMode = AOCSMODES["OFF"]
 		aocsGuidMode = aocsGuidanceModeLogic(aocsMode)
@@ -102,11 +108,12 @@ class FswModeMgtState:
 		self.angRateThdDur = 0		
 
 
-	def update(self, simParam, modeMgtParam, fswEstBus, simBus, receivedTcList):
-		# Retrieve useful data
+	def update(self, simParam, modeMgtParam, fswEstIf, simIf, receivedTcList):
+		# Retrieve parameters
 		Ts = simParam.Ts
-		angRateEst_BI_B = fswEstBus.signals["angRateEst_BI_B"].value # from previous timestep	
-		elapsedTime = simBus.signals["elapsedTime"].value
+		# Fetch interfaces
+		angRateEst_BI_B = fswEstIf["angRateEst_BI_B"] # from previous timestep	
+		elapsedTime = simIf["elapsedTime"]
 		# Initialize
 		eventsList = []
 		aocsMode = self.aocsMode

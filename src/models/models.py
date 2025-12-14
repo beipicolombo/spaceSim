@@ -1,10 +1,11 @@
 
 import numpy as np
 
+import src.utils.paramTools as paramTools
+
 import src.models.scModel as scModel
 import src.models.spaceEnv.envModel as envModel
-import src.models.dyn.attitudeDynamics as attDyn
-import src.models.dyn.orbitDynamics as orbDyn
+import src.models.dyn.dynamics as dynModel
 
 
 # To be moved as common constants
@@ -13,41 +14,37 @@ deg2rad = pi/180
 
 
 # --------------------------------------------------
-# MODELS
+# CLASSES
 # --------------------------------------------------
 class Models():
 	def __init__(self, massModelName, allParam):
 		self.spacecraft = scModel.Spacecraft(massModelName, allParam)
 		self.environment = envModel.Environment()
-		self.attitude = attDyn.Attitude()
-		self.orbit = orbDyn.Orbit()
+		self.dynamics = dynModel.Dynamics()
+		# Interface
+		self.interface = {}
+		self.interface.update({"spacecraft": self.spacecraft.interface})
+		self.interface.update({"environment": self.environment.interface})
+		self.interface.update({"dynamics": self.dynamics.interface})
 
-	def run(self, simParam, simBus, fswBus, modelsBus):
-		# Initialize output bus
-		modelsBusOut = modelsBus
-		# Run environment model
-		modelsBusOut.subBuses["environment"] = self.environment.run(simParam, self.spacecraft.massModel, simBus, modelsBus)
-		# Run spacecraft model
-		modelsBusOut.subBuses["actuators"] = self.spacecraft.run(simParam, fswBus, modelsBus)
-		# Compute total external torque
-		modelsBusOut = self.computeTotTorque(modelsBusOut)
+
+	def run(self, simulation, fswIf):
+		# Fetch input
+		simParam = simulation.param
+		simIf = simulation.interface
+
+		# Run spacecraft actuators model
+		self.spacecraft.act.run(simParam.simOptions, fswIf)
+
 		# Run dynamics model
-		# ...
-		# Run sensors model
-		# ...
+		actIf = self.spacecraft.act.interface # From current timestep
+		envIfPre = self.environment.interface # From previous timestep
+		self.dynamics.run(simParam, self.spacecraft, actIf, envIfPre)
 
-		return modelsBusOut
+		# Run environment model
+		dynIf = self.dynamics.interface # From current timestep
+		self.environment.run(simParam, self.spacecraft, simIf, dynIf)
 
-
-    # Total total torque
-	def computeTotTorque(self, modelsBus):
-        # Retrieve useful inputs
-		torqueExt_B = modelsBus.subBuses["environment"].signals["torqueExt_B"].value
-		torqueAct_B = modelsBus.subBuses["actuators"].signals["torqueAct_B"].value
-		# Initialize output bus
-		modelsBusOut = modelsBus
-		# Compute total external torque
-		torqueTot_B = torqueExt_B + torqueAct_B
-		# Update output bus signals
-		modelsBusOut.subBuses["dynamics"].subBuses["attitude"].signals["torqueTot_B"].update(torqueTot_B)
-		return modelsBusOut
+		# Run spacecraft sensors model
+		envIf = self.environment.interface # From current timestep
+		self.spacecraft.sen.run(fswIf, dynIf, envIf)

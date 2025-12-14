@@ -1,6 +1,6 @@
 
 import numpy as np
-import src.models.kin.attitudeKinematics as attitudeKinematics
+import src.models.kin.attitudeKinematics as attKin
 
 
 # --------------------------------------------------
@@ -11,6 +11,17 @@ class Control():
         self.param = Param()
         self.state = 0
         # TBW: implement separate classes for different control algorithms
+        # Interface
+        self.interface = {}
+        self.interface.update({"forceCtrl_B": np.array([0, 0, 0])})
+        self.interface.update({"torqueCtrl_B": np.array([0, 0, 0])})
+        self.interface.update({"forceCtrlThr_B": np.array([0, 0, 0])})
+        self.interface.update({"torqueCtrlThr_B": np.array([0, 0, 0])})
+        self.interface.update({"torqueCtrlRw_B": np.array([0, 0, 0])})
+        self.interface.update({"angRateEst_BR_B": np.array([0, 0, 0])})
+        self.interface.update({"eulerAngEst_BR": np.array([0, 0, 0])})
+        self.interface.update({"rotAngEst_BR": np.array([0, 0, 0])})
+        self.interface.update({"qEstBR": attKin.Quaternion()})
 
 
     def thrustControl(self):
@@ -51,30 +62,27 @@ class Control():
         return trqCmdManual_B
 
 
-    def run(self, fswBus):
+    def run(self, fswModeMgtIf, fswEstIf, fswGuidIf):
+        # Retrieve parameters
         fswControlParam = self.param
-        # Initialize output bus
-        fswControlBusOut = fswBus.subBuses["control"]
 
-        # Retrieve useful inputs
-        trqCmdManual_B = fswBus.subBuses["interfaces"].signals["trqCmdManual_B"].value
+        # Fetch mode management interface
+        aocsCtrMode = fswModeMgtIf["aocsCtrMode"]
+        aocsCtrActMode = fswModeMgtIf["aocsCtrActMode"]
+        # Fetch guidance interface
+        angRate_RI_R = fswGuidIf["angRate_RI_R"]
+        qRI = fswGuidIf["qRI"]
+        # Fetch estimation interface
+        angRateEst_BI_B =  fswEstIf["angRateEst_BI_B"]
+        qBIest =  fswEstIf["qBIest"]
 
-        angRate_RI_R = fswBus.subBuses["guidance"].signals["angRate_RI_R"].value
-        qRI_sca = fswBus.subBuses["guidance"].signals["qRI_sca"].value
-        qRI_vec = fswBus.subBuses["guidance"].signals["qRI_vec"].value
+        # TBW Fetch manual inputs interface
+        # trqCmdManual_B = fswBus.subBuses["interfaces"].signals["trqCmdManual_B"].value
+        trqCmdManual_B = np.array([0, 0, 0])
 
-        angRateEst_BI_B =  fswBus.subBuses["estimation"].signals["angRateEst_BI_B"].value
-        qBIest_sca =  fswBus.subBuses["estimation"].signals["qBIest_sca"].value
-        qBIest_vec =  fswBus.subBuses["estimation"].signals["qBIest_vec"].value
-
-        aocsCtrMode = fswBus.subBuses["modeMgt"].signals["aocsCtrMode"].value
-        aocsCtrActMode = fswBus.subBuses["modeMgt"].signals["aocsCtrActMode"].value
-
-        # Compute the spacecraft attitude and angular rates with respect to the guidance reference frame
-        qBIest = attitudeKinematics.Quaternion(qBIest_sca, qBIest_vec)
-        qRI = attitudeKinematics.Quaternion(qRI_sca, qRI_vec)
-        qEstBR = attitudeKinematics.multiplyQuat(qRI.conjugate(), qBIest).normalize()
-
+        # Compute quaternion error
+        qEstBR = attKin.multiplyQuat(qRI.conjugate(), qBIest).normalize()
+        # Compute rate error
         angRateEst_BR_B = angRateEst_BI_B - np.matmul(qEstBR.toDcm(), angRate_RI_R)
         eulerAngEst_BR = qEstBR.toEuler()
         (rotDirEst_BR_B, rotAngEst_BR) = qEstBR.toVecRot()
@@ -136,20 +144,17 @@ class Control():
             forceCtrlThr_B = np.array([0, 0, 0])
             torqueCtrlRw_B = np.array([0, 0, 0])
             
-        # Update output bus signals
-        fswControlBusOut.signals["forceCtrl_B"].update(forceCtrl_B)
-        fswControlBusOut.signals["torqueCtrl_B"].update(torqueCtrl_B)
-        fswControlBusOut.signals["forceCtrlThr_B"].update(forceCtrlThr_B)
-        fswControlBusOut.signals["torqueCtrlThr_B"].update(torqueCtrlThr_B)
-        fswControlBusOut.signals["torqueCtrlRw_B"].update(torqueCtrlRw_B)
-        fswControlBusOut.signals["angRateEst_BR_B"].update(angRateEst_BR_B)
-        fswControlBusOut.signals["eulerAngEst_BR"].update(eulerAngEst_BR)
-        fswControlBusOut.signals["rotAngEst_BR"].update(rotAngEst_BR)
-        fswControlBusOut.signals["qEstBR_sca"].update(qEstBR.sca)
-        fswControlBusOut.signals["qEstBR_vec"].update(qEstBR.vec)
+        # Update interface
+        self.interface["forceCtrl_B"] = forceCtrl_B
+        self.interface["torqueCtrl_B"] = torqueCtrl_B
+        self.interface["forceCtrlThr_B"] = forceCtrlThr_B
+        self.interface["torqueCtrlThr_B"] = torqueCtrlThr_B
+        self.interface["torqueCtrlRw_B"] = torqueCtrlRw_B
+        self.interface["angRateEst_BR_B"] = angRateEst_BR_B
+        self.interface["eulerAngEst_BR"] = eulerAngEst_BR
+        self.interface["rotAngEst_BR"] = rotAngEst_BR
+        self.interface["qEstBR"] = qEstBR
             
-        return (fswControlBusOut)
-
 
 class Param:
     # To be moved as higher level class

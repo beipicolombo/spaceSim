@@ -1,6 +1,6 @@
 
 import numpy as np
-import src.models.kin.attitudeKinematics as attitudeKinematics
+import src.models.kin.attitudeKinematics as attKin
 
 # To be moved as common constants
 pi  = np.pi
@@ -12,24 +12,29 @@ deg2rad = pi/180
 class Guidance():
     def __init__(self):
         self.param = Param()
-
+        # Interface
+        self.interface = {}
+        self.interface.update({"eulerAng_RI": np.array([0, 0, 0])})
+        self.interface.update({"eulerAng_RL": np.array([0, 0, 0])})
+        self.interface.update({"qRI": attKin.Quaternion()})    
+        self.interface.update({"angRate_RI_R": np.array([0, 0, 0])})
 
     def rateDampingGuidance(self):
         angRate_RI_R = np.array([0, 0, 0])
-        qRI = attitudeKinematics.Quaternion()
+        qRI = attKin.Quaternion()
         return (angRate_RI_R, qRI)
 
 
     def attitudeInertialGuidance(self):
         fswGuidanceParam = self.param
         angRate_RI_R = np.array([0, 0, 0])
-        qRI = attitudeKinematics.trans_EulerAngToQuat(fswGuidanceParam.GUIDMODE_ATT_INERT_eulerAngGuid_RI)
+        qRI = attKin.trans_EulerAngToQuat(fswGuidanceParam.GUIDMODE_ATT_INERT_eulerAngGuid_RI)
         return (angRate_RI_R, qRI)
 
 
     def offGuidance(self):
         angRate_RI_R = np.array([0, 0, 0])
-        qRI = attitudeKinematics.Quaternion()
+        qRI = attKin.Quaternion()
         return (angRate_RI_R, qRI)
 
 
@@ -40,18 +45,11 @@ class Guidance():
         return (angRate_RI_R, qRI)
 
 
-    def run(self, fswBusIn):
-        # Initialize output bus
-        fswGuidBusOut = fswBusIn.subBuses["guidance"]
-
-        # Retrieve signals / parameters
-        aocsGuidMode = fswBusIn.subBuses["modeMgt"].signals["aocsGuidMode"].value
-        angRate_LI_L = fswBusIn.subBuses["estimation"].signals["angRateEst_LI_L"].value
-        qLI_sca = fswBusIn.subBuses["estimation"].signals["qLIest_sca"].value
-        qLI_vec = fswBusIn.subBuses["estimation"].signals["qLIest_vec"].value
-
-        # Reconstruct the LVLH frame quaternion
-        qLI = attitudeKinematics.Quaternion(qLI_sca, qLI_vec)
+    def run(self, fswModeMgtIf, fswEstIf):
+        # Fetch interfaces
+        qLI = fswEstIf["qLIest"]
+        angRate_LI_L = fswEstIf["angRateEst_LI_L"]
+        aocsGuidMode = fswModeMgtIf["aocsGuidMode"]
 
         # Compute guidance angular rates and euler angles depending on the current guidance mode
         # Guidance modes:
@@ -78,19 +76,17 @@ class Guidance():
         qRI.normalize()
         
         # Compute guidance with respect to the nadir reference frame
-        qRL = attitudeKinematics.multiplyQuat(qLI.conjugate(), qRI)
+        qRL = attKin.multiplyQuat(qLI.conjugate(), qRI)
 
         # Compute euler angles
         eulerAng_RI = qRI.toEuler() 
         eulerAng_RL = qRL.toEuler()
 
-        fswGuidBusOut.signals["eulerAng_RI"].update(eulerAng_RI)
-        fswGuidBusOut.signals["eulerAng_RL"].update(eulerAng_RL)
-        fswGuidBusOut.signals["qRI_sca"].update(qRI.sca)
-        fswGuidBusOut.signals["qRI_vec"].update(qRI.vec)
-        fswGuidBusOut.signals["angRate_RI_R"].update(angRate_RI_R)
-
-        return fswGuidBusOut
+        # Update interface
+        self.interface["eulerAng_RI"] = eulerAng_RI
+        self.interface["eulerAng_RL"] = eulerAng_RL
+        self.interface["qRI"] = qRI
+        self.interface["angRate_RI_R"] = angRate_RI_R
 
 
 class Param:
@@ -103,9 +99,11 @@ class Param:
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
+# ...
 
 
 # --------------------------------------------------
 # SIMULATION / TEST
 # --------------------------------------------------
+# ...
 

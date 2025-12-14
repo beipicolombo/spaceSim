@@ -21,6 +21,7 @@ for key in THR_UNIT_STATES.keys():
     thrUnitStateNb = THR_UNIT_STATES[key]
     THR_UNIT_STATES_ID[thrUnitStateNb] = key
 
+
 # --------------------------------------------------
 # DATA CLASSES
 # --------------------------------------------------
@@ -44,6 +45,7 @@ class ThrUnitParam:
     pos_B: list
     force: float
 
+
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
@@ -57,29 +59,28 @@ class Thr:
             thrSetParam = allThrSetParam[key]
             thrSetParam = ThrSetParam(**thrSetParam)
             self.addSet(thrSetParam)
-
+        # Interface
+        self.interface = {"torque_B": np.array([0, 0, 0])}
 
     def addSet(self, thrSetParam):
         self.nbSets += 1
         self.sets.update({thrSetParam.name: ThrSet(thrSetParam)})
 
-
-    def run(self, simOptions, fswCmdBus, modelsActBus):
-        # Initialize outputs bus
-        modelsActBusOut = modelsActBus
+    def run(self, simOptions, fswIf):
+        # Fetch interface
+        fswCmdIf = fswIf["command"]
         # Process
         if simOptions.isThrAct:
-            torqueThr_B = self.computeTrq(fswCmdBus)
+            torqueThr_B = self.computeTrq(fswCmdIf)
         else:
             torqueThr_B = np.array([0, 0, 0])
-        # Set outputs bus
-        modelsActBusOut.signals["torqueThr_B"].update(torqueThr_B)
-        return modelsActBusOut
+        # Update interface
+        self.interface["torqueThr_B"] = torqueThr_B
 
-
-    def computeTrq(self, fswCmdBus):
-        # [TBW]
-        torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdThr_B"].value)
+    def computeTrq(self, fswCmdIf):
+        # Fetch interface
+        torqueCmd_B = fswCmdIf["torqueCmdThr_B"]
+        # Process
         torque_B = torqueCmd_B
         return torque_B
 
@@ -93,6 +94,8 @@ class ThrSet():
         for idUnit in range(1, thrSetParam.nbUnits+1):
             thrUnitParam = self.getThrUnitParam(idUnit)
             self.units.update({thrUnitParam.name: ThrUnit(thrUnitParam)})
+        # Interface
+        self.interface = {}
 
     def getThrUnitParam(self, idUnit):
         name = ("unit"+str(idUnit))
@@ -125,8 +128,11 @@ class ThrSet():
         for key in self.units:
             self.units[key].switchOff()
 
-    def computeTrq(self, fswCmdBus):
-        torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdThr_B"].value)
+    # Not used for now
+    def computeTrq(self, fswCmdIf):
+        # Fetch interface
+        torqueCmd_B = np.array(fswCmdIf["torqueCmdThr_B"])
+        # Process
         torque_B = torqueCmd_B
         return torque_B
 
@@ -136,6 +142,8 @@ class ThrUnit():
     def __init__(self, thrUnitParam):
         self.param = thrUnitParam
         self.state = THR_UNIT_STATES["ON"]
+        # Interface
+        self.interface = {}
 
     def switchOn(self):
         self.state = THR_UNIT_STATES["ON"]
@@ -143,16 +151,19 @@ class ThrUnit():
     def switchOff(self):
         self.state = THR_UNIT_STATES["OFF"]
 
-    def computeTrq(self, fswCmdBus):
-        torqueCmd_B = np.array(fswCmdBus.signals["torqueCmdThr_B"].value)
+    # Not used for now
+    def computeTrq(self, fswCmdIf):
+        # Fetch interface
+        torqueCmd_B = fswCmdIf["torqueCmdThr_B"]
+        # Process
         torque_B = torqueCmd_B
         return torque_B
+
 
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
 # [TBW] Consumption model
-
 
 
 # --------------------------------------------------

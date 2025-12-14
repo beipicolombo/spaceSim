@@ -12,7 +12,7 @@ import src.models.spaceEnv.envModel as envModel
 import src.models.spaceEnv.perfModel as perfModel
 
 
-def runLoop(simParam, interfaceInputsParam, fsw, models, attitude, orbit, modelsBus, fswBus, simBus, joystickSerialPort, displays):
+def runLoop(simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays):
     
     simuStrTime = time.time()
     tcList = simParam.tcTimeline # list of TC to be received
@@ -33,10 +33,10 @@ def runLoop(simParam, interfaceInputsParam, fsw, models, attitude, orbit, models
         modelsBus = models.run(simParam, simBus, fswBus, modelsBus)
         
         # Run attitude model
-        modelsBus = attitude.run(simParam, models.spacecraft, modelsBus)
+        modelsBus = models.attitude.run(simParam, models.spacecraft, modelsBus)
 
         # Run orbit model
-        modelsBus = orbit.run(simParam, modelsBus)
+        modelsBus = models.orbit.run(simParam, modelsBus)
 
         # Run sensors model
         modelsBus = models.spacecraft.sen.run(modelsBus)

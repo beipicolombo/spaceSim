@@ -41,12 +41,12 @@ class Spacecraft:
 		self.act = actModels.Actuators(self.massModel, allParam["act"])
 
 	def run(self, simParam, fswBus, modelsBus):
-		# Initialize outputs buses
+		# Initialize outputs bus
 		modelsActBusOut = modelsBus.subBuses["actuators"]
 		# Run actuators
 		modelsActBusOut = self.act.run(simParam.simOptions, fswBus.subBuses["command"], modelsBus.subBuses["actuators"])
 		# Run sensors
-		# TBW		
+		# TBW
 		return modelsActBusOut
 
 

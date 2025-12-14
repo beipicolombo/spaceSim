@@ -3,6 +3,8 @@ import numpy as np
 
 import src.models.scModel as scModel
 import src.models.spaceEnv.envModel as envModel
+import src.models.dyn.attitudeDynamics as attDyn
+import src.models.dyn.orbitDynamics as orbDyn
 
 
 # To be moved as common constants
@@ -17,6 +19,8 @@ class Models():
 	def __init__(self, massModelName, allParam):
 		self.spacecraft = scModel.Spacecraft(massModelName, allParam)
 		self.environment = envModel.Environment()
+		self.attitude = attDyn.Attitude()
+		self.orbit = orbDyn.Orbit()
 
 	def run(self, simParam, simBus, fswBus, modelsBus):
 		# Initialize output bus
@@ -27,6 +31,11 @@ class Models():
 		modelsBusOut.subBuses["actuators"] = self.spacecraft.run(simParam, fswBus, modelsBus)
 		# Compute total external torque
 		modelsBusOut = self.computeTotTorque(modelsBusOut)
+		# Run dynamics model
+		# ...
+		# Run sensors model
+		# ...
+
 		return modelsBusOut
 
 

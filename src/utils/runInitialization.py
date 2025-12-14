@@ -85,12 +85,9 @@ def runInitialization(scenarioPatchFcnHdl):
     print("      [Models] Models")
     models = mod.Models(simParam.simOptions.massModelName, allParam)
     
-    # [Models] Orbit
-    # ==================================
-    print("      [Models] Orbit state")
-    orbit = orbDyn.Orbit()
-    orbit.config = paramTools.patchAttributes(orbit.config, patches["orbitInitParamPatch"])
-    modelsBus = orbit.set(modelsBus)
+    # Orbit
+    models.orbit.config = paramTools.patchAttributes(models.orbit.config, patches["orbitInitParamPatch"])
+    modelsBus = models.orbit.set(modelsBus)
 
     # LVLH frame => initialized here because it is needed for the attitude initalization
     # the initial attitude can be defined wrt the LVLH frame
@@ -98,20 +95,14 @@ def runInitialization(scenarioPatchFcnHdl):
     # TBW: implement run() method
     modelsBus = envModel.computeLvlhFrame(modelsBus)
     
-    # [Models] Attitude
-    # ==================================
-    print("      [Models] Attitude state")
-    attitude = attDyn.Attitude()
-    attitude.config = paramTools.patchAttributes(attitude.config, patches["initDynStatePatch"]) 
-    modelsBus = attitude.set(simParam, models.spacecraft, modelsBus)
+    # Attitude
+    models.attitude.config = paramTools.patchAttributes(models.attitude.config, patches["initDynStatePatch"]) 
+    modelsBus = models.attitude.set(simParam, models.spacecraft, modelsBus)
     
-    # [Models] Spacecraft sensors states
-    # ==================================
-    print("      [Models] Spacecraft sensors states")
+    # Sensors
     modelsBus = models.spacecraft.sen.run(modelsBus)
 
-    # [Models] Performance (additional models signals)
-    # ==================================
+    # Performance
     # TBW: Implement performance model as class Performance
     modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
     
@@ -158,7 +149,7 @@ def runInitialization(scenarioPatchFcnHdl):
     fswBus.subBuses["estimation"] = fsw.estimation.run(fswBus, modelsBus)
     
     # [Guidance]
-    fsw.guidance.param.orbitRate = orbit.state.orbitContext.orbitPulse
+    fsw.guidance.param.orbitRate = models.orbit.state.orbitContext.orbitPulse
     fswBus.subBuses["guidance"] = fsw.guidance.run(fswBus)
     
     # [Control]
@@ -179,4 +170,4 @@ def runInitialization(scenarioPatchFcnHdl):
     # displays = display.Displays()
     #displays.initialize(simParam, modelsBus, fswBus, simBus, fswModeMgtState)
         
-    return (simParam, interfaceInputsParam, fsw, models, attitude, orbit, modelsBus, fswBus, simBus, joystickSerialPort, displays)
+    return (simParam, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays)

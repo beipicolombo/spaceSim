@@ -8,6 +8,7 @@ Created on Fri Jul 19 14:44:02 2024
 import yaml # [WIP]
 from deepmerge import always_merger # [WIP]
 from pathlib import Path # [WIP]
+import time
 
 import src.utils.simulation as sim
 import src.utils.paramTools as paramTools
@@ -51,6 +52,9 @@ def load_data(data_directory):
 
 
 def runInitialization(scenarioPatchFcnHdl):
+    # Get start time
+    simuStrTime = time.time()
+
     print("Retrieving scenario-specific patches...")    
     # Get patches
     patches = scenarioPatchFcnHdl()
@@ -58,12 +62,24 @@ def runInitialization(scenarioPatchFcnHdl):
     # Load external data
     allParam = load_data(DEFAULTDATA_PATH)
 
-
-    print("Creating simulation object...")    
+    # Initialize objects
+    print("================")
+    print("Initializing objects...")
+    print("   simulation")
     simulation = sim.Simulation()
 
-    print("Patch simulation-specific parameters...")  
-    # [Simulation] Parameters
+    print("   interfaceInputsParam")
+    interfaceInputsParam = interfaceInputs.Param()
+
+    print("   models")   
+    models = mod.Models(simulation.param.simOptions.massModelName, allParam)
+
+    print("   fsw")   
+    fsw = fswModel.Fsw()
+
+    print("================")
+    print("Building parameters...")  
+    # Simulation Parameters
     # ==================================
     print("   Simulation parameters")
     simulation.param = paramTools.patchAttributes(simulation.param, patches["simParamPatch"])
@@ -72,35 +88,33 @@ def runInitialization(scenarioPatchFcnHdl):
     simulation.param.simOptions = paramTools.patchAttributes(simulation.param.simOptions, patches["simOptionsPatch"])
     simulation.set()
 
-    # Interfaces parameters
+    # Interface inputs parameters
     # ==================================
-    print("   Interfaces parameters")
-    interfaceInputsParam = interfaceInputs.Param()
+    print("   Interface inputs parameters")
     interfaceInputsParam.keyboardInputsParam = paramTools.patchAttributes(interfaceInputsParam.keyboardInputsParam, patches["ifKeyboardParamPatch"])
     joystickSerialPort = interfaceInputsParam.joystickParam.initializeSerialPort()
 
-    print("   FSW / models")
-    # [Models] Models
-    # ==================================
-    print("      [Models] Models")
-    models = mod.Models(simulation.param.simOptions.massModelName, allParam)
+    print("   Models")
+    # [Models] Dynamics
     models.dynamics.orbit.config = paramTools.patchAttributes(models.dynamics.orbit.config, patches["orbitInitParamPatch"])
     models.dynamics.orbit.set()
 
-    # Performance
+    # [Models] Performance
     # TBW: Implement performance model as class Performance
     # modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
     
-    # [FSW] Functions parameters
+    # FSW
     # ==================================
-    print("      [FSW] Functions parameters")
-    # Initialize
-    fsw = fswModel.Fsw()
+    print("   FSW parameters")
+    # [Mode management] Patch simulation-specific parameters and update state 
+    fsw.modeMgt.param = paramTools.patchAttributes(fsw.modeMgt.param, patches["modeMgtParamPatch"])
+    fsw.modeMgt.state = fswModeMgt.State(fsw.modeMgt.param.aocsModeInit)
     
     # [Guidance] Patch simulation-specific parameters
     fsw.guidance.param = paramTools.patchAttributes(fsw.guidance.param, patches["guidParamPatch"])
     
     # [Control] Patch simulation-specific parameters
+    # FSW has full knowledge of spacecraft mass model
     fsw.control.param.inertiaSc_B = models.spacecraft.massModel.inertiaSc_B
     fsw.control.param = paramTools.patchAttributes(fsw.control.param, patches["ctrParamPatch"])
     # Tuning => TBW
@@ -110,21 +124,24 @@ def runInitialization(scenarioPatchFcnHdl):
     fsw.control.param.getAttCtrlTuningFrom_dampingAndNaturalFrequency(attCtrDamping, attCtrNatFreq)
     fsw.control.param.getRateCtrlTuningFrom_timeResp(rateCtrTimeResp2pc)
     
-    # [Command] FSW has full knowledge of actuator model => TBW to be descoped
-    
-    # [Mode management] Patch simulation-specific parameters and update state 
-    fsw.modeMgt.param = paramTools.patchAttributes(fsw.modeMgt.param, patches["modeMgtParamPatch"])
-    fsw.modeMgt.state = fswModeMgt.State(fsw.modeMgt.param.aocsModeInit)
+    # [Command] TBW
+    # FSW has full knowledge of actuator model => TBW to be descoped
     
     # [FSW] Functions states
     # ==================================
+    print("   FSW states")
     fsw.run(simulation, models.interface)
     
     # [Displays]
     # ==================================
-    print("      [Displays]")
+    print("   Displays")
     displays = 0
     # displays = display.Displays()
     #displays.initialize(simulation.param, modelsBus, fswBus, simBus, fswModeMgtState)
-        
+    
+    # Get end time and duration
+    simuEndTime = time.time()
+    simuDuration = simuEndTime - simuStrTime
+    print("Duration: " + str(simuDuration))
+    
     return (simulation, fsw, models, interfaceInputsParam, joystickSerialPort, displays)

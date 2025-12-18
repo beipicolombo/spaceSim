@@ -35,6 +35,6 @@ def runLoop(simulation, fsw, models, interfaceInputsParam, joystickSerialPort, d
     # Get end time and duration
     simuEndTime = time.time()
     simuDuration = simuEndTime - simuStrTime
-    print("   Duration: " + str(simuDuration))
+    print("Duration: " + str(simuDuration))
 
     return (simulation, fsw, models, allEvtList)

@@ -14,5 +14,5 @@ def patchAttributes(obj, dicToPatch):
     objNew = obj
     for key, value in dicToPatch.items():
         setattr(obj, key, value)
-        print("patching " + key + "...")
+        print("* patching " + key + "...")
     return objNew

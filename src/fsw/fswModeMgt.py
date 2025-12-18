@@ -37,11 +37,12 @@ class ModeMgt():
 		self.interface.update({"aocsCtrMode": self.state.aocsCtrMode})
 		self.interface.update({"aocsCtrActMode": self.state.aocsCtrActMode})
 		self.interface.update({"aocsModeElapsedTime": self.state.aocsModeElapsedTime})
+		self.interface.update({"events": self.state.events})
 
-
-	def run(self, simParam, simIf, fswEstIf, receivedTcList):
+	def run(self, simParam, simIf, fswEstIf):
 		# Fetch simulation interface
 		elapsedTime = simIf["elapsedTime"]
+		receivedTcList = simIf["receivedTcList"]
 		# Initalize
 		allEvents = []
 		# Manage received TC
@@ -50,6 +51,9 @@ class ModeMgt():
 		# Update mode management states
 		(eventsList, isAocsModeTrans) = self.state.update(simParam, self.param, fswEstIf, simIf, receivedTcList)
 		allEvents = allEvents + eventsList 
+		# Manage events
+		for event in allEvents:
+			event.display()
 		# Update interface
 		self.interface["aocsMode"] = self.state.aocsMode
 		self.interface["aocsGuidMode"] = self.state.aocsGuidMode
@@ -57,11 +61,7 @@ class ModeMgt():
 		self.interface["aocsCtrActMode"] = self.state.aocsCtrActMode
 		self.interface["aocsModeElapsedTime"] = self.state.aocsModeElapsedTime
 		self.interface["isAocsModeTrans"] = isAocsModeTrans
-		# Manage events
-		for event in allEvents:
-			event.display()
-
-		return allEvents
+		self.interface["events"] = allEvents
 
 
 class Param:
@@ -105,7 +105,8 @@ class State:
 		self.aocsCtrActMode = aocsCtrActMode
 		self.aocsModeElapsedTime = 0
 		self.angRateThd = 0
-		self.angRateThdDur = 0		
+		self.angRateThdDur = 0
+		self.events = []
 
 
 	def update(self, simParam, modeMgtParam, fswEstIf, simIf, receivedTcList):

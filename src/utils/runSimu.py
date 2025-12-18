@@ -4,8 +4,6 @@ from src.utils.runPlots import *
 from src.utils.runExport import *
 from src.utils.runInitialization import *
 
-import src.data.scenarios.scenarioDefinitions as scenarioDefinitions
-
 
 def runSimu(scenarioPatchFcnHdl):
     # --------------------------------------------------
@@ -13,7 +11,7 @@ def runSimu(scenarioPatchFcnHdl):
     # --------------------------------------------------
     print("==================================")
     print("Initialization")
-    (simulation, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays) = runInitialization(scenarioPatchFcnHdl)
+    (simulation, fsw, models, interfaceInputsParam, joystickSerialPort, displays) = runInitialization(scenarioPatchFcnHdl)
 
 
     # --------------------------------------------------
@@ -21,7 +19,11 @@ def runSimu(scenarioPatchFcnHdl):
     # --------------------------------------------------
     print("==================================")
     print("Simulation")
-    (modelsBus, fswBus, simBus, allEvtDataframe) = runLoop(simulation, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays)
+    (simulation, fsw, models, allEvtList) = runLoop(simulation, fsw, models, interfaceInputsParam, joystickSerialPort, displays)
+    # Temporary
+    simBus = []
+    modelsBus = []
+    fswBus = []
 
 
     # --------------------------------------------------
@@ -29,7 +31,9 @@ def runSimu(scenarioPatchFcnHdl):
     # --------------------------------------------------
     print("==================================")
     print("Post-processing")
-    
+    # Convert the events list into a dataframe
+    allEvtDataframe = eventsAndTmTc.eventListToDataFrame(allEvtList)
+
     
     # --------------------------------------------------
     # PLOTS
@@ -45,7 +49,7 @@ def runSimu(scenarioPatchFcnHdl):
     print("==================================")
     print("Export data")
     dictDataExport = 0
-    dictDataExport = runExport(modelsBus, fswBus, simulation.param)
+    # dictDataExport = runExport(modelsBus, fswBus, simulation.param)
     
     outputs = {"dictDataExport": dictDataExport,
                "simParam": simulation.param,

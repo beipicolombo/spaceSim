@@ -34,7 +34,7 @@ class Fsw:
 		self.interface.update({"control": self.control.interface})
 		self.interface.update({"command": self.command.interface})
 
-	def run(self, simulation, modelsIf, receivedTcList):
+	def run(self, simulation, modelsIf):
 		# Fetch input
 		simIf = simulation.interface
 		simParam = simulation.param
@@ -45,7 +45,7 @@ class Fsw:
 
 		# Run mode management
 		# Received TC list to implemented in simIf
-		self.modeMgt.run(simParam, simIf, fswEstIfPre, receivedTcList)
+		self.modeMgt.run(simParam, simIf, fswEstIfPre)
 		fswModeMgtIf = self.interface["modeMgt"] # Current timestep
 		
 		# Run sensor processing
@@ -66,7 +66,6 @@ class Fsw:
 
 		# Run command
 		self.command.run(fswModeMgtIf, fswCtrlIf)
-		fswCmdIf = self.interface["command"] # Current timestep
 
 
 # --------------------------------------------------

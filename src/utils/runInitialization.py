@@ -62,7 +62,7 @@ def runInitialization(scenarioPatchFcnHdl):
     print("Creating simulation object...")    
     simulation = sim.Simulation()
 
-    print("Setting parameters...")  
+    print("Patch simulation-specific parameters...")  
     # [Simulation] Parameters
     # ==================================
     print("   Simulation parameters")
@@ -70,15 +70,11 @@ def runInitialization(scenarioPatchFcnHdl):
     simulation.param.updateTimeVec()
     simulation.param.runOptions = paramTools.patchAttributes(simulation.param.runOptions, patches["runOptionsPatch"])
     simulation.param.simOptions = paramTools.patchAttributes(simulation.param.simOptions, patches["simOptionsPatch"])
-    # Create simulation object
-    simulation = sim.Simulation()
+    simulation.set()
 
-    # Data buses and signals
-    (modelsBus, fswBus, simBus) = initData.initializeBusesAndSignals(simulation.param)
-    
     # Interfaces parameters
     # ==================================
-    print("   Interfaces")
+    print("   Interfaces parameters")
     interfaceInputsParam = interfaceInputs.Param()
     interfaceInputsParam.keyboardInputsParam = paramTools.patchAttributes(interfaceInputsParam.keyboardInputsParam, patches["ifKeyboardParamPatch"])
     joystickSerialPort = interfaceInputsParam.joystickParam.initializeSerialPort()
@@ -114,23 +110,16 @@ def runInitialization(scenarioPatchFcnHdl):
     fsw.control.param.getAttCtrlTuningFrom_dampingAndNaturalFrequency(attCtrDamping, attCtrNatFreq)
     fsw.control.param.getRateCtrlTuningFrom_timeResp(rateCtrTimeResp2pc)
     
-    # FSW has full knowledge of actuator model => TBW to be descoped
-    # TBW
+    # [Command] FSW has full knowledge of actuator model => TBW to be descoped
     
-    # [Mode management] Patch simulation-specific parameters    
+    # [Mode management] Patch simulation-specific parameters and update state 
     fsw.modeMgt.param = paramTools.patchAttributes(fsw.modeMgt.param, patches["modeMgtParamPatch"])
     fsw.modeMgt.state = fswModeMgt.State(fsw.modeMgt.param.aocsModeInit)
     
     # [FSW] Functions states
     # ==================================
-    receivedTcList = []
-    fsw.run(simulation, models.interface, receivedTcList)
+    fsw.run(simulation, models.interface)
     
-    # [Models]
-    # ==================================
-    # print("      [Models] Spacecraft and environment states")
-    # modelsBus = models.run(simulation.param, simBus, fswBus, modelsBus)
-        
     # [Displays]
     # ==================================
     print("      [Displays]")
@@ -138,4 +127,4 @@ def runInitialization(scenarioPatchFcnHdl):
     # displays = display.Displays()
     #displays.initialize(simulation.param, modelsBus, fswBus, simBus, fswModeMgtState)
         
-    return (simulation, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays)
+    return (simulation, fsw, models, interfaceInputsParam, joystickSerialPort, displays)

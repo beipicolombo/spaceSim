@@ -1,16 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jun 30 22:06:57 2024
-
-@author: Xela
-"""
 
 import numpy as np
 import ephem
-import src.interfaces.eventsAndTmTc as eventsAndTmTc
 from src.interfaces.eventsAndTmTcDatabase import TC_DATABASE
 from src.interfaces.eventsAndTmTcDatabase import EVT_DATABASE
-
 
 
 # To be moved as common constants
@@ -35,18 +27,42 @@ class Simulation():
         # Interface
         self.interface = {}
         self.interface.update({"elapsedTime": self.state.elapsedTime})
-        
+        self.interface.update({"receivedTcList": []})
+
+    def set(self):
+        self.state.waitingTc = self.param.tcTimeline # Initialize waiting TC list
+
     def run(self):
         # Compute elapsed time
         Ts = self.param.Ts
         self.state.elapsedTime = self.state.elapsedTime + Ts
+        # Retrieve received TCs
+        receivedTcList = self.listenTc()
         # Update interface
         self.interface["elapsedTime"] = self.state.elapsedTime
-        
+        self.interface["receivedTcList"] = receivedTcList
+
+    # TC listener
+    def listenTc(self):
+        # Get the elapsed time and TC timeline
+        elapsedTime = self.state.elapsedTime
+        # Initialization
+        receivedTcList = []
+        # If any TC is defined in the timeline
+        if (len(self.state.waitingTc) > 0):
+            # Check if the TC is received
+            # TBW: handle if TCs are received at the same time
+            if (elapsedTime >= self.state.waitingTc[0].time):
+                receivedTcList.append(self.state.waitingTc.pop(0))
+
+        # Update interface
+        return receivedTcList
+
         
 class State():
     def __init__(self):
         self.elapsedTime = 0
+        self.waitingTc = []
 
 
 # To be implemented with dataclass

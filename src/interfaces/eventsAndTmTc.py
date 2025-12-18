@@ -79,23 +79,3 @@ class EventDatabase():
         evtOut = self.dict[evtName]
         evtOut.time = time
         return evtOut
-
-
-# Function for TC listener
-def listenTc(simBus, tcList):
-    # Get the current time
-    currTime = simBus.signals["elapsedTime"].value
-
-    # Initialize outputs
-    updatedTcList = tcList
-    receivedTcList = []
-
-    if (len(tcList) > 0):
-        # Check if the TC is received
-        # TBW: handle if TCs are received at the same time
-        if (currTime >= tcList[0].time):
-            receivedTcList.append(updatedTcList.pop(0))
-
-    return (receivedTcList, updatedTcList)
-
-

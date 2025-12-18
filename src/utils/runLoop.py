@@ -1,21 +1,11 @@
 
 import time
 
-import src.interfaces.interfaceInputs as interfaceInputs
-import src.interfaces.eventsAndTmTc as eventsAndTmTc
 
-import src.models.dyn.attitudeDynamics as attDyn
-import src.models.dyn.orbitDynamics as orbDyn
-import src.models.kin.attitudeKinematics as attKin
-
-import src.models.spaceEnv.envModel as envModel
-import src.models.spaceEnv.perfModel as perfModel
-
-
-def runLoop(simulation, interfaceInputsParam, fsw, models, modelsBus, fswBus, simBus, joystickSerialPort, displays):
-    
+def runLoop(simulation, fsw, models, interfaceInputsParam, joystickSerialPort, displays):
+    # Get start time
     simuStrTime = time.time()
-    tcList = simulation.param.tcTimeline # list of TC to be received
+    # Initial events list
     allEvtList = []
 
     for ii in range(1, simulation.param.nbPts):    
@@ -23,39 +13,28 @@ def runLoop(simulation, interfaceInputsParam, fsw, models, modelsBus, fswBus, si
         
         # [Simulation]
         # ==================================
-        # Update time
         simulation.run()
 
         # [Models]
         # ==================================
         models.run(simulation, fsw.interface)
 
-        # Performance (additional models signals)
-        # TBW
-        # modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
-
         # [FSW]
         # ==================================
-        # Retrieve received TCs
-        (receivedTcList, tcList) = eventsAndTmTc.listenTc(simBus, tcList)
-
-        fsw.run(simulation, models.interface, receivedTcList)
+        fsw.run(simulation, models.interface)
 
         # Update event management
-        allEvtList = receivedTcList
-        # allEvtList = allEvtList + modeMgtEvtList
+        allEvtList = allEvtList + fsw.interface["modeMgt"]["events"]
 
         # [Graphics]
         # ==================================    
         # displays.update(simulation.param, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI)
 
-    # Convert the events list into a dataframe
-    allEvtDataframe = eventsAndTmTc.eventListToDataFrame(allEvtList)
+    joystickSerialPort.close()
 
+    # Get end time and duration
     simuEndTime = time.time()
     simuDuration = simuEndTime - simuStrTime
     print("   Duration: " + str(simuDuration))
 
-    joystickSerialPort.close()
-    
-    return (modelsBus, fswBus, simBus, allEvtDataframe)
+    return (simulation, fsw, models, allEvtList)

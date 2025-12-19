@@ -82,7 +82,8 @@ class MassModel:
 		self.inertiaSc_G = inertiaSc_G
 		self.inertiaScInv_B = inertiaScInv_B
 		self.massCB = massCB
-		self.masssc = massSc	
+		self.massSc = massSc
+		self.comSc_B = com_B
 
 
 # --------------------------------------------------

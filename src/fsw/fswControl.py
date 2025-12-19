@@ -24,6 +24,17 @@ class Control():
         self.interface.update({"qEstBR": attKin.Quaternion()})
 
 
+    def set(self, fswParam):
+        inertiaSc_B = fswParam.inertiaSc_B
+        # Set tuning for attitude control
+        (Kp, Kd) = getAttCtrlTuningFrom_dampingAndNaturalFrequency(inertiaSc_B, self.param.attCtrDamping, self.param.attCtrNatFreq)
+        self.param.attControlKp = Kp
+        self.param.attControlKd = Kd
+        # Set tuning for rate control
+        Kd = getRateCtrlTuningFrom_timeResp(inertiaSc_B, self.param.rateCtrTimeResp2pc)
+        self.param.rateDampingKd = Kd
+
+
     def thrustControl(self):
         torqueCtrl_B = np.array([0, 0, 0]) 
         forceCtrl_B = np.array([0, 0, 0])
@@ -159,6 +170,9 @@ class Control():
 class Param:
     # To be moved as higher level class
     def __init__(self):
+        self.attCtrNatFreq =  0.0010919*10 # [rad/s]
+        self.attCtrDamping = 0.6 # [-]
+        self.rateCtrTimeResp2pc = 10*60
         self.rateDampingKd = 10.0*np.eye(3)
         self.attControlKp = 0.1*np.eye(3)
         self.attControlKd = 10*np.eye(3)
@@ -166,44 +180,37 @@ class Param:
         self.swInertiaTrqCompensation = False
 
 
-    def getAttCtrlTuningFrom_overshootAndTimeResp(self, overshoot, timeResp):
-        # Get damping
-        damp = np.sqrt(np.log(overshoot)**2/(np.pi**2 + np.log(overshoot)**2))
-        # Get natural pulse
-        omega_n = 2/(timeResp * damp)
-
-        # Get controller gains
-        Kp = omega_n**2 * self.inertiaSc_B
-        Kd = 2*damp*omega_n * self.inertiaSc_B
-        
-        print("damping: %.4f [-]" % (damp))
-        print("natural frequency: %.4f [rad/s]" % (omega_n))
-
-        self.attControlKd = Kd
-        self.attControlKp = Kp
-
-
-    def getAttCtrlTuningFrom_dampingAndNaturalFrequency(self, damp, omega_n):
-        # Get controller gains
-        Kp = omega_n**2 * self.inertiaSc_B
-        Kd = 2*damp*omega_n * self.inertiaSc_B
-
-        self.attControlKd = Kd
-        self.attControlKp = Kp
-
-
-    def getRateCtrlTuningFrom_timeResp(self, timeResp):
-        # 2% time response formula: Tr(2%) = 4 x tau, with tau = 1/omega (1st order system cutoff frequency)
-        # Get controller gain
-        Kd = self.inertiaSc_B / timeResp
-
-        self.rateDampingKd = Kd
-
-
 # --------------------------------------------------
 # FUNCTIONS
 # --------------------------------------------------
+def getAttCtrlTuningFrom_overshootAndTimeResp(self, overshoot, timeResp):
+    # Get damping
+    damp = np.sqrt(np.log(overshoot)**2/(np.pi**2 + np.log(overshoot)**2))
+    # Get natural pulse
+    omega_n = 2/(timeResp * damp)
 
+    # Get controller gains
+    Kp = omega_n**2 * self.inertiaSc_B
+    Kd = 2*damp*omega_n * self.inertiaSc_B
+    
+    print("damping: %.4f [-]" % (damp))
+    print("natural frequency: %.4f [rad/s]" % (omega_n))
+
+    return (Kp, Kd)
+
+
+def getAttCtrlTuningFrom_dampingAndNaturalFrequency(inertiaSc_B, damp, omega_n):
+    # Get controller gains
+    Kp = omega_n**2 * inertiaSc_B
+    Kd = 2*damp*omega_n * inertiaSc_B
+    return (Kp, Kd)
+    
+
+def getRateCtrlTuningFrom_timeResp(inertiaSc_B, timeResp):
+    # 2% time response formula: Tr(2%) = 4 x tau, with tau = 1/omega (1st order system cutoff frequency)
+    # Get controller gain
+    Kd = inertiaSc_B / timeResp
+    return Kd
 
 # --------------------------------------------------
 # SIMULATION / TEST

@@ -26,7 +26,7 @@ def runLoop(simulation, fsw, models, interfaceInputsParam, joystickSerialPort, d
         # Update event management
         allEvtList = allEvtList + fsw.interface["modeMgt"]["events"]
 
-        # [Graphics]
+        # [Displays]
         # ==================================    
         # displays.update(simulation.param, modelsBus, fswBus, simBus, fswModeMgtState, qPrevLI, qPrevBI)
 

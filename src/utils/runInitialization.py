@@ -10,8 +10,8 @@ from deepmerge import always_merger # [WIP]
 from pathlib import Path # [WIP]
 import time
 
-import src.utils.simulation as sim
 import src.utils.paramTools as paramTools
+import src.utils.simulation as sim
 
 import src.data.initData as initData
 
@@ -106,27 +106,9 @@ def runInitialization(scenarioPatchFcnHdl):
     # FSW
     # ==================================
     print("   FSW parameters")
-    # [Mode management] Patch simulation-specific parameters and update state 
-    fsw.modeMgt.param = paramTools.patchAttributes(fsw.modeMgt.param, patches["modeMgtParamPatch"])
-    fsw.modeMgt.state = fswModeMgt.State(fsw.modeMgt.param.aocsModeInit)
-    
-    # [Guidance] Patch simulation-specific parameters
-    fsw.guidance.param = paramTools.patchAttributes(fsw.guidance.param, patches["guidParamPatch"])
-    
-    # [Control] Patch simulation-specific parameters
-    # FSW has full knowledge of spacecraft mass model
-    fsw.control.param.inertiaSc_B = models.spacecraft.massModel.inertiaSc_B
-    fsw.control.param = paramTools.patchAttributes(fsw.control.param, patches["ctrParamPatch"])
-    # Tuning => TBW
-    attCtrNatFreq =  0.0010919*10 # [rad/s]
-    attCtrDamping = 0.6 # [-]
-    rateCtrTimeResp2pc = 10*60 # [s]
-    fsw.control.param.getAttCtrlTuningFrom_dampingAndNaturalFrequency(attCtrDamping, attCtrNatFreq)
-    fsw.control.param.getRateCtrlTuningFrom_timeResp(rateCtrTimeResp2pc)
-    
-    # [Command] TBW
-    # FSW has full knowledge of actuator model => TBW to be descoped
-    
+    # Common parameters
+    fsw.set(patches, models)
+
     # [FSW] Functions states
     # ==================================
     print("   FSW states")
@@ -143,5 +125,5 @@ def runInitialization(scenarioPatchFcnHdl):
     simuEndTime = time.time()
     simuDuration = simuEndTime - simuStrTime
     print("Duration: " + str(simuDuration))
-    
+
     return (simulation, fsw, models, interfaceInputsParam, joystickSerialPort, displays)

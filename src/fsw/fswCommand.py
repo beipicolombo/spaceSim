@@ -9,11 +9,11 @@ import src.models.act.rwModels as rwModels
 # --------------------------------------------------
 class Command():
 	def __init__(self):
-		self.param = 0
+		self.param = Param()
 		# Interface
 		self.interface = {"torqueCmdThr_B": np.array([0, 0, 0]), 
 					      "torqueCmdRw_B": np.array([0, 0, 0])}
-
+	
 	def run(self, fswModeMgtIf, fswCtrlIf):
 		# Retrieve parameters
 		fswCmdParam = self.param
@@ -41,6 +41,10 @@ class Command():
 		# Update interface
 		self.interface["torqueCmdRw_B"] = torqueCmdRw_B
 
+
+class Param():
+	def __init__(self):
+		self.dummy = 0
 
 # --------------------------------------------------
 # FUNCTIONS

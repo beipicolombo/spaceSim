@@ -1,4 +1,7 @@
 import numpy as np
+
+import src.utils.paramTools as paramTools
+
 import src.fsw.fswModeMgt as fswModeMgt
 import src.fsw.fswSensorProc as fswSensorProc
 import src.fsw.fswEstimation as fswEstimation
@@ -16,8 +19,8 @@ deg2rad = pi/180
 # --------------------------------------------------
 class Fsw:
 	def __init__(self):
-		# TBW
-		self.param = 0
+		# Command parameters
+		self.param = Param()
 		# FSW function
 		self.modeMgt = fswModeMgt.ModeMgt()
 		self.sensorProc = fswSensorProc.SensorProcessing()
@@ -33,6 +36,32 @@ class Fsw:
 		self.interface.update({"guidance": self.guidance.interface})
 		self.interface.update({"control": self.control.interface})
 		self.interface.update({"command": self.command.interface})
+
+
+	def set(self, patches, models):
+		# Set high level FSW parameters
+		# FSW has full knowledge of actuator model => TBW to be descoped
+		self.param.inertiaSc_B = models.spacecraft.massModel.inertiaSc_B
+		self.param.inertiaSc_G = models.spacecraft.massModel.inertiaSc_G
+		self.param.massCB = models.spacecraft.massModel.massCB
+		self.param.massSc = models.spacecraft.massModel.massSc
+		self.param.comSc_B = models.spacecraft.massModel.comSc_B
+
+		# [Mode management] Patch simulation-specific parameters and update state 
+		self.modeMgt.param = paramTools.patchAttributes(self.modeMgt.param, patches["modeMgtParamPatch"])
+		self.modeMgt.state = fswModeMgt.State(self.modeMgt.param.aocsModeInit)
+
+		# [Guidance] Patch simulation-specific parameters
+		self.guidance.param = paramTools.patchAttributes(self.guidance.param, patches["guidParamPatch"])
+
+		# [Control] Patch simulation-specific parameters
+		# FSW has full knowledge of spacecraft mass model
+		self.control.param = paramTools.patchAttributes(self.control.param, patches["ctrParamPatch"])
+		self.control.set(self.param)
+		
+		# [Command] TBW
+		# FSW has full knowledge of actuator model => TBW to be descoped
+
 
 	def run(self, simulation, modelsIf):
 		# Fetch input
@@ -67,6 +96,16 @@ class Fsw:
 		# Run command
 		self.command.run(fswModeMgtIf, fswCtrlIf)
 
+
+# High level FSW parameters
+class Param:
+	def __init__(self):
+		# Spacecraft mass model
+		self.inertiaSc_B = np.identity(3)
+		self.inertiaSc_G = np.identity(3)
+		self.massCB = 0
+		self.massSc = 0
+		self.comSc_B = np.array([0, 0, 0])
 
 # --------------------------------------------------
 # FUNCTIONS

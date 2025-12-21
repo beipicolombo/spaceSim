@@ -49,7 +49,7 @@ class ThrUnitParam:
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-# THR model
+# Thrusters model
 class Thr:
     def __init__(self, allThrSetParam):
         self.param = allThrSetParam
@@ -66,6 +66,12 @@ class Thr:
         self.nbSets += 1
         self.sets.update({thrSetParam.name: ThrSet(thrSetParam)})
 
+    # Build
+    def build(self, patches):
+        # [TBW] To be implemented
+        dum = 0
+
+    # Run
     def run(self, simOptions, fswIf):
         # Fetch interface
         fswCmdIf = fswIf["command"]

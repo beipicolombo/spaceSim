@@ -47,6 +47,7 @@ class StrUnitParam:
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# Star trackers model
 class Str():
     def __init__(self, allStrSetParam):
         self.param = allStrSetParam
@@ -63,6 +64,12 @@ class Str():
         self.nbSets += 1
         self.sets.update({strSetParam.name: StrSet(strSetParam)})        
 
+    # Build
+    def build(self, patches):
+        # [TBW] To be implemented
+        dum = 0
+
+    # Run
     def run(self, dynIf, envIf):
         # Fetch dynamics and environment interface
         qBI = dynIf["attitude"]["qBI"]

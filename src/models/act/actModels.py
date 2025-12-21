@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Mar 27 13:15:55 2022
-
-@author: Xela
-"""
 
 import numpy as np
+
+import src.utils.paramTools as paramTools
+
 import src.models.act.thrModels as thrModels
 import src.models.act.rwModels as rwModels
 # import math as m
@@ -19,6 +16,7 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# Actuators model
 class Actuators:
 	def __init__(self, attDynParam, actParam):
 		self.thrModel = thrModels.Thr(actParam["thr"])
@@ -28,6 +26,13 @@ class Actuators:
 		self.interface.update({"thr": self.thrModel.interface})
 		self.interface.update({"rw": self.rwModel.interface})
 
+	# Build
+	def build(self, patches):
+		# Build objects
+		self.thrModel.build(patches)
+		self.rwModel.build(patches)
+
+	# Run
 	def run(self, simOptions, fswIf):
 		# Run RW model
 		self.rwModel.run(simOptions, fswIf)

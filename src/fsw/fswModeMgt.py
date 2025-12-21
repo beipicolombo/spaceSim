@@ -1,5 +1,8 @@
 
 import numpy as np
+
+import src.utils.paramTools as paramTools
+
 import src.interfaces.eventsAndTmTc as eventsAndTmTc
 from src.interfaces.eventsAndTmTcDatabase import EVT_DATABASE
 
@@ -26,9 +29,12 @@ for key in AOCSMODES.keys():
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# Mode management function
 class ModeMgt():
 	def __init__(self):
+		# Parameters
 		self.param = Param()
+		# State
 		self.state = State(self.param.aocsModeInit)
 		# Interface
 		self.interface = {}
@@ -39,6 +45,15 @@ class ModeMgt():
 		self.interface.update({"aocsModeElapsedTime": self.state.aocsModeElapsedTime})
 		self.interface.update({"events": self.state.events})
 
+	# Build
+	def build(self, patches):
+		# Patch parameters 
+		self.param = paramTools.patchAttributes(self.param, patches["modeMgtParamPatch"])
+		# Set state
+		self.state = State(self.param.aocsModeInit)
+
+
+	# Run
 	def run(self, simParam, simIf, fswEstIf):
 		# Fetch simulation interface
 		elapsedTime = simIf["elapsedTime"]
@@ -64,27 +79,7 @@ class ModeMgt():
 		self.interface["events"] = allEvents
 
 
-class Param:
-	def __init__(self):
-        # Initial AOCS mode
-		self.aocsModeInit = AOCSMODES["OFF"]
-		self.aocsOffModeMinDur = 10 # [s]
-		# SAFE mode parameters
-		self.aocsSafeModeMinDur = 0*60 # [s]
-		self.aocsSafeModeAngRateThd = 0.02*deg2rad # [s]
-		self.aocsSafeModeAngRateThdDur = 10*60 # [s]
-		self.isAutoSafeToNomPtngModeAllwd = False
-		# NOM_PTNG parameters
-		self.aocsNomPtngModeMinDur = 30*60 # [s]
-		self.isAutoNomPtngToNomEqAllwd = False
-		# NOM_EQ parameters
-		self.aocsNomEqModeMinDur = 90*60 # [s
-		self.isAutoNomToOcmAllwd = False
-		# NOM common parameters
-		self.aocsNomModeAngRateThd = 0.01*deg2rad # [s]
-		self.aocsNomModeAngRateThdDur = 10*60 # [s]
-
-
+# Mode management state
 class State:
 	def __init__(self, aocsMode):
 		aocsMode = AOCSMODES["OFF"]
@@ -108,7 +103,7 @@ class State:
 		self.angRateThdDur = 0
 		self.events = []
 
-
+	# State update
 	def update(self, simParam, modeMgtParam, fswEstIf, simIf, receivedTcList):
 		# Retrieve parameters
 		Ts = simParam.Ts
@@ -204,6 +199,28 @@ class State:
 		self.angRateThdDur = angRateThdDur
 
 		return (eventsList, isAocsModeTrans)
+
+
+# Mode management parameters
+class Param:
+	def __init__(self):
+		# Initial AOCS mode
+		self.aocsModeInit = AOCSMODES["OFF"]
+		self.aocsOffModeMinDur = 10 # [s]
+		# SAFE mode parameters
+		self.aocsSafeModeMinDur = 0*60 # [s]
+		self.aocsSafeModeAngRateThd = 0.02*deg2rad # [s]
+		self.aocsSafeModeAngRateThdDur = 10*60 # [s]
+		self.isAutoSafeToNomPtngModeAllwd = False
+		# NOM_PTNG parameters
+		self.aocsNomPtngModeMinDur = 30*60 # [s]
+		self.isAutoNomPtngToNomEqAllwd = False
+		# NOM_EQ parameters
+		self.aocsNomEqModeMinDur = 90*60 # [s
+		self.isAutoNomToOcmAllwd = False
+		# NOM common parameters
+		self.aocsNomModeAngRateThd = 0.01*deg2rad # [s]
+		self.aocsNomModeAngRateThdDur = 10*60 # [s]
 
 
 # --------------------------------------------------

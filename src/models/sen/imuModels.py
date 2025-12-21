@@ -46,6 +46,7 @@ class ImuUnitParam:
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# Inertial measurement units model
 class Imu():
     def __init__(self, allImuSetParam):
         self.param = allImuSetParam
@@ -62,6 +63,12 @@ class Imu():
         self.nbSets += 1
         self.sets.update({imuSetParam.name: ImuSet(imuSetParam)})
 
+    # Build
+    def build(self, patches):
+        # [TBW] To be implemented
+        dum = 0
+
+    # Run
     def run(self, dynIf, envIf):
         # Fetch dynamics and environment interfaces
         angRate_BI_B = dynIf["attitude"]["angRate_BI_B"]

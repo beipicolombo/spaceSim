@@ -1,5 +1,8 @@
 
 import numpy as np
+
+import src.utils.paramTools as paramTools
+
 import src.models.kin.attitudeKinematics as attKin
 
 # To be moved as common constants
@@ -9,9 +12,13 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# Guidance function
 class Guidance():
     def __init__(self):
+        # Parameters
         self.param = Param()
+        # State 
+        self.state = State()
         # Interface
         self.interface = {}
         self.interface.update({"eulerAng_RI": np.array([0, 0, 0])})
@@ -19,32 +26,14 @@ class Guidance():
         self.interface.update({"qRI": attKin.Quaternion()})    
         self.interface.update({"angRate_RI_R": np.array([0, 0, 0])})
 
-    def rateDampingGuidance(self):
-        angRate_RI_R = np.array([0, 0, 0])
-        qRI = attKin.Quaternion()
-        return (angRate_RI_R, qRI)
+    # Build
+    def build(self, patches):
+        # Patch parameters
+        self.param = paramTools.patchAttributes(self.param, patches["guidParamPatch"])
+        # Set state
+        self.state = State()
 
-
-    def attitudeInertialGuidance(self):
-        fswGuidanceParam = self.param
-        angRate_RI_R = np.array([0, 0, 0])
-        qRI = attKin.trans_EulerAngToQuat(fswGuidanceParam.GUIDMODE_ATT_INERT_eulerAngGuid_RI)
-        return (angRate_RI_R, qRI)
-
-
-    def offGuidance(self):
-        angRate_RI_R = np.array([0, 0, 0])
-        qRI = attKin.Quaternion()
-        return (angRate_RI_R, qRI)
-
-
-    def nadirGuidance(self, angRate_LI_L, qLI):
-        fswGuidanceParam = self.param
-        angRate_RI_R = angRate_LI_L
-        qRI = qLI
-        return (angRate_RI_R, qRI)
-
-
+    # Run
     def run(self, fswModeMgtIf, fswEstIf):
         # Fetch interfaces
         qLI = fswEstIf["qLIest"]
@@ -89,8 +78,42 @@ class Guidance():
         self.interface["angRate_RI_R"] = angRate_RI_R
 
 
+    def rateDampingGuidance(self):
+        angRate_RI_R = np.array([0, 0, 0])
+        qRI = attKin.Quaternion()
+        return (angRate_RI_R, qRI)
+
+
+    def attitudeInertialGuidance(self):
+        fswGuidanceParam = self.param
+        angRate_RI_R = np.array([0, 0, 0])
+        qRI = attKin.trans_EulerAngToQuat(fswGuidanceParam.GUIDMODE_ATT_INERT_eulerAngGuid_RI)
+        return (angRate_RI_R, qRI)
+
+
+    def offGuidance(self):
+        angRate_RI_R = np.array([0, 0, 0])
+        qRI = attKin.Quaternion()
+        return (angRate_RI_R, qRI)
+
+
+    def nadirGuidance(self, angRate_LI_L, qLI):
+        fswGuidanceParam = self.param
+        angRate_RI_R = angRate_LI_L
+        qRI = qLI
+        return (angRate_RI_R, qRI)
+
+
+
+# Guidance function state
+class State:
+    def __init__(self):
+        # [TBW] Dummy state
+        self.dummy = 0
+
+
+# Guidance function parameters
 class Param:
-    # To be moved as higher level class
     def __init__(self):
         self.GUIDMODE_ATT_INERT_eulerAngGuid_RI = np.array([0, 0, 0])*deg2rad
         self.orbitRate = 0 # [rad/s]        

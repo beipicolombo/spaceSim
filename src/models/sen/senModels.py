@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Mar 27 13:15:55 2022
-
-@author: Xela
-"""
 
 import numpy as np
+
+import src.utils.paramTools as paramTools
+
 import src.models.sen.strModels as strModels
 import src.models.sen.imuModels as imuModels
 # import math as m
@@ -18,6 +15,7 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# Sensors model
 class Sensors:
 	def __init__(self, senParam):
 		self.str = strModels.Str(senParam["str"])
@@ -27,6 +25,13 @@ class Sensors:
 		self.interface.update({"imu": self.imu.interface})
 		self.interface.update({"str": self.str.interface})
 
+	# Build
+	def build(self, patches):
+		# Build objects
+		self.str.build(patches)
+		self.imu.build(patches)
+
+	# Run
 	def run(self, fswIf, dynIf, envIf):
 		# Process
 		self.imu.run(dynIf, envIf)

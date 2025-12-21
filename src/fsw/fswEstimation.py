@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Jun 30 22:06:57 2024
-
-@author: Xela
-"""
 
 import numpy as np
+
+import src.utils.paramTools as paramTools
+
 import src.models.kin.attitudeKinematics as attitudeKinematics
 
 deg2rad = np.pi/180
@@ -14,9 +11,13 @@ deg2rad = np.pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# Estimation function
 class Estimation():
     def __init__(self):
-        self.param = 0
+        # Parameters
+        self.param = Param()
+        # State
+        self.state = State()
         # Interface
         self.interface = {}
         self.interface.update({"posEst_J": np.array([0, 0, 0])})
@@ -27,6 +28,15 @@ class Estimation():
         self.interface.update({"eulerAngEst_BI": np.array([0, 0, 0])})
         self.interface.update({"qBIest": attitudeKinematics.Quaternion()})
 
+    # Build 
+    def build(self, patches):
+        # Do nothing for now
+        # Patch parameters
+        self.param = Param()
+        # Set state
+        self.state = State()
+
+    # Run
     def run(self, fswModeMgtIf, fswSensorProcIf, modelsIf):
         # Position and velocity estimation
         self.positionVelocityEstimation(fswModeMgtIf, fswSensorProcIf, modelsIf)
@@ -65,6 +75,20 @@ class Estimation():
         # Update interface        
         self.interface["qBIest"] = qBIest
         self.interface["angRateEst_BI_B"] = angRateEst_BI_B
+
+
+# Estimation state
+class State():
+    def __init__(self):
+        # [TBW] Dummy state
+        self.dummy = 0
+
+
+# Estimation parameters
+class Param():
+    def __init__(self):
+        # [TBW] Dummy parameters
+        self.dummy = 0
 
 
 # --------------------------------------------------

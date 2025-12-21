@@ -78,40 +78,27 @@ def runInitialization(scenarioPatchFcnHdl):
     fsw = fswModel.Fsw()
 
     print("================")
-    print("Building parameters...")  
+    print("Building parameters and states...")  
     # Simulation Parameters
     # ==================================
-    print("   Simulation parameters")
-    simulation.param = paramTools.patchAttributes(simulation.param, patches["simParamPatch"])
-    simulation.param.updateTimeVec()
-    simulation.param.runOptions = paramTools.patchAttributes(simulation.param.runOptions, patches["runOptionsPatch"])
-    simulation.param.simOptions = paramTools.patchAttributes(simulation.param.simOptions, patches["simOptionsPatch"])
-    simulation.set()
+    print("   Simulation")
+    simulation.build(patches)
 
     # Interface inputs parameters
     # ==================================
-    print("   Interface inputs parameters")
+    print("   Interface inputs")
     interfaceInputsParam.keyboardInputsParam = paramTools.patchAttributes(interfaceInputsParam.keyboardInputsParam, patches["ifKeyboardParamPatch"])
     joystickSerialPort = interfaceInputsParam.joystickParam.initializeSerialPort()
 
     print("   Models")
-    # [Models] Dynamics
-    models.dynamics.orbit.config = paramTools.patchAttributes(models.dynamics.orbit.config, patches["orbitInitParamPatch"])
-    models.dynamics.orbit.set()
-
-    # [Models] Performance
-    # TBW: Implement performance model as class Performance
-    # modelsBus = perfModel.computeBodyNadirAttitude(modelsBus)
+    models.build(patches)
     
     # FSW
     # ==================================
-    print("   FSW parameters")
-    # Common parameters
-    fsw.set(patches, models)
-
-    # [FSW] Functions states
-    # ==================================
-    print("   FSW states")
+    print("   FSW")
+    # [TBW]
+    fsw.build(patches, models)
+    # [TBW] 
     fsw.run(simulation, models.interface)
     
     # [Displays]

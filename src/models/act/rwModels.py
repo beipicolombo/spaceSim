@@ -48,7 +48,7 @@ class RwUnitParam:
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-# RW model
+# Reaction wheels model
 class Rw:
     def __init__(self, allRwSetParam):
         self.param = allRwSetParam
@@ -65,6 +65,12 @@ class Rw:
         self.nbSets += 1
         self.sets.update({rwSetParam.name: RwSet(rwSetParam)})
 
+    # Build
+    def build(self, patches):
+        # [TBW] To be implemented
+        dum = 0
+
+    # Run
     def run(self, simOptions, fswIf):
         # Fetch interface
         fswCmdIf = fswIf["command"]

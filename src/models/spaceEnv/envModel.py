@@ -3,6 +3,8 @@ import numpy as np
 
 import ephem
 
+import src.utils.paramTools as paramTools
+
 import src.utils.constants as const
 import src.utils.conversions as conversions
 
@@ -28,6 +30,7 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# Environment model
 class Environment():
     def __init__(self):
         self.ephemerides = Ephemerides()
@@ -42,7 +45,15 @@ class Environment():
         self.interface.update({"ephemerides": self.ephemerides.interface})
         self.interface.update({"aerodynamics": self.aerodynamics.interface})
 
+    # Build
+    def build(self, patches):
+        # Build objects
+        self.ephemerides.build(patches)
+        self.aerodynamics.build(patches)
+        self.gravity.build(patches)
 
+
+    # Run
     def run(self, simParam, spacecraft, simIf, dynIf):
         # Compute LVLH frame
         self.computeLvlhFrame(dynIf)
@@ -95,14 +106,26 @@ class Environment():
         self.interface["angRate_LI_L"] = angRate_LI_L
 
 
+# Ephemerides model
 class Ephemerides():
     def __init__ (self):
-        # TBW
-        self.param = 0
+        # Param
+        self.param = 0 # [TBW] Dummy 
+        # State
+        self.state = 0 # [TBW] Dummy 
         # Interface
         self.interface = {}
         self.interface.update({"sunToMarsDir_I": np.array([0, 0, 0])})
 
+    # Build
+    def build(self, patches):
+        # [TBW] To be implemented
+        # Patch parameters
+        self.param = 0
+        # Set state
+        self.state = 0
+
+    # Run
     def run(self, simParam, simIf):
         # Fetch simulation interface
         elapsedTime = simIf["elapsedTime"]
@@ -119,13 +142,25 @@ class Ephemerides():
         self.interface["sunToMarsDir_I"] = sunToMarsDir_I
 
 
+# Aerodynamics model
 class Aerodynamics():
     def __init__ (self):
-        # TBW
-        self.param = 0
+        # Param
+        self.param = 0 # [TBW] Dummy 
+        # State
+        self.state = 0 # [TBW] Dummy 
         # Interface
         self.interface = {"torque_B": np.array([0, 0, 0])}
 
+    # Build
+    def build(self, patches):
+        # [TBW] To be implemented
+        # Patch parameters
+        self.param = 0
+        # Set state
+        self.state = 0
+
+    # Run
     def run(self, simParam, spacecraft, dynIf, envIf):
         # Compute aerodynamic storque
         torqueAero_B = computeAeroTorque()
@@ -133,13 +168,25 @@ class Aerodynamics():
         self.interface["torque_B"] = torqueAero_B
 
 
+# Gravity model
 class Gravity():
     def __init__ (self):
-        # TBW
-        self.param = 0
+        # Param
+        self.param = 0 # [TBW] Dummy 
+        # State
+        self.state = 0 # [TBW] Dummy 
         # Interface
         self.interface = {"torqueGG_B": np.array([0, 0, 0])}
 
+    # Build
+    def build(self, patches):
+        # [TBW] To be implemented
+        # Patch parameters
+        self.param = 0
+        # Set state
+        self.state = 0
+
+    # Run
     def run(self, simParam, spacecraft, dynIf, envIf):
         # Fetch environment and dynamics interface
         qLI = envIf["qLI"]
@@ -166,7 +213,6 @@ class Gravity():
         # Update interface
         self.interface["torque_B"] = torqueGG_B
  
-
 
 # --------------------------------------------------
 # FUNCTIONS

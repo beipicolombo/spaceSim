@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
+import src.utils.paramTools as paramTools
+
 import src.models.act.actModels as actModels
 import src.models.sen.senModels as senModels
 import src.models.dyn.massModels as massModels
@@ -28,11 +30,11 @@ class MassParam:
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# Spacecraft model
 class Spacecraft:
 	def __init__(self, massModelName, allParam):
-		# Template
+		# Mass modek
 		self.massModelName = massModelName
-		# Mass param [TBW]
 		rawMassParam = MassParam(**allParam["spacecraft"]["Default"])
 		self.massModel = MassModel(rawMassParam)
 		# Sensors
@@ -44,12 +46,20 @@ class Spacecraft:
 		self.interface.update({"actuators": self.act.interface})
 		self.interface.update({"sensors": self.sen.interface})
 
+	# Build
+	def build(self, patches):
+		# Build objects
+		self.sen.build(patches)
+		self.act.build(patches)
+
+	# Run
 	def run(self, simParam, fswIf):
 		# Run actuators
 		self.act.run(simParam.simOptions, fswIf)
 		# Run sensors
 		# self.sen.run.()
 		return modelsActBusOut
+
 
 
 class MassModel:

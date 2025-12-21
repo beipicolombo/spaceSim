@@ -1,16 +1,23 @@
 
 import numpy as np
+
+import src.utils.paramTools as paramTools
+
 import src.models.kin.attitudeKinematics as attKin
 
 
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+        # TBW: implement separate classes for different control algorithms
+
+# Control function
 class Control():
     def __init__(self):
+        # Parameters
         self.param = Param()
-        self.state = 0
-        # TBW: implement separate classes for different control algorithms
+        # State
+        self.state = State()
         # Interface
         self.interface = {}
         self.interface.update({"forceCtrl_B": np.array([0, 0, 0])})
@@ -23,8 +30,11 @@ class Control():
         self.interface.update({"rotAngEst_BR": np.array([0, 0, 0])})
         self.interface.update({"qEstBR": attKin.Quaternion()})
 
-
-    def set(self, fswParam):
+    # Build
+    def build(self, patches, fswParam):
+        # Patch parameters
+        self.param = paramTools.patchAttributes(self.param, patches["ctrParamPatch"])
+        # Build other parameters
         inertiaSc_B = fswParam.inertiaSc_B
         # Set tuning for attitude control
         (Kp, Kd) = getAttCtrlTuningFrom_dampingAndNaturalFrequency(inertiaSc_B, self.param.attCtrDamping, self.param.attCtrNatFreq)
@@ -33,46 +43,11 @@ class Control():
         # Set tuning for rate control
         Kd = getRateCtrlTuningFrom_timeResp(inertiaSc_B, self.param.rateCtrTimeResp2pc)
         self.param.rateDampingKd = Kd
+        # Set state
+        self.state = State()
 
 
-    def thrustControl(self):
-        torqueCtrl_B = np.array([0, 0, 0]) 
-        forceCtrl_B = np.array([0, 0, 0])
-        return forceCtrl_B
-
-
-    def rateControl(self, angRateEst_BR_B):
-        fswControlParam = self.param
-        torqueCtrl_B = -np.matmul(fswControlParam.rateDampingKd, angRateEst_BR_B) 
-        return torqueCtrl_B    
-
-
-    def attitudeControl(self, angRateEst_BR_B, qEstBR):
-        fswControlParam = self.param
-        eulerAngEst_BR = qEstBR.toEuler()
-        #torqueCtrl_B = -np.matmul(fswControlParam.attControlKd, angRateEst_BR_B) - np.matmul(fswControlParam.attControlKp, qEstBR.vec)
-        torqueCtrl_B = -np.matmul(fswControlParam.attControlKd, angRateEst_BR_B) - np.matmul(fswControlParam.attControlKp, eulerAngEst_BR)
-        return torqueCtrl_B
-
-
-    def offControl(self):
-        forceCtrl_B = np.array([0, 0, 0])
-        torqueCtrl_B = np.array([0, 0, 0])
-        return (forceCtrl_B, torqueCtrl_B)
-
-
-    def inertiaTrqCompensation(self, angRateEst_BI_B):
-        fswControlParam = self.param
-        inertiaSc_B = fswControlParam.inertiaSc_B
-        trq_B = - np.cross(angRateEst_BI_B, np.matmul(inertiaSc_B, angRateEst_BI_B))
-        trq_B = np.array([0, 0, 0])
-
-        return trq_B
-
-    def manualAttitudeControl(self, trqCmdManual_B):
-        return trqCmdManual_B
-
-
+    # Run
     def run(self, fswModeMgtIf, fswEstIf, fswGuidIf):
         # Retrieve parameters
         fswControlParam = self.param
@@ -165,8 +140,53 @@ class Control():
         self.interface["eulerAngEst_BR"] = eulerAngEst_BR
         self.interface["rotAngEst_BR"] = rotAngEst_BR
         self.interface["qEstBR"] = qEstBR
-            
 
+    def thrustControl(self):
+        torqueCtrl_B = np.array([0, 0, 0]) 
+        forceCtrl_B = np.array([0, 0, 0])
+        return forceCtrl_B
+
+
+    def rateControl(self, angRateEst_BR_B):
+        fswControlParam = self.param
+        torqueCtrl_B = -np.matmul(fswControlParam.rateDampingKd, angRateEst_BR_B) 
+        return torqueCtrl_B    
+
+
+    def attitudeControl(self, angRateEst_BR_B, qEstBR):
+        fswControlParam = self.param
+        eulerAngEst_BR = qEstBR.toEuler()
+        #torqueCtrl_B = -np.matmul(fswControlParam.attControlKd, angRateEst_BR_B) - np.matmul(fswControlParam.attControlKp, qEstBR.vec)
+        torqueCtrl_B = -np.matmul(fswControlParam.attControlKd, angRateEst_BR_B) - np.matmul(fswControlParam.attControlKp, eulerAngEst_BR)
+        return torqueCtrl_B
+
+
+    def offControl(self):
+        forceCtrl_B = np.array([0, 0, 0])
+        torqueCtrl_B = np.array([0, 0, 0])
+        return (forceCtrl_B, torqueCtrl_B)
+
+
+    def inertiaTrqCompensation(self, angRateEst_BI_B):
+        fswControlParam = self.param
+        inertiaSc_B = fswControlParam.inertiaSc_B
+        trq_B = - np.cross(angRateEst_BI_B, np.matmul(inertiaSc_B, angRateEst_BI_B))
+        trq_B = np.array([0, 0, 0])
+
+        return trq_B
+
+    def manualAttitudeControl(self, trqCmdManual_B):
+        return trqCmdManual_B
+
+
+# Control state
+class State:
+    def __init__(self):
+        # Dummy state
+        self.dummy = 0
+
+
+# Control parameters
 class Param:
     # To be moved as higher level class
     def __init__(self):

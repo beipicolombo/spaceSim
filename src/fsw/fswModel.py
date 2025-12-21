@@ -1,7 +1,5 @@
 import numpy as np
 
-import src.utils.paramTools as paramTools
-
 import src.fsw.fswModeMgt as fswModeMgt
 import src.fsw.fswSensorProc as fswSensorProc
 import src.fsw.fswEstimation as fswEstimation
@@ -38,29 +36,32 @@ class Fsw:
 		self.interface.update({"command": self.command.interface})
 
 
-	def set(self, patches, models):
-		# Set high level FSW parameters
-		# FSW has full knowledge of actuator model => TBW to be descoped
+	def build(self, patches, models):
+		# [Common] High level FSW parameters
+		# [TBW] For now FSW has full knowledge of spacecraft mass model
 		self.param.inertiaSc_B = models.spacecraft.massModel.inertiaSc_B
 		self.param.inertiaSc_G = models.spacecraft.massModel.inertiaSc_G
 		self.param.massCB = models.spacecraft.massModel.massCB
 		self.param.massSc = models.spacecraft.massModel.massSc
 		self.param.comSc_B = models.spacecraft.massModel.comSc_B
 
-		# [Mode management] Patch simulation-specific parameters and update state 
-		self.modeMgt.param = paramTools.patchAttributes(self.modeMgt.param, patches["modeMgtParamPatch"])
-		self.modeMgt.state = fswModeMgt.State(self.modeMgt.param.aocsModeInit)
+		# [Mode management]
+		self.modeMgt.build(patches)
 
-		# [Guidance] Patch simulation-specific parameters
-		self.guidance.param = paramTools.patchAttributes(self.guidance.param, patches["guidParamPatch"])
+		# [Sensor processing]
+		self.sensorProc.build(patches)
 
-		# [Control] Patch simulation-specific parameters
-		# FSW has full knowledge of spacecraft mass model
-		self.control.param = paramTools.patchAttributes(self.control.param, patches["ctrParamPatch"])
-		self.control.set(self.param)
+		# [Estimation]
+		self.estimation.build(patches)
+
+		# [Guidance]
+		self.guidance.build(patches)
+
+		# [Control]
+		self.control.build(patches, self.param)
 		
-		# [Command] TBW
-		# FSW has full knowledge of actuator model => TBW to be descoped
+		# [Command]
+		self.command.build(patches)
 
 
 	def run(self, simulation, modelsIf):
@@ -72,28 +73,27 @@ class Fsw:
 		# Fetch interface
 		fswEstIfPre = self.interface["estimation"] # From previous timestep
 
-		# Run mode management
-		# Received TC list to implemented in simIf
+		# [Mode management}
 		self.modeMgt.run(simParam, simIf, fswEstIfPre)
 		fswModeMgtIf = self.interface["modeMgt"] # Current timestep
 		
-		# Run sensor processing
+		# [Sensor processing]
 		self.sensorProc.run(fswModeMgtIf)
 		fswSensorProcIf = self.interface["sensorProc"] # Current timestep
 
-		# Run estimation
+		# [Estimation]
 		self.estimation.run(fswModeMgtIf, fswSensorProcIf, modelsIf)
 		fswEstIf = self.interface["estimation"] # Current timestep
 
-		# Run guidance
+		# [Guidance]
 		self.guidance.run(fswModeMgtIf, fswEstIf)
 		fswGuidIf = self.interface["guidance"] # Current timestep
 
-		# Run control
+		# [Control]
 		self.control.run(fswModeMgtIf, fswEstIf, fswGuidIf)
 		fswCtrlIf = self.interface["control"] # Current timestep
 
-		# Run command
+		# [Command]
 		self.command.run(fswModeMgtIf, fswCtrlIf)
 
 

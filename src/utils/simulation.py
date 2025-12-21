@@ -1,6 +1,9 @@
 
 import numpy as np
 import ephem
+
+import src.utils.paramTools as paramTools
+
 from src.interfaces.eventsAndTmTcDatabase import TC_DATABASE
 from src.interfaces.eventsAndTmTcDatabase import EVT_DATABASE
 
@@ -19,19 +22,29 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
+# Simulation high level function
 class Simulation():
     def __init__(self):
-        # TBW: add simParam as parameter
+        # Parameters
         self.param = Param()
+        # State
         self.state  = State()
         # Interface
         self.interface = {}
         self.interface.update({"elapsedTime": self.state.elapsedTime})
         self.interface.update({"receivedTcList": []})
 
-    def set(self):
+    # Build
+    def build(self, patches):
+        # Patch parameters
+        self.param = paramTools.patchAttributes(self.param, patches["simParamPatch"])
+        self.param.updateTimeVec()
+        self.param.runOptions = paramTools.patchAttributes(self.param.runOptions, patches["runOptionsPatch"])
+        self.param.simOptions = paramTools.patchAttributes(self.param.simOptions, patches["simOptionsPatch"])
+        # Set state
         self.state.waitingTc = self.param.tcTimeline # Initialize waiting TC list
 
+    # Run
     def run(self):
         # Compute elapsed time
         Ts = self.param.Ts
@@ -58,14 +71,16 @@ class Simulation():
         # Update interface
         return receivedTcList
 
-        
+
+# Simulation state     
 class State():
     def __init__(self):
         self.elapsedTime = 0
         self.waitingTc = []
 
 
-# To be implemented with dataclass
+# Simulation parameters
+# [TBW] To be implemented with dataclass
 class Param:
     # To be moved as higher level class
     def __init__(self):

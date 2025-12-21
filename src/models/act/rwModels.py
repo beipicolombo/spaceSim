@@ -51,7 +51,9 @@ class RwUnitParam:
 # Reaction wheels model
 class Rw:
     def __init__(self, allRwSetParam):
+        # Parameters
         self.param = allRwSetParam
+        # Sets
         self.nbSets = 0
         self.sets = {}
         for key in allRwSetParam.keys():
@@ -93,14 +95,27 @@ class Rw:
 # RW set model
 class RwSet():
     def __init__(self, rwSetParam):
+        # Parameters
         self.param = rwSetParam
-        self.units = {}
+        # State
         self.state = RW_UNIT_STATES["ON"]
+        # Units
+        self.units = {}
         for idUnit in range(1, rwSetParam.nbUnits+1):
             rwUnitParam = self.getRwUnitParam(idUnit)
             self.units.update({rwUnitParam.name: RwUnit(rwUnitParam)})
         # Interface
         self.interface = {}
+
+    # Build
+    def build(self):
+        # [TBW] To be implemented
+        dum = 0
+
+    # Run
+    def run(self):
+        # [TBW] To be implemented
+        dum = 0
 
     def getRwUnitParam(self, idUnit):
         name = ("unit"+str(idUnit))
@@ -144,10 +159,17 @@ class RwSet():
 # RW unit model
 class RwUnit():
     def __init__(self, rwUnitParam):
+        # Parameters
         self.param = rwUnitParam
+        # State
         self.state = RW_UNIT_STATES["ON"]
         # Interface
         self.interface = {}
+
+    # Run
+    def run(self):
+        # [TBW] To be implemented
+        dum = 0
 
     def switchOn(self):
         self.state = RW_UNIT_STATES["ON"]

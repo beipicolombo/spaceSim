@@ -50,7 +50,9 @@ class StrUnitParam:
 # Star trackers model
 class Str():
     def __init__(self, allStrSetParam):
+        # Parameters
         self.param = allStrSetParam
+        # Sets
         self.nbSets = 0
         self.sets = {}
         for key in allStrSetParam.keys():
@@ -82,12 +84,25 @@ class Str():
 # STR set model
 class StrSet():
     def __init__(self, strSetParam):
+        # Parameters
         self.param = strSetParam
-        self.units = {}
+        # State
         self.state = STR_UNIT_STATES["ON"]
+        # Units
+        self.units = {}
         for idUnit in range(1, strSetParam.nbUnits+1):
             strUnitParam = self.getStrUnitParam(idUnit)
             self.units.update({strUnitParam.name: StrUnit(strUnitParam)})
+
+    # Build
+    def build(self):
+        # [TBW] To be implemented
+        dum = 0
+
+    # Run
+    def run(self):
+        # [TBW] To be implemented
+        dum = 0
 
     def getStrUnitParam(self, idUnit):
         name = ("unit"+str(idUnit))
@@ -123,11 +138,18 @@ class StrSet():
 # STR unit model
 class StrUnit():
     def __init__(self, strUnitParam):
+        # Parameters
         self.param = strUnitParam
+        # State
         self.state = STR_UNIT_STATES["ON"]
+
+    # Run
+    def run(self):
+        # [TBW] To be implemented
+        dum = 0
 
     def switchOn(self):
         self.state = STR_UNIT_STATES["ON"]
 
     def switchOff(self):
-        self.state = STR_UNIT_STATES["OFF"]          
+        self.state = STR_UNIT_STATES["OFF"]

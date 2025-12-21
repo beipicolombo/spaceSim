@@ -49,7 +49,9 @@ class ImuUnitParam:
 # Inertial measurement units model
 class Imu():
     def __init__(self, allImuSetParam):
+        # Parameters
         self.param = allImuSetParam
+        # Sets
         self.nbSets = 0
         self.sets = {}
         for key in allImuSetParam.keys():
@@ -81,12 +83,25 @@ class Imu():
 # IMU set model
 class ImuSet():
     def __init__(self, imuSetParam):
+        # Parameters
         self.param = imuSetParam
-        self.units = {}
+        # State
         self.state = IMU_UNIT_STATES["ON"]
+        # Units
+        self.units = {}
         for idUnit in range(1, imuSetParam.nbUnits+1):
             imuUnitParam = self.getImuUnitParam(idUnit)
             self.units.update({imuUnitParam.name: ImuUnit(imuUnitParam)})
+
+    # Build
+    def buikd(self):
+        # [TBW] To be implemented
+        dum = 0
+
+    # Run
+    def run(self):
+        # [TBW] To be implemented
+        dum = 0
 
     def getImuUnitParam(self, idUnit):
         name = ("unit"+str(idUnit))
@@ -122,8 +137,15 @@ class ImuSet():
 # IMU unit model
 class ImuUnit():
     def __init__(self, imuUnitParam):
+        # Parameters
         self.param = imuUnitParam
+        # State
         self.state = IMU_UNIT_STATES["ON"]
+
+    # Run
+    def run(self):
+        # [TBW] To be implemented
+        dum = 0
 
     def switchOn(self):
         self.state = IMU_UNIT_STATES["ON"]

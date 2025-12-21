@@ -52,7 +52,9 @@ class ThrUnitParam:
 # Thrusters model
 class Thr:
     def __init__(self, allThrSetParam):
+        # Parameters
         self.param = allThrSetParam
+        # Sets
         self.nbSets = 0
         self.sets = {}
         for key in allThrSetParam.keys():
@@ -94,14 +96,27 @@ class Thr:
 # THR set model
 class ThrSet():
     def __init__(self, thrSetParam):
+        # Parameters
         self.param = thrSetParam
-        self.units = {}
+        # State
         self.state = THR_UNIT_STATES["ON"]
+        # Units
+        self.units = {}
         for idUnit in range(1, thrSetParam.nbUnits+1):
             thrUnitParam = self.getThrUnitParam(idUnit)
             self.units.update({thrUnitParam.name: ThrUnit(thrUnitParam)})
         # Interface
         self.interface = {}
+
+    # Build
+    def build(self):
+        # [TBW] To be implemented
+        dum = 0
+
+    # Run
+    def run(self):
+        # [TBW] To be implemented
+        dum = 0
 
     def getThrUnitParam(self, idUnit):
         name = ("unit"+str(idUnit))
@@ -146,10 +161,17 @@ class ThrSet():
 # THR unit model
 class ThrUnit():
     def __init__(self, thrUnitParam):
+        # Parameters
         self.param = thrUnitParam
+        # State
         self.state = THR_UNIT_STATES["ON"]
         # Interface
         self.interface = {}
+
+    # Run
+    def run(self):
+        # [TBW] To be implemented
+        dum = 0
 
     def switchOn(self):
         self.state = THR_UNIT_STATES["ON"]

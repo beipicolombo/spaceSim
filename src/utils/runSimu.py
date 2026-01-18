@@ -20,10 +20,6 @@ def runSimu(scenarioPatchFcnHdl):
     print("==================================")
     print("Simulation")
     (simulation, fsw, models, allEvtList) = runLoop(simulation, fsw, models, interfaceInputsParam, joystickSerialPort, displays)
-    # Temporary
-    simBus = []
-    modelsBus = []
-    fswBus = []
 
 
     # --------------------------------------------------
@@ -51,6 +47,11 @@ def runSimu(scenarioPatchFcnHdl):
     dictDataExport = 0
     # dictDataExport = runExport(modelsBus, fswBus, simulation.param)
     
+    # Temporary
+    simBus = []
+    modelsBus = []
+    fswBus = []
+    # Set outputs dictionnary
     outputs = {"dictDataExport": dictDataExport,
                "simParam": simulation.param,
                "modelsBus": modelsBus,

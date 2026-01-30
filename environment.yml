@@ -16,6 +16,7 @@ dependencies:
   - vpython
   - pytest
   - pip
+  - python-abc
 
 #  - yaml
 #  - pathLib

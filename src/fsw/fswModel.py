@@ -1,5 +1,7 @@
 import numpy as np
 
+from abc import ABC, abstractmethod
+
 import src.fsw.fswModeMgt as fswModeMgt
 import src.fsw.fswSensorProc as fswSensorProc
 import src.fsw.fswEstimation as fswEstimation
@@ -15,10 +17,41 @@ deg2rad = pi/180
 # --------------------------------------------------
 # CLASSES
 # --------------------------------------------------
-class Fsw:
+# FSW data bus - owned by FSW
+class FswDataBus():
 	def __init__(self):
-		# Command parameters
+		self.modeMgt = {}
+		self.sensorProc = {}
+		self.estimation = {}
+		self.guidance = {}
+		self.control = {}
+		self.command = {}
+
+
+# Abstract class for FSW functions
+class FswFunction(ABC):
+    def __init__(self):
+        self.param = None
+        self.state = None
+        self.functions = []
+        self.interface = {}
+
+    @abstractmethod
+    def build(self):
+        pass
+
+    @abstractmethod
+    def run(self):
+        pass
+
+
+# Top level FSW function
+class Fsw():
+	def __init__(self):
+		# Parameters
 		self.param = Param()
+		# State
+		self.state = State()
 		# FSW function
 		self.modeMgt = fswModeMgt.ModeMgt()
 		self.sensorProc = fswSensorProc.SensorProcessing()
@@ -73,7 +106,7 @@ class Fsw:
 		# Fetch interface
 		fswEstIfPre = self.interface["estimation"] # From previous timestep
 
-		# [Mode management}
+		# [Mode management]
 		self.modeMgt.run(simParam, simIf, fswEstIfPre)
 		fswModeMgtIf = self.interface["modeMgt"] # Current timestep
 		
@@ -106,6 +139,13 @@ class Param:
 		self.massCB = 0
 		self.massSc = 0
 		self.comSc_B = np.array([0, 0, 0])
+
+
+# High level FSW state
+class State:
+	def __init__(self):
+		# Dummy
+		self.dum = 0
 
 # --------------------------------------------------
 # FUNCTIONS
